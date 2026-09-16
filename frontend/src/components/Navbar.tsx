@@ -20,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ state, onReset, loading }) => {
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold tracking-wider text-white">RESQ<span className="text-sky-400">GRID</span></span>
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold tracking-wider">
-                SIH AI OPTIMIZER
+                TACTICAL AI OPTIMIZER
               </span>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">

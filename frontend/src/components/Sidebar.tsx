@@ -36,7 +36,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, unapprovedCount }) => {
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Command Center', icon: LayoutDashboard, badge: null },
-    { id: 'demo' as NavTab, label: 'Killer Demo Flow', icon: Zap, badge: 'SIH' },
+    { id: 'demo' as NavTab, label: 'Demo Flow', icon: Zap, badge: 'Guide' },
     { id: 'map' as NavTab, label: 'Live GIS Map', icon: MapPin, badge: null },
     { id: 'optimization' as NavTab, label: 'Optimization Engine', icon: Sliders, badge: unapprovedCount > 0 ? `${unapprovedCount} pending` : null },
     { id: 'simulation' as NavTab, label: 'What-If Simulation', icon: PlaySquare, badge: 'Live' },
@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, unapp
               {item.badge && (
                 <span
                   className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${
-                    item.badge === 'SIH'
+                    item.badge === 'Guide'
                       ? 'bg-purple-950 text-purple-300 border border-purple-500/40'
                       : item.badge === 'Live'
                       ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'

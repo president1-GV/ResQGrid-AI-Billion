@@ -89,7 +89,7 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
           ...prev,
           'Step 5: Road R17 (North Bridge Causeway) breached by flood surge! Status updated to BLOCKED.',
         ]);
-        const res = await onCloseRoad('ROAD-R17', 'Simulated Causeway Breach during SIH Demonstration');
+        const res = await onCloseRoad('ROAD-R17', 'Simulated Causeway Breach during Demonstration');
         setDemoLog((prev) => [
           ...prev,
           `Step 5 Complete: Re-optimization finished! Rerouted dispatches from alternate depot WH-EAST. Delta response time: +${res.delta.response_time_diff}m.`,
@@ -127,11 +127,11 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
           <div className="flex items-center space-x-2">
             <span className="text-xs font-mono text-purple-400 font-bold uppercase">Evaluator Presentation</span>
             <span className="text-xs px-2 py-0.5 rounded bg-purple-950 border border-purple-500/40 text-purple-300 font-semibold">
-              SIH HACKATHON LIVE FLOW
+              TACTICAL LIVE EVALUATION FLOW
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">
-            ResQGrid End-to-End Killer Demonstration
+            ResQGrid End-to-End Interactive Demonstration
           </h1>
           <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
             Follow this structured, verifiable 6-step walkthrough demonstrating why ResQGrid is not a mere alert dashboard, but an explainable, constraint-aware optimization engine.

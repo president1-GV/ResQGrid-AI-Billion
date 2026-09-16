@@ -66,7 +66,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => onSelectTab('demo')}
             className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-semibold text-sm transition-all"
           >
-            <span>Killer Demo Flow</span>
+            <span>Interactive Demo Flow</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

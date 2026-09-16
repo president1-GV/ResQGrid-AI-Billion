@@ -234,9 +234,9 @@ OK
 
 ---
 
-## 9. Killer Demonstration Walkthrough (SIH Evaluator Flow)
+## 9. Demonstration Walkthrough (Live Evaluator Flow)
 
-Navigate to **Killer Demo Flow** in the sidebar:
+Navigate to **Demo Flow** in the sidebar:
 
 1. **Step 1: Disaster Event Triggered**  
    245mm monsoon rainfall inundates the Brahmaputra Basin. River swell rises 2.8m above danger mark. 45,800 citizens impacted across 7 wards.
@@ -258,7 +258,3 @@ Navigate to **Killer Demo Flow** in the sidebar:
 - **Human-in-the-Loop Protocol**: AI suggests; authorized officers review, approve, modify (with mandatory operational rationale), or reject.
 - **Immutable Audit Logging**: Every critical action, trigger, and dispatch override is recorded with timestamps, user credentials, and operational metadata.
 - **Air-Gapped / Offline Readiness**: Mathematical solver runs locally with zero dependence on paid proprietary cloud APIs.
-
----
-
-

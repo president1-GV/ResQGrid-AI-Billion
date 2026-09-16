@@ -50,7 +50,7 @@ class GeospatialDataAdapter:
     def get_layer_metadata(self) -> Dict[str, Any]:
         return {
             "source": "OpenStreetMap Humanitarian Data Model (Level 2)",
-            "license": "ODbL (Open Database License)",
+            "data_standard": "ODbL Open Data Commons",
             "coverage": "Brahmaputra Basin - Kamrup Metropolitan District",
             "feature_counts": {
                 "hospitals": 3,
