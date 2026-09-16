@@ -354,3 +354,106 @@ export interface ExecutiveReports {
   allocation_report: Record<string, any>;
   performance_report: Record<string, any>;
 }
+
+export interface DatasetMetadata {
+  dataset_id: string;
+  name: string;
+  provider: string;
+  description: string;
+  source_url: string;
+  license_type: string;
+  format: string;
+  update_frequency: string;
+  geographic_scope: string;
+  temporal_scope: string;
+  record_count: number;
+  file_size_bytes: number;
+  last_ingested?: string;
+  ingestion_status: 'IDLE' | 'INGESTING' | 'SUCCESS' | 'FAILED' | 'STALE';
+  validation_status: 'PENDING' | 'VALIDATED' | 'FLAGGED' | 'FAILED';
+  quality_score: number;
+  is_synthetic: boolean;
+  schema_fields: Array<{ name: string; type: string; desc: string }>;
+  local_path?: string;
+}
+
+export interface DataQualityReport {
+  dataset_id: string;
+  timestamp: string;
+  record_count: number;
+  completeness_pct: number;
+  uniqueness_pct: number;
+  validity_pct: number;
+  consistency_pct: number;
+  timeliness_hours: number;
+  geospatial_validity_pct: number;
+  overall_quality_score: number;
+  issues: string[];
+}
+
+export interface LocationCandidate {
+  name: string;
+  latitude: number;
+  longitude: number;
+  district: string;
+  state: string;
+  confidence: number;
+  source: string;
+}
+
+export interface LLMExtractionOutput {
+  extraction_id: string;
+  event_type?: string;
+  location: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+    district?: string;
+    state?: string;
+    resolution_confidence: number;
+    is_ambiguous: boolean;
+    candidate_matches: LocationCandidate[];
+    source: string;
+  };
+  affected_population?: number;
+  severity?: string;
+  medical_needs: {
+    priority?: string;
+    patients?: number;
+    critical_injuries?: number;
+    explanation?: string;
+  };
+  road_conditions: {
+    status?: string;
+    blocked_segments: string[];
+    explanation?: string;
+  };
+  resource_demands: Record<string, number | null>;
+  confidence: number;
+  field_confidence: Record<string, number>;
+  missing_fields: string[];
+  hallucination_warnings: string[];
+  flag_for_review: boolean;
+  source_reference: string;
+  timestamp: string;
+  review_status: 'PENDING_REVIEW' | 'FLAGGED_FOR_REVIEW' | 'APPROVED' | 'MODIFIED' | 'REJECTED';
+  reviewer_notes?: string;
+}
+
+export interface ModelTrainingResponse {
+  model_name: string;
+  model_version: string;
+  model_type: string;
+  status: string;
+  trained_at: string;
+  records_used: number;
+  train_split: number;
+  test_split: number;
+  r2_score?: number;
+  mae?: number;
+  rmse?: number;
+  feature_importances: Record<string, number>;
+  loss_history: number[];
+  artifact_path: string;
+}
+

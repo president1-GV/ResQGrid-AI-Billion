@@ -25,6 +25,21 @@ from .services.data_adapters import weather_adapter, geospatial_adapter
 from .services.gis_service import gis_service
 from .services.routing_engine import routing_service, offline_demo_routing_service
 from .utils.time_utils import get_utc_now_iso
+from .models.dataset_schemas import (
+    DatasetMetadata, DataQualityReport, IngestionRun, LLMExtractionInput,
+    LLMExtractionOutput, HumanReviewAction, ModelTrainingRequest, ModelTrainingResponse
+)
+from .services.dataset_service import DatasetService
+from .services.data_quality_engine import DataQualityEngine
+from .services.external_adapters import (
+    IndiaFloodInventoryAdapter, EMDATIndiaAdapter, IMDWeatherAdapter,
+    OpenMeteoLiveWeatherAdapter, OpenStreetMapGeocoder
+)
+from .services.location_resolver import LocationResolver
+from .services.llm_extractor import LLMExtractor
+from .services.feature_store import FeatureStore
+from .services.ml_demand_engine import MLDemandEngine
+from .services.training_service import TrainingService
 
 app = FastAPI(
     title="ResQGrid AI - Disaster Resource Allocation & Re-Optimization Engine",
@@ -43,6 +58,9 @@ app.add_middleware(
 # Startup: Calculate initial priorities and run initial optimization
 @app.on_event("startup")
 def startup_event():
+    # Initialize Dataset Intelligence Catalog & Sources
+    DatasetService.init_registry()
+
     # Compute initial demand estimates and priorities
     demand_estimator.update_zone_demands(list(state.zones.values()), state.event.rainfall_mm)
     priority_engine.compute_all_priorities(list(state.zones.values()))
@@ -69,6 +87,8 @@ def get_health():
         "nlp_extractor": "ONLINE (Lexical & Regex Entity Engine)",
         "gis_data": "ONLINE (OpenStreetMap GeoJSON Ready)",
         "data_adapters": "ONLINE (Open-Meteo Level 1 Active)",
+        "dataset_intelligence": "ONLINE (7 National & Global Sources Registered)",
+        "ml_demand_engine": "ONLINE (Gradient Boosting Multi-Commodity Regressor)",
         "timestamp": get_utc_now_iso()
     }
 
@@ -1026,3 +1046,139 @@ def generate_reports():
         "allocation_report": allocation_report,
         "performance_report": performance_report
     }
+
+
+# ============================================================
+# DATASET INTELLIGENCE & LLM DATA ENGINE APIs
+# ============================================================
+
+@app.get("/api/datasets")
+def list_datasets():
+    """Returns catalog of all registered national and open disaster datasets."""
+    return DatasetService.list_datasets()
+
+
+@app.get("/api/datasets/{dataset_id}")
+def get_dataset(dataset_id: str):
+    """Returns dataset metadata, schemas, and local storage status."""
+    ds = DatasetService.get_dataset(dataset_id)
+    if not ds:
+        raise HTTPException(status_code=404, detail="Dataset not found in catalog.")
+    return ds
+
+
+@app.post("/api/datasets/{dataset_id}/ingest")
+def ingest_dataset(dataset_id: str):
+    """Triggers download, local storage, and quality engine evaluation for a dataset."""
+    try:
+        return DatasetService.ingest_dataset(dataset_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/datasets/{dataset_id}/validate")
+def validate_dataset(dataset_id: str):
+    """Executes data quality engine across completeness, uniqueness, validity, and geometry."""
+    return DatasetService.get_quality_report(dataset_id)
+
+
+@app.get("/api/datasets/{dataset_id}/quality")
+def get_dataset_quality(dataset_id: str):
+    """Returns quality score and concrete issues detected in dataset records."""
+    return DatasetService.get_quality_report(dataset_id)
+
+
+@app.get("/api/datasets/{dataset_id}/lineage")
+def get_dataset_lineage(dataset_id: str):
+    """Returns end-to-end data lineage DAG from raw ingestion to OR-Tools solver."""
+    return DatasetService.get_lineage(dataset_id)
+
+
+@app.post("/api/llm/extract-event")
+def extract_event_from_text(input_data: LLMExtractionInput):
+    """
+    Extracts structured disaster intelligence from unstructured field reports.
+    Enforces strict Pydantic schemas, null hallucination protection, and location resolution.
+    """
+    output = LLMExtractor.extract_event(input_data)
+    DatasetService.add_extraction(output.dict())
+    return output
+
+
+@app.get("/api/data/review")
+def list_pending_extractions():
+    """Returns field report extractions for human officer review."""
+    return DatasetService.list_extractions()
+
+
+@app.post("/api/data/review")
+def review_extraction(action: HumanReviewAction):
+    """Applies human approval, edit, or rejection to an LLM extraction."""
+    updated = DatasetService.update_extraction_review(
+        action.extraction_id,
+        action.action,
+        action.rationale,
+        action.modified_data
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Extraction record not found.")
+
+    # Record governance audit
+    state.add_audit_log(
+        action=f"EXTRACTION_{action.action}",
+        entity_type="FIELD_REPORT",
+        entity_id=action.extraction_id,
+        details=f"Officer {action.reviewer_role} performed {action.action}: {action.rationale or 'No notes provided.'}"
+    )
+    return updated
+
+
+@app.post("/api/location/resolve")
+def resolve_location(body: Dict[str, Any]):
+    """Geocodes locations with OSM Nominatim and Indian Disaster Gazetteer."""
+    query = body.get("query", "")
+    return LocationResolver.resolve(query)
+
+
+@app.post("/api/models/train")
+def train_demand_model(request: ModelTrainingRequest):
+    """Trains multi-commodity Gradient Boosting demand prediction models on flood records."""
+    try:
+        res = TrainingService.train_demand_model(request)
+        state.add_audit_log(
+            action="MODEL_TRAINED",
+            entity_type="ML_MODEL",
+            entity_id=res.model_version,
+            details=f"Trained {res.model_name} on {res.records_used} records with R2: {res.r2_score}, MAE: {res.mae}."
+        )
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/features")
+def get_features(zone_id: Optional[str] = None):
+    """Returns stored feature vectors for zones."""
+    return FeatureStore.get_features(zone_id)
+
+
+@app.post("/api/features/generate")
+def generate_features(body: Dict[str, Any]):
+    """Generates and versions normalized tabular features for a disaster sector."""
+    return FeatureStore.generate_features_for_zone(
+        zone_id=body.get("zone_id", "ZONE-01"),
+        population=int(body.get("population", 12000)),
+        vulnerability=float(body.get("vulnerability", 0.7)),
+        rainfall_mm=float(body.get("rainfall_mm", 120.0)),
+        flooded_area_sqkm=float(body.get("flooded_area_sqkm", 8.5)),
+        duration_days=float(body.get("duration_days", 2.0)),
+        hospitals_available=int(body.get("hospitals_available", 2)),
+        roads_blocked_count=int(body.get("roads_blocked_count", 0))
+    )
+
+
+@app.get("/api/weather/live")
+def get_live_weather(lat: float = 26.1445, lon: float = 91.7362):
+    """Queries real-time live precipitation and forecast telemetry for coordinates."""
+    return OpenMeteoLiveWeatherAdapter.get_live_weather(lat, lon)
+

@@ -11,11 +11,16 @@ import {
   Award,
   History,
   ShieldCheck,
-  Zap
+  Zap,
+  Database,
+  Brain
 } from 'lucide-react';
 
 export type NavTab =
   | 'dashboard'
+  | 'demo'
+  | 'datasets'
+  | 'analyzer'
   | 'map'
   | 'optimization'
   | 'simulation'
@@ -24,8 +29,7 @@ export type NavTab =
   | 'reports'
   | 'resources'
   | 'analytics'
-  | 'audit'
-  | 'demo';
+  | 'audit';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -37,13 +41,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab, unapp
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Command Center', icon: LayoutDashboard, badge: null },
     { id: 'demo' as NavTab, label: 'Demo Flow', icon: Zap, badge: 'Guide' },
+    { id: 'datasets' as NavTab, label: 'Datasets & Quality', icon: Database, badge: 'Live' },
+    { id: 'analyzer' as NavTab, label: 'LLM & Field Reports', icon: Brain, badge: 'AI' },
     { id: 'map' as NavTab, label: 'Live GIS Map', icon: MapPin, badge: null },
     { id: 'optimization' as NavTab, label: 'Optimization Engine', icon: Sliders, badge: unapprovedCount > 0 ? `${unapprovedCount} pending` : null },
     { id: 'simulation' as NavTab, label: 'What-If Simulation', icon: PlaySquare, badge: 'Live' },
     { id: 'benchmark' as NavTab, label: 'Baseline vs ResQGrid', icon: Award, badge: null },
     { id: 'gaps' as NavTab, label: 'Resource Gap Analysis', icon: Layers, badge: null },
     { id: 'resources' as NavTab, label: 'Warehouses & Fleets', icon: Boxes, badge: null },
-    { id: 'reports' as NavTab, label: 'NLP Field Reports', icon: FileText, badge: null },
+    { id: 'reports' as NavTab, label: 'Dispatches & Reports', icon: FileText, badge: null },
     { id: 'analytics' as NavTab, label: 'Impact Analytics', icon: TrendingUp, badge: null },
     { id: 'audit' as NavTab, label: 'Governance & Audit', icon: ShieldCheck, badge: null },
   ];

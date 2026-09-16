@@ -249,3 +249,104 @@ export async function approveAllAllocations(officerName: string = 'Chief Operati
   return res.json();
 }
 
+// ============================================================
+// DATASET INTELLIGENCE & LLM APIs
+// ============================================================
+
+export async function fetchDatasets(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/datasets`);
+  if (!res.ok) throw new Error('Failed to fetch dataset catalog');
+  return res.json();
+}
+
+export async function fetchDataset(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/datasets/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch dataset ${id}`);
+  return res.json();
+}
+
+export async function ingestDataset(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/datasets/${id}/ingest`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || `Failed to ingest dataset ${id}`);
+  }
+  return res.json();
+}
+
+export async function validateDataset(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/datasets/${id}/validate`, { method: 'POST' });
+  if (!res.ok) throw new Error(`Failed to validate dataset ${id}`);
+  return res.json();
+}
+
+export async function fetchDatasetQuality(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/datasets/${id}/quality`);
+  if (!res.ok) throw new Error(`Failed to fetch quality report for ${id}`);
+  return res.json();
+}
+
+export async function fetchDatasetLineage(id: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/datasets/${id}/lineage`);
+  if (!res.ok) throw new Error(`Failed to fetch lineage for ${id}`);
+  return res.json();
+}
+
+export async function extractLLMEvent(text: string, sourceRef: string = 'FIELD-DISPATCH', provider: string = 'local'): Promise<any> {
+  const res = await fetch(`${API_BASE}/llm/extract-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, source_reference: sourceRef, provider }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'LLM extraction failed');
+  }
+  return res.json();
+}
+
+export async function fetchPendingReviews(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/data/review`);
+  if (!res.ok) throw new Error('Failed to fetch review queue');
+  return res.json();
+}
+
+export async function submitReviewAction(action: { extraction_id: string; action: string; rationale?: string; modified_data?: any; reviewer_role?: string }): Promise<any> {
+  const res = await fetch(`${API_BASE}/data/review`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(action),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to submit review action');
+  }
+  return res.json();
+}
+
+export async function trainDemandModel(params: { dataset_id?: string; n_estimators?: number; learning_rate?: number } = {}): Promise<any> {
+  const res = await fetch(`${API_BASE}/models/train`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model_type: 'demand_gradient_boosting',
+      dataset_id: params.dataset_id || 'india_flood_inventory',
+      test_split: 0.2,
+      n_estimators: params.n_estimators || 80,
+      learning_rate: params.learning_rate || 0.1,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Model training failed');
+  }
+  return res.json();
+}
+
+export async function fetchLiveWeather(lat: number = 26.1445, lon: number = 91.7362): Promise<any> {
+  const res = await fetch(`${API_BASE}/weather/live?lat=${lat}&lon=${lon}`);
+  if (!res.ok) throw new Error('Failed to fetch live weather telemetry');
+  return res.json();
+}
+
+

@@ -25,6 +25,8 @@ import { FieldReportsView } from './views/FieldReportsView';
 import { AnalyticsView } from './views/AnalyticsView';
 import { AuditView } from './views/AuditView';
 import { DemoModeView } from './views/DemoModeView';
+import { DatasetsView } from './views/DatasetsView';
+import { FieldReportAnalyzerView } from './views/FieldReportAnalyzerView';
 import { CreateIncidentModal } from './components/CreateIncidentModal';
 import { Shield, AlertTriangle } from 'lucide-react';
 
@@ -196,6 +198,9 @@ export function App() {
                     onOpenCreateIncident={() => setIsCreateModalOpen(true)}
                   />
                 )}
+
+                {currentTab === 'datasets' && <DatasetsView />}
+                {currentTab === 'analyzer' && <FieldReportAnalyzerView />}
 
                 {currentTab === 'map' && (
                   <MapView
