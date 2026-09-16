@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-09-17T04:47:28.860257Z",
+  "raw_source": "LLM/raw/India_Flood_Inventory_v3.csv",
+  "split_strategy": "Strict Chronological Temporal Holdout (Zero Leakage)",
+  "train_records": 6307,
+  "val_records": 213,
+  "test_records": 794,
+  "feature_columns": [
+    "duration_days",
+    "severity_score",
+    "start_month",
+    "is_monsoon",
+    "district_flooded_area_pct",
+    "district_population",
+    "historical_mean_duration"
+  ],
+  "target_columns": [
+    "demand_water_liters",
+    "demand_food_packs",
+    "demand_medical_kits",
+    "demand_rescue_boats",
+    "demand_ambulances",
+    "fatalities",
+    "injured"
+  ],
+  "train_years": [
+    1967,
+    2017
+  ],
+  "val_years": [
+    2018,
+    2020
+  ],
+  "test_years": [
+    2021,
+    2023
+  ]
+}

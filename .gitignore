@@ -45,3 +45,8 @@ __pycache__/
 venv/
 .venv/
 env/
+
+# Data and large local artifacts
+LLM/raw/*.csv
+LLM/raw/*.parquet
+LLM/processed/*.parquet

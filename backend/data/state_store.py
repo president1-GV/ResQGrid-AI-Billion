@@ -111,6 +111,17 @@ class StateStore:
         self.audit_logs.insert(0, log)
         return log
 
+    def add_audit_log(self, action: str, details: str, entity_type: Optional[str] = None, entity_id: Optional[str] = None, user: str = "System", role: str = "OFFICER", metadata: Optional[Dict[str, Any]] = None):
+        return self.log_audit(
+            user=user,
+            role=role,
+            action=action,
+            details=details,
+            resource_type=entity_type,
+            resource_id=entity_id,
+            metadata=metadata
+        )
+
     def load_demo_scenario(self, scenario_id: str):
         if scenario_id not in self.demo_scenarios:
             return None

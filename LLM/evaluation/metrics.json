@@ -1,0 +1,146 @@
+{
+  "model_name": "resqgrid-demand-forecaster",
+  "version": "v1.0.0",
+  "trained_at": "2026-09-17T04:50:16.519792Z",
+  "random_seed": 42,
+  "baseline_model": {
+    "type": "Ridge Regression",
+    "metrics": {
+      "demand_water_liters": {
+        "val_mae": 8762.21,
+        "val_rmse": 25036.51,
+        "val_r2": 0.4498,
+        "test_mae": 24429.31,
+        "test_rmse": 333418.39,
+        "test_r2": -165.4579
+      },
+      "demand_food_packs": {
+        "val_mae": 1166.86,
+        "val_rmse": 3331.4,
+        "val_r2": 0.4521,
+        "test_mae": 3246.98,
+        "test_rmse": 44236.97,
+        "test_r2": -163.8217
+      },
+      "demand_medical_kits": {
+        "val_mae": 6.16,
+        "val_rmse": 15.21,
+        "val_r2": 0.6377,
+        "test_mae": 5.99,
+        "test_rmse": 15.09,
+        "test_r2": 0.3801
+      },
+      "demand_rescue_boats": {
+        "val_mae": 0.44,
+        "val_rmse": 0.71,
+        "val_r2": 0.9176,
+        "test_mae": 0.41,
+        "test_rmse": 0.64,
+        "test_r2": 0.9218
+      },
+      "demand_ambulances": {
+        "val_mae": 0.08,
+        "val_rmse": 0.29,
+        "val_r2": -0.0459,
+        "test_mae": 0.08,
+        "test_rmse": 0.13,
+        "test_r2": -0.3223
+      }
+    },
+    "overall_test_r2": -65.66
+  },
+  "advanced_model": {
+    "type": "Gradient Boosting Multi-Output Regressor",
+    "metrics": {
+      "demand_water_liters": {
+        "val_mae": 2015.62,
+        "val_rmse": 14694.2,
+        "val_r2": 0.8105,
+        "test_mae": 1346.58,
+        "test_rmse": 14147.76,
+        "test_r2": 0.7003
+      },
+      "demand_food_packs": {
+        "val_mae": 302.63,
+        "val_rmse": 2190.52,
+        "val_r2": 0.7631,
+        "test_mae": 193.08,
+        "test_rmse": 1918.2,
+        "test_r2": 0.6901
+      },
+      "demand_medical_kits": {
+        "val_mae": 1.79,
+        "val_rmse": 6.26,
+        "val_r2": 0.9386,
+        "test_mae": 1.01,
+        "test_rmse": 6.02,
+        "test_r2": 0.9012
+      },
+      "demand_rescue_boats": {
+        "val_mae": 0.0,
+        "val_rmse": 0.0,
+        "val_r2": 1.0,
+        "test_mae": 0.0,
+        "test_rmse": 0.07,
+        "test_r2": 0.999
+      },
+      "demand_ambulances": {
+        "val_mae": 0.08,
+        "val_rmse": 0.3,
+        "val_r2": -0.1181,
+        "test_mae": 0.07,
+        "test_rmse": 0.19,
+        "test_r2": -1.5569
+      }
+    },
+    "overall_val_r2": 0.6788,
+    "overall_test_r2": 0.3467,
+    "feature_importances": {
+      "demand_water_liters": {
+        "duration_days": 0.37,
+        "severity_score": 0.0,
+        "district_flooded_area_pct": 0.4864,
+        "district_population": 0.1367,
+        "historical_mean_duration": 0.0022,
+        "start_month": 0.0041,
+        "is_monsoon": 0.0005
+      },
+      "demand_food_packs": {
+        "duration_days": 0.37,
+        "severity_score": 0.0,
+        "district_flooded_area_pct": 0.4865,
+        "district_population": 0.1371,
+        "historical_mean_duration": 0.0022,
+        "start_month": 0.0039,
+        "is_monsoon": 0.0003
+      },
+      "demand_medical_kits": {
+        "duration_days": 0.0104,
+        "severity_score": 0.0,
+        "district_flooded_area_pct": 0.7499,
+        "district_population": 0.2291,
+        "historical_mean_duration": 0.0044,
+        "start_month": 0.006,
+        "is_monsoon": 0.0003
+      },
+      "demand_rescue_boats": {
+        "duration_days": 0.0,
+        "severity_score": 0.0,
+        "district_flooded_area_pct": 1.0,
+        "district_population": 0.0,
+        "historical_mean_duration": 0.0,
+        "start_month": 0.0,
+        "is_monsoon": 0.0
+      },
+      "demand_ambulances": {
+        "duration_days": 0.2316,
+        "severity_score": 0.0,
+        "district_flooded_area_pct": 0.2319,
+        "district_population": 0.3262,
+        "historical_mean_duration": 0.0741,
+        "start_month": 0.1269,
+        "is_monsoon": 0.0093
+      }
+    }
+  }
+}

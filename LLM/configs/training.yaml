@@ -1,0 +1,59 @@
+# ResQGrid AI - Machine Learning Training Configuration
+# Model: Multi-Commodity Disaster Demand & Severity Forecasting Engine
+# Architecture: Baseline (MultiOutput Ridge) vs Advanced (MultiOutput Gradient Boosting)
+
+model_name: "resqgrid-demand-forecaster"
+version: "v1.0.0"
+task: "multi_target_disaster_resource_forecasting"
+random_seed: 42
+
+dataset:
+  train_path: "LLM/processed/train.parquet"
+  val_path: "LLM/processed/val.parquet"
+  test_path: "LLM/processed/test.parquet"
+  split_strategy: "temporal_holdout"
+  split_boundary_train_year: 2017
+  split_boundary_val_year: 2020
+  split_boundary_test_year: 2023
+
+features:
+  numeric:
+    - "duration_days"
+    - "severity_score"
+    - "district_flooded_area_pct"
+    - "district_population"
+    - "historical_mean_duration"
+  categorical:
+    - "start_month"
+    - "is_monsoon"
+
+targets:
+  - "demand_water_liters"
+  - "demand_food_packs"
+  - "demand_medical_kits"
+  - "demand_rescue_boats"
+  - "demand_ambulances"
+
+baseline:
+  model_type: "ridge_regression"
+  alpha: 1.0
+
+advanced_model:
+  model_type: "gradient_boosting_regressor"
+  n_estimators: 120
+  learning_rate: 0.08
+  max_depth: 5
+  subsample: 0.85
+  min_samples_split: 5
+
+uncertainty:
+  method: "quantile_regression_bounds"
+  lower_quantile: 0.10
+  upper_quantile: 0.90
+  coverage_target: 0.80
+
+output:
+  artifact_dir: "LLM/models/demand_forecasting/v1"
+  metrics_path: "LLM/evaluation/metrics.json"
+  evaluation_report: "LLM/evaluation/evaluation_report.md"
+  registry_path: "LLM/models/MODEL_REGISTRY.md"

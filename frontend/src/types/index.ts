@@ -457,3 +457,24 @@ export interface ModelTrainingResponse {
   artifact_path: string;
 }
 
+export interface AuthOfficer {
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: 'INCIDENT_COMMANDER' | 'LOGISTICS_CHIEF' | 'FIELD_RESPONDER' | 'GOVERNANCE_AUDITOR';
+  badge_number: string;
+  permissions: string[];
+  is_active: boolean;
+  last_login?: string;
+  clearance?: string;
+  password_hint?: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in_hours: number;
+  user: AuthOfficer;
+}
+
+

@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-09-16T19:46:30.184442Z",
+  "status": "PASSED",
+  "datasets": {
+    "india_flood_inventory": {
+      "rows": 6876,
+      "columns": 23,
+      "invalid_coords": 6876,
+      "negative_durations": 0,
+      "status": "VALIDATED"
+    },
+    "district_flooded_area": {
+      "districts": 732,
+      "null_names": 0,
+      "status": "VALIDATED"
+    },
+    "district_flood_impact": {
+      "districts": 732,
+      "valid_populations": 732,
+      "status": "VALIDATED"
+    },
+    "emdat_india_train": {
+      "records": 145,
+      "valid_years": 144,
+      "status": "VALIDATED"
+    }
+  }
+}

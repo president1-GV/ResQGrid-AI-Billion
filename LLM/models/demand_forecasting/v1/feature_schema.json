@@ -1,0 +1,50 @@
+{
+  "features": [
+    "duration_days",
+    "severity_score",
+    "district_flooded_area_pct",
+    "district_population",
+    "historical_mean_duration",
+    "start_month",
+    "is_monsoon"
+  ],
+  "targets": [
+    "demand_water_liters",
+    "demand_food_packs",
+    "demand_medical_kits",
+    "demand_rescue_boats",
+    "demand_ambulances"
+  ],
+  "residual_quantiles": {
+    "demand_water_liters": {
+      "p10_log": -0.05955083504024863,
+      "p50_log": 0.005952093488248877,
+      "p90_log": 0.08219391674000821,
+      "std_log": 0.2013465614337511
+    },
+    "demand_food_packs": {
+      "p10_log": -0.0629398331562463,
+      "p50_log": 0.006102451772786566,
+      "p90_log": 0.0836361524587476,
+      "std_log": 0.202365200600248
+    },
+    "demand_medical_kits": {
+      "p10_log": -0.028112007148250573,
+      "p50_log": 0.0024316452625297025,
+      "p90_log": 0.05395059067687817,
+      "std_log": 0.1550414693980356
+    },
+    "demand_rescue_boats": {
+      "p10_log": -1.4911612187473722e-05,
+      "p50_log": -4.839428857428274e-06,
+      "p90_log": 2.6447630240067355e-05,
+      "std_log": 1.5187308261397278e-05
+    },
+    "demand_ambulances": {
+      "p10_log": -0.028494957018314924,
+      "p50_log": -0.009503743980576962,
+      "p90_log": 0.0014204225930545267,
+      "std_log": 0.09504602848803109
+    }
+  }
+}

@@ -11,13 +11,79 @@ import {
   SyntheticScenario,
   IncidentCreateRequest,
   IncidentPipelineResult,
-  ExecutiveReports
+  ExecutiveReports,
+  AuthOfficer,
+  LoginResponse
 } from '../types';
 
 const API_BASE = '/api';
 
+export function getStoredToken(): string | null {
+  return localStorage.getItem('resqgrid_token');
+}
+
+export function setStoredToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem('resqgrid_token', token);
+  } else {
+    localStorage.removeItem('resqgrid_token');
+  }
+}
+
+export function getAuthHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...extraHeaders,
+  };
+  const token = getStoredToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+export async function loginOfficer(email: string, password: string): Promise<LoginResponse> {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Authentication failed');
+  }
+  const data: LoginResponse = await res.json();
+  setStoredToken(data.access_token);
+  return data;
+}
+
+export async function fetchCurrentUser(): Promise<AuthOfficer> {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to fetch current user profile');
+  return res.json();
+}
+
+export async function fetchAvailableOfficers(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/auth/officers`);
+  if (!res.ok) throw new Error('Failed to fetch command officers');
+  return res.json();
+}
+
+export async function logoutOfficer(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+  } finally {
+    setStoredToken(null);
+  }
+}
+
 export async function fetchState(): Promise<SystemState> {
-  const res = await fetch(`${API_BASE}/state`);
+  const res = await fetch(`${API_BASE}/state`, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error('Failed to fetch system state');
   return res.json();
 }
