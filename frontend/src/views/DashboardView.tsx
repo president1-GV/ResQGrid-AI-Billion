@@ -47,24 +47,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-6">
       {/* Top Banner with Night/Light Mode & Incident Creation */}
       <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-sky-950/40 to-slate-900 border border-sky-500/20 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-              PRIORITY LEVEL 1: CRITICAL INUNDATION
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Event #{state.event.event_number}
-            </span>
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold">
-              DETECT &bull; VERIFY &bull; PRIORITIZE &bull; OPTIMIZE &bull; RESPOND
-            </span>
+        <div className="flex items-start space-x-4">
+          <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-sky-500/40 shadow-xl shadow-sky-500/10 shrink-0 hidden sm:flex items-center justify-center overflow-hidden">
+            <img
+              src="/resqgrid-logo.png"
+              alt="ResQGrid AI"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            {state.event.location} Emergency Command Center
-          </h1>
-          <p className="text-sm text-slate-400 max-w-3xl">
-            {state.event.description}
-          </p>
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                PRIORITY LEVEL 1: CRITICAL INUNDATION
+              </span>
+              <span className="text-xs text-slate-400 font-mono">
+                Event #{state.event.event_number}
+              </span>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold">
+                DETECT &bull; VERIFY &bull; PRIORITIZE &bull; OPTIMIZE &bull; RESPOND
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {state.event.location} Emergency Command Center
+            </h1>
+            <p className="text-sm text-slate-400 max-w-3xl">
+              {state.event.description}
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">

@@ -142,8 +142,12 @@ export function App() {
   if (loading && !state) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-300 space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/50 flex items-center justify-center text-sky-400 font-bold animate-pulse">
-          <Shield className="w-6 h-6 text-sky-400" />
+        <div className="w-16 h-16 rounded-2xl bg-white p-1 border border-sky-500/50 shadow-xl shadow-sky-500/20 flex items-center justify-center animate-pulse overflow-hidden">
+          <img
+            src="/resqgrid-logo.png"
+            alt="ResQGrid AI Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
         <div className="text-sm font-semibold tracking-wider text-white uppercase font-mono">
           Initializing ResQGrid AI Command Engine...
