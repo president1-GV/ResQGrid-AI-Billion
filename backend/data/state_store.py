@@ -3,12 +3,13 @@ from datetime import datetime
 import json
 from .seed_data import (
     get_initial_disaster_event, get_initial_zones, get_initial_warehouses,
-    get_initial_hospitals, get_initial_shelters, get_initial_roads
+    get_initial_hospitals, get_initial_shelters, get_initial_roads,
+    get_initial_workforce, get_initial_dispatches, get_synthetic_scenarios
 )
 from ..models.schemas import (
     DisasterEvent, AffectedZone, Warehouse, Hospital, Shelter, Road,
     AllocationItem, OptimizationRun, FieldReport, AuditLog, RoadStatus,
-    AllocationStatus
+    AllocationStatus, WorkforceTeam, DispatchItem
 )
 
 class StateStore:
@@ -22,6 +23,10 @@ class StateStore:
         self.hospitals: Dict[str, Hospital] = {h.id: h for h in get_initial_hospitals()}
         self.shelters: Dict[str, Shelter] = {s.id: s for s in get_initial_shelters()}
         self.roads: Dict[str, Road] = {r.id: r for r in get_initial_roads()}
+        self.workforce: Dict[str, WorkforceTeam] = {t.id: t for t in get_initial_workforce()}
+        self.dispatches: List[DispatchItem] = get_initial_dispatches()
+        self.demo_scenarios: Dict[str, Any] = get_synthetic_scenarios()
+        self.incidents: List[Dict[str, Any]] = []
         self.allocations: List[AllocationItem] = []
         self.optimization_runs: List[OptimizationRun] = []
         self.field_reports: List[FieldReport] = [
@@ -105,5 +110,25 @@ class StateStore:
         )
         self.audit_logs.insert(0, log)
         return log
+
+    def load_demo_scenario(self, scenario_id: str):
+        if scenario_id not in self.demo_scenarios:
+            return None
+        scenario = self.demo_scenarios[scenario_id]
+        self.event.type = scenario["disaster_type"]
+        self.event.location = scenario["location"]
+        self.event.rainfall_mm = scenario["rainfall_mm"]
+        self.event.river_level_meters = scenario["river_level_meters"]
+        self.event.affected_population = scenario["affected_population"]
+        self.event.description = scenario["description"]
+        self.log_audit(
+            user="Evaluator",
+            role="SUPERVISOR",
+            action="SCENARIO_LOADED",
+            resource_type="SyntheticDemoScenario",
+            resource_id=scenario_id,
+            details=f"Loaded synthetic scenario '{scenario['title']}' ({scenario['tag']})."
+        )
+        return scenario
 
 state = StateStore()

@@ -7,11 +7,13 @@ import { Layers, MapPin, AlertTriangle, Check, Shield, Navigation } from 'lucide
 interface MapViewProps {
   state: SystemState;
   onToggleRoad: (roadId: string) => void;
+  isDarkMode?: boolean;
 }
 
-export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad }) => {
+export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMode = true }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   const [selectedZone, setSelectedZone] = useState<AffectedZone | null>(state.zones[0] || null);
   const [showZones, setShowZones] = useState(true);
@@ -38,8 +40,11 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad }) => {
         zoomControl: true,
       });
 
-      // Dark tactical OpenStreetMap CartoDB dark matter tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      const tileUrl = isDarkMode
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+      tileLayerRef.current = L.tileLayer(tileUrl, {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 19,
@@ -53,11 +58,24 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad }) => {
 
       mapInstanceRef.current = map;
     }
-
-    return () => {
-      // Keep map instance alive across rerenders for smooth UX
-    };
   }, []);
+
+  // Update tile layer whenever theme toggles
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+    }
+    const tileUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    tileLayerRef.current = L.tileLayer(tileUrl, {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(mapInstanceRef.current);
+  }, [isDarkMode]);
 
   // Update layers whenever state changes
   useEffect(() => {

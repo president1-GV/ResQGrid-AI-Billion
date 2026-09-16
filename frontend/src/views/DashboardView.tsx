@@ -11,7 +11,11 @@ import {
   ShieldAlert,
   Zap,
   Check,
-  X
+  X,
+  Moon,
+  Sun,
+  PlusCircle,
+  Truck
 } from 'lucide-react';
 import { SystemState } from '../types';
 import { NavTab } from '../components/Sidebar';
@@ -21,13 +25,19 @@ interface DashboardViewProps {
   onSelectTab: (tab: NavTab) => void;
   onApproveAllocation: (id: string) => void;
   onRejectAllocation: (id: string) => void;
+  isDarkMode: boolean;
+  onToggleTheme: () => void;
+  onOpenCreateIncident?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   state,
   onSelectTab,
   onApproveAllocation,
-  onRejectAllocation
+  onRejectAllocation,
+  isDarkMode,
+  onToggleTheme,
+  onOpenCreateIncident,
 }) => {
   const latestRun = state.latest_run;
   const criticalZones = state.zones.filter((z) => z.priority_score >= 80);
@@ -35,7 +45,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
+      {/* Top Banner with Night/Light Mode & Incident Creation */}
       <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-sky-950/40 to-slate-900 border border-sky-500/20 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -44,6 +54,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
             <span className="text-xs text-slate-400 font-mono">
               Event #{state.event.event_number}
+            </span>
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold">
+              DETECT &bull; VERIFY &bull; PRIORITIZE &bull; OPTIMIZE &bull; RESPOND
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -54,20 +67,54 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {/* Dashboard Theme Switcher Option */}
+          <button
+            onClick={onToggleTheme}
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Night Mode'}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all shadow-sm cursor-pointer ${
+              isDarkMode
+                ? 'bg-slate-800 hover:bg-slate-700 text-sky-300 border-slate-700'
+                : 'bg-white hover:bg-slate-100 text-amber-600 border-slate-300 shadow-slate-200'
+            }`}
+          >
+            {isDarkMode ? (
+              <>
+                <Moon className="w-3.5 h-3.5 text-sky-400" />
+                <span>Night Mode</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span>Light Mode</span>
+              </>
+            )}
+          </button>
+
+          {onOpenCreateIncident && (
+            <button
+              onClick={onOpenCreateIncident}
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/25 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>CREATE INCIDENT &rarr; RUN RESQGRID</span>
+            </button>
+          )}
+
           <button
             onClick={() => onSelectTab('optimization')}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/20 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs transition-all cursor-pointer"
           >
-            <Zap className="w-4 h-4 fill-current" />
-            <span>OPTIMIZE ALLOCATION</span>
+            <Zap className="w-3.5 h-3.5 text-sky-400" />
+            <span>Optimize Solver</span>
           </button>
+
           <button
             onClick={() => onSelectTab('demo')}
-            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-semibold text-sm transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-semibold text-xs transition-all cursor-pointer"
           >
             <span>Interactive Demo Flow</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

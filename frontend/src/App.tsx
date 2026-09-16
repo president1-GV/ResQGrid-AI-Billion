@@ -25,6 +25,7 @@ import { FieldReportsView } from './views/FieldReportsView';
 import { AnalyticsView } from './views/AnalyticsView';
 import { AuditView } from './views/AuditView';
 import { DemoModeView } from './views/DemoModeView';
+import { CreateIncidentModal } from './components/CreateIncidentModal';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 export function App() {
@@ -32,6 +33,21 @@ export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [loading, setLoading] = useState(true);
   const [fieldReports, setFieldReports] = useState<any[]>([]);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('resqgrid_theme') as 'dark' | 'light') || 'dark';
+  });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('resqgrid_theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const loadAll = async () => {
     try {
@@ -145,7 +161,14 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col font-sans">
-      <Navbar state={state} onReset={handleReset} loading={loading} />
+      <Navbar
+        state={state}
+        onReset={handleReset}
+        loading={loading}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onOpenCreateIncident={() => setIsCreateModalOpen(true)}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
@@ -164,11 +187,18 @@ export function App() {
                     onSelectTab={setCurrentTab}
                     onApproveAllocation={handleApprove}
                     onRejectAllocation={(id) => handleReject(id, 'Command Center Rejected')}
+                    isDarkMode={theme === 'dark'}
+                    onToggleTheme={toggleTheme}
+                    onOpenCreateIncident={() => setIsCreateModalOpen(true)}
                   />
                 )}
 
                 {currentTab === 'map' && (
-                  <MapView state={state} onToggleRoad={handleToggleRoad} />
+                  <MapView
+                    state={state}
+                    onToggleRoad={handleToggleRoad}
+                    isDarkMode={theme === 'dark'}
+                  />
                 )}
 
                 {currentTab === 'optimization' && (
@@ -225,6 +255,13 @@ export function App() {
           </div>
         </main>
       </div>
+
+      <CreateIncidentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={loadAll}
+        isDarkMode={theme === 'dark'}
+      />
     </div>
   );
 }

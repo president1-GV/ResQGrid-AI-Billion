@@ -226,3 +226,131 @@ export interface SystemState {
   }>;
   audit_logs_count: number;
 }
+
+export interface WorkforceTeam {
+  id: string;
+  name: string;
+  role: string;
+  skill: string;
+  location: string;
+  availability: 'AVAILABLE' | 'DEPLOYED' | 'UNAVAILABLE' | 'ON_DUTY' | 'OFF_DUTY';
+  capacity: number;
+  current_assignment?: string;
+  contact?: string;
+}
+
+export interface DispatchItem {
+  id: string;
+  allocation_id: string;
+  resource_type: string;
+  quantity: number;
+  team_id?: string;
+  team_name?: string;
+  destination_zone_id: string;
+  destination_zone_name: string;
+  source_warehouse_id: string;
+  source_warehouse_name: string;
+  vehicle_type: string;
+  eta_min: number;
+  status: 'PLANNED' | 'ASSIGNED' | 'DISPATCHED' | 'IN_TRANSIT' | 'ARRIVED' | 'DEPLOYED' | 'COMPLETED';
+  departure_time?: string;
+  completion_time?: string;
+  notes?: string;
+  timestamp: string;
+}
+
+export interface VerificationResult {
+  status: 'VERIFIED' | 'PARTIALLY_VERIFIED' | 'CONFLICTING' | 'UNVERIFIED';
+  confidence: number;
+  evidence: string[];
+  conflicts_detected: string[];
+}
+
+export interface ImpactAssessment {
+  impact_score: number;
+  impact_level: string;
+  factors: Record<string, number>;
+  confidence: number;
+  reported_vs_estimated: Record<string, string>;
+}
+
+export interface DemandForecast {
+  resource: string;
+  required_quantity: number;
+  current_available: number;
+  shortage: number;
+  forecast_horizon: string;
+  confidence: number;
+  is_estimated: boolean;
+}
+
+export interface ExplainableRecommendation {
+  why_resource: string;
+  why_location: string;
+  why_quantity: string;
+  why_team: string;
+  why_priority: string;
+  factors_summary: string[];
+}
+
+export interface IncidentCreateRequest {
+  disaster_type: string;
+  location: string;
+  lat?: number;
+  lon?: number;
+  affected_population: number;
+  casualties?: number;
+  missing_people?: number;
+  injured_people?: number;
+  infrastructure_damage?: string;
+  medical_needs?: number;
+  water_needs?: number;
+  food_needs?: number;
+  shelter_needs?: number;
+  urgency?: string;
+  raw_text?: string;
+  source?: string;
+}
+
+export interface IncidentPipelineResult {
+  incident_id: string;
+  incident_number: string;
+  disaster_type: string;
+  location: string;
+  lat: number;
+  lon: number;
+  severity: string;
+  affected_population: number;
+  extraction_details: Record<string, { value: any; confidence: number; source: string }>;
+  verification: VerificationResult;
+  impact: ImpactAssessment;
+  demand_forecasts: DemandForecast[];
+  priority_score: number;
+  priority_level: string;
+  priority_reasons: string[];
+  recommended_allocations: AllocationItem[];
+  recommendation_explanation: ExplainableRecommendation;
+  dispatches: DispatchItem[];
+  audit_event_id: string;
+  timestamp: string;
+}
+
+export interface SyntheticScenario {
+  id: string;
+  title: string;
+  tag: string;
+  disaster_type: string;
+  location: string;
+  rainfall_mm: number;
+  river_level_meters: number;
+  danger_mark_meters: number;
+  affected_population: number;
+  description: string;
+  synthetic: boolean;
+}
+
+export interface ExecutiveReports {
+  incident_report: Record<string, any>;
+  allocation_report: Record<string, any>;
+  performance_report: Record<string, any>;
+}

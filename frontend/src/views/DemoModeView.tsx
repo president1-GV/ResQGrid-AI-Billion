@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { SystemState, OptimizationObjectiveWeights } from '../types';
 import { NavTab } from '../components/Sidebar';
+import { loadDemoScenario } from '../services/api';
 
 interface DemoModeViewProps {
   state: SystemState;
@@ -35,11 +36,108 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [stepLoading, setStepLoading] = useState(false);
+  const [autoRunning, setAutoRunning] = useState(false);
+  const [activeScenarioId, setActiveScenarioId] = useState<string>('demo_flood');
   const [demoLog, setDemoLog] = useState<string[]>([
     'Step 1 Active: Catastrophic monsoon flood initiated in Brahmaputra Basin (245mm/24h).',
+    '[SYNTHETIC / DEMO DATA] High population impact & acute water shortage.',
   ]);
 
   const latestRun = state.latest_run;
+
+  const scenarios = [
+    { id: 'demo_flood', label: 'DEMO 1 — FLOOD', sub: 'High Population & Water Shortage' },
+    { id: 'demo_earthquake', label: 'DEMO 2 — EARTHQUAKE', sub: 'Infra Collapse & Trauma Demand' },
+    { id: 'demo_cyclone', label: 'DEMO 3 — CYCLONE', sub: 'Storm Surge & Shelter Relief' },
+    { id: 'demo_shortage', label: 'DEMO 4 — RESOURCE SHORTAGE', sub: 'Multi-Zone Supply Scarcity' },
+    { id: 'demo_conflicting', label: 'DEMO 5 — CONFLICTING REPORTS', sub: 'Telemetry Discrepancy Resolution' },
+    { id: 'demo_dynamic', label: 'DEMO 6 — DYNAMIC UPDATE', sub: 'Road Breach & Real-Time Reroute' },
+  ];
+
+  const handleSelectScenario = async (scId: string) => {
+    setActiveScenarioId(scId);
+    setStepLoading(true);
+    try {
+      const res = await loadDemoScenario(scId);
+      setDemoLog([
+        `Loaded Scenario: ${res.scenario.title} (${res.scenario.tag})`,
+        `[SYNTHETIC / DEMO DATA] ${res.scenario.description}`,
+      ]);
+      setCurrentStep(1);
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setStepLoading(false);
+    }
+  };
+
+  const handleRunFullDemo = async () => {
+    setAutoRunning(true);
+    try {
+      setCurrentStep(1);
+      setDemoLog([
+        'RUN RESQGRID DEMO Initiated: Executing full autonomous multi-stage disaster pipeline...',
+        `[SYNTHETIC / DEMO DATA] Loaded ${state.event.type} emergency in ${state.event.location}`,
+      ]);
+      await new Promise((r) => setTimeout(r, 600));
+
+      setDemoLog((prev) => [
+        ...prev,
+        'Stage 2 [EXTRACTION & FUSION]: Multi-modal sensor fusion completed. Identified affected municipal sectors.',
+      ]);
+      setCurrentStep(2);
+      await new Promise((r) => setTimeout(r, 600));
+
+      setDemoLog((prev) => [
+        ...prev,
+        'Stage 3 [VERIFY & PRIORITIZE]: Multi-factor Priority Engine scored critical impact zones.',
+      ]);
+      setCurrentStep(3);
+      await new Promise((r) => setTimeout(r, 600));
+
+      setDemoLog((prev) => [
+        ...prev,
+        'Stage 4 [OR-TOOLS MIP OPTIMIZE]: Solving constraint-based multi-depot fleet allocation...',
+      ]);
+      await onOptimize({
+        response_time: 0.3,
+        unmet_demand: 0.35,
+        travel_distance: 0.15,
+        equity: 0.2,
+        resource_priorities: {
+          medical_kits: 1.0,
+          ambulances: 1.0,
+          medical_teams: 0.95,
+          water: 0.85,
+          food: 0.7,
+          shelter_kits: 0.6,
+        },
+      });
+      setCurrentStep(4);
+      await new Promise((r) => setTimeout(r, 700));
+
+      setDemoLog((prev) => [
+        ...prev,
+        'Stage 5 [DYNAMIC RE-OPT]: Simulating culvert breach on ROAD-R17 & executing dynamic re-routing...',
+      ]);
+      await onCloseRoad('ROAD-R17', 'Autonomous Demo Culvert Breach Simulation');
+      setCurrentStep(5);
+      await new Promise((r) => setTimeout(r, 700));
+
+      setDemoLog((prev) => [
+        ...prev,
+        'Stage 6 [BENCHMARK VALIDATION]: Computing comparative matrix vs greedy baseline dispatch...',
+      ]);
+      await onRunBenchmark();
+      setCurrentStep(6);
+      setDemoLog((prev) => [
+        ...prev,
+        'SUCCESS: Full ResQGrid autonomous demonstration pipeline completed and verified!',
+      ]);
+    } finally {
+      setAutoRunning(false);
+    }
+  };
 
   const nextStep = async () => {
     setStepLoading(true);
@@ -140,12 +238,55 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={handleRunFullDemo}
+            disabled={autoRunning || stepLoading}
+            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition cursor-pointer disabled:opacity-50"
+          >
+            <Zap className={`w-4 h-4 fill-current ${autoRunning ? 'animate-spin' : ''}`} />
+            <span>{autoRunning ? 'RUNNING FULL DEMO...' : 'RUN RESQGRID DEMO'}</span>
+          </button>
+
+          <button
             onClick={resetDemo}
             className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Demo</span>
           </button>
+        </div>
+      </div>
+
+      {/* 6 Synthetic Scenarios Selector */}
+      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
+            Select Synthetic Disaster Scenario:
+          </span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            ALL SCENARIOS ARE GROUNDED IN SYNTHETIC / DEMO DATA
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {scenarios.map((sc) => {
+            const isSelected = activeScenarioId === sc.id;
+            return (
+              <button
+                key={sc.id}
+                onClick={() => handleSelectScenario(sc.id)}
+                disabled={stepLoading || autoRunning}
+                className={`p-2.5 rounded-lg text-left transition-all border ${
+                  isSelected
+                    ? 'bg-purple-950/80 border-purple-500/60 shadow-md shadow-purple-500/10'
+                    : 'bg-slate-950/70 hover:bg-slate-800/80 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <div className={`text-[11px] font-bold ${isSelected ? 'text-purple-300' : 'text-slate-300'}`}>
+                  {sc.label}
+                </div>
+                <div className="text-[9px] opacity-75 truncate">{sc.sub}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 

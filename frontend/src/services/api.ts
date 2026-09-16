@@ -5,7 +5,13 @@ import {
   FieldReport,
   AuditLog,
   OptimizationObjectiveWeights,
-  AllocationItem
+  AllocationItem,
+  WorkforceTeam,
+  DispatchItem,
+  SyntheticScenario,
+  IncidentCreateRequest,
+  IncidentPipelineResult,
+  ExecutiveReports
 } from '../types';
 
 const API_BASE = '/api';
@@ -137,5 +143,68 @@ export async function fetchWeather() {
 export async function resetSystemState() {
   const res = await fetch(`${API_BASE}/reset`, { method: 'POST' });
   if (!res.ok) throw new Error('Failed to reset system state');
+  return res.json();
+}
+
+export async function fetchWorkforce(): Promise<WorkforceTeam[]> {
+  const res = await fetch(`${API_BASE}/workforce`);
+  if (!res.ok) throw new Error('Failed to fetch workforce');
+  return res.json();
+}
+
+export async function updateWorkforceStatus(teamId: string, availability: string, assignment?: string): Promise<WorkforceTeam> {
+  const res = await fetch(`${API_BASE}/workforce/${teamId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ availability, assignment }),
+  });
+  if (!res.ok) throw new Error('Failed to update workforce status');
+  return res.json();
+}
+
+export async function fetchDispatches(): Promise<DispatchItem[]> {
+  const res = await fetch(`${API_BASE}/dispatches`);
+  if (!res.ok) throw new Error('Failed to fetch dispatches');
+  return res.json();
+}
+
+export async function updateDispatchStatus(dispatchId: string, status: string, notes?: string): Promise<DispatchItem> {
+  const res = await fetch(`${API_BASE}/dispatches/${dispatchId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, notes }),
+  });
+  if (!res.ok) throw new Error('Failed to update dispatch status');
+  return res.json();
+}
+
+export async function fetchDemoScenarios(): Promise<SyntheticScenario[]> {
+  const res = await fetch(`${API_BASE}/demo/scenarios`);
+  if (!res.ok) throw new Error('Failed to fetch demo scenarios');
+  return res.json();
+}
+
+export async function loadDemoScenario(scenarioId: string): Promise<{ scenario: SyntheticScenario; run: OptimizationRun; message: string }> {
+  const res = await fetch(`${API_BASE}/demo/scenarios/${scenarioId}/load`, { method: 'POST' });
+  if (!res.ok) throw new Error('Failed to load demo scenario');
+  return res.json();
+}
+
+export async function createIncidentAndRun(data: IncidentCreateRequest): Promise<IncidentPipelineResult> {
+  const res = await fetch(`${API_BASE}/incidents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Incident pipeline execution failed');
+  }
+  return res.json();
+}
+
+export async function fetchExecutiveReports(): Promise<ExecutiveReports> {
+  const res = await fetch(`${API_BASE}/reports/generate`);
+  if (!res.ok) throw new Error('Failed to generate executive reports');
   return res.json();
 }

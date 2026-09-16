@@ -244,3 +244,123 @@ class SimulationScenario(BaseModel):
     demand_multipliers: Dict[str, float] = {}
     warehouse_capacity_multipliers: Dict[str, float] = {}
     disabled_vehicles: List[str] = []
+
+class DispatchStatus(str, Enum):
+    PLANNED = "PLANNED"
+    ASSIGNED = "ASSIGNED"
+    DISPATCHED = "DISPATCHED"
+    IN_TRANSIT = "IN_TRANSIT"
+    ARRIVED = "ARRIVED"
+    DEPLOYED = "DEPLOYED"
+    COMPLETED = "COMPLETED"
+
+class VerificationStatus(str, Enum):
+    VERIFIED = "VERIFIED"
+    PARTIALLY_VERIFIED = "PARTIALLY_VERIFIED"
+    CONFLICTING = "CONFLICTING"
+    UNVERIFIED = "UNVERIFIED"
+
+class WorkforceTeam(BaseModel):
+    id: str
+    name: str
+    role: str
+    skill: str
+    location: str
+    availability: str = "AVAILABLE"  # AVAILABLE, DEPLOYED, UNAVAILABLE, ON_DUTY, OFF_DUTY
+    capacity: int = 10
+    current_assignment: Optional[str] = None
+    contact: Optional[str] = None
+
+class DispatchItem(BaseModel):
+    id: str
+    allocation_id: str
+    resource_type: str
+    quantity: int
+    team_id: Optional[str] = None
+    team_name: Optional[str] = None
+    destination_zone_id: str
+    destination_zone_name: str
+    source_warehouse_id: str
+    source_warehouse_name: str
+    vehicle_type: str
+    eta_min: float
+    status: DispatchStatus = DispatchStatus.PLANNED
+    departure_time: Optional[str] = None
+    completion_time: Optional[str] = None
+    notes: Optional[str] = None
+    timestamp: str
+
+class ExtractedAttribute(BaseModel):
+    value: Any
+    confidence: float
+    source: str
+
+class VerificationResult(BaseModel):
+    status: VerificationStatus
+    confidence: float
+    evidence: List[str]
+    conflicts_detected: List[str] = []
+
+class ImpactAssessment(BaseModel):
+    impact_score: float
+    impact_level: str
+    factors: Dict[str, float]
+    confidence: float
+    reported_vs_estimated: Dict[str, str] = {}
+
+class DemandForecast(BaseModel):
+    resource: str
+    required_quantity: int
+    current_available: int
+    shortage: int
+    forecast_horizon: str = "24h"
+    confidence: float = 0.85
+    is_estimated: bool = True
+
+class ExplainableRecommendation(BaseModel):
+    why_resource: str
+    why_location: str
+    why_quantity: str
+    why_team: str
+    why_priority: str
+    factors_summary: List[str]
+
+class IncidentCreateRequest(BaseModel):
+    disaster_type: str = "Flood"
+    location: str
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    affected_population: int
+    casualties: int = 0
+    missing_people: int = 0
+    injured_people: int = 0
+    infrastructure_damage: str = "Severe"
+    medical_needs: int = 0
+    water_needs: int = 0
+    food_needs: int = 0
+    shelter_needs: int = 0
+    urgency: str = "High"
+    raw_text: Optional[str] = None
+    source: str = "Field Dispatch Form"
+
+class IncidentPipelineResult(BaseModel):
+    incident_id: str
+    incident_number: str
+    disaster_type: str
+    location: str
+    lat: float
+    lon: float
+    severity: str
+    affected_population: int
+    extraction_details: Dict[str, ExtractedAttribute]
+    verification: VerificationResult
+    impact: ImpactAssessment
+    demand_forecasts: List[DemandForecast]
+    priority_score: float
+    priority_level: str
+    priority_reasons: List[str]
+    recommended_allocations: List[AllocationItem]
+    recommendation_explanation: ExplainableRecommendation
+    dispatches: List[DispatchItem]
+    audit_event_id: str
+    timestamp: str

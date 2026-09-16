@@ -1,14 +1,24 @@
 import React from 'react';
-import { Shield, Radio, Activity, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Shield, Radio, Activity, RefreshCw, Moon, Sun, PlusCircle } from 'lucide-react';
 import { SystemState } from '../types';
 
 interface NavbarProps {
   state: SystemState | null;
   onReset: () => void;
   loading: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+  onOpenCreateIncident?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ state, onReset, loading }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  state,
+  onReset,
+  loading,
+  theme,
+  onToggleTheme,
+  onOpenCreateIncident,
+}) => {
   return (
     <header className="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center space-x-4">
@@ -50,6 +60,35 @@ export const Navbar: React.FC<NavbarProps> = ({ state, onReset, loading }) => {
       )}
 
       <div className="flex items-center space-x-3">
+        {onOpenCreateIncident && (
+          <button
+            onClick={onOpenCreateIncident}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-sky-400 hover:bg-sky-300 rounded-lg shadow-sm shadow-sky-400/20 transition cursor-pointer"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Create Incident</span>
+          </button>
+        )}
+
+        {/* Night / Light Mode Toggle Button */}
+        <button
+          onClick={onToggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Night Mode'}
+          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition cursor-pointer bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200"
+        >
+          {theme === 'dark' ? (
+            <>
+              <Moon className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">Night Mode</span>
+            </>
+          ) : (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Light Mode</span>
+            </>
+          )}
+        </button>
+
         <button
           onClick={onReset}
           disabled={loading}

@@ -462,3 +462,215 @@ def get_initial_roads() -> List[Road]:
             speed_multiplier=1.0
         )
     ]
+
+def get_initial_workforce():
+    from ..models.schemas import WorkforceTeam
+    return [
+        WorkforceTeam(
+            id="TEAM-MED-01",
+            name="Surgical Trauma Unit Alpha",
+            role="Medical Team",
+            skill="Emergency Triage & Trauma Surgery",
+            location="WH-CENTRAL",
+            availability="AVAILABLE",
+            capacity=8,
+            current_assignment=None,
+            contact="+91-98640-11201"
+        ),
+        WorkforceTeam(
+            id="TEAM-MED-02",
+            name="Pediatric & Epidemic Response Team",
+            role="Medical Team",
+            skill="ORS Administration, Waterborne Disease Control",
+            location="South Slum Cluster",
+            availability="DEPLOYED",
+            capacity=10,
+            current_assignment="zone_2 (South Slum Clinic)",
+            contact="+91-98640-11202"
+        ),
+        WorkforceTeam(
+            id="TEAM-RES-01",
+            name="NDRF Swift-Water Rescue Team 4",
+            role="Rescue Team",
+            skill="Inflatable Boat Swift Water Extraction",
+            location="Riverbank Colony",
+            availability="DEPLOYED",
+            capacity=14,
+            current_assignment="zone_1 (Embankment Breach)",
+            contact="+91-98640-22101"
+        ),
+        WorkforceTeam(
+            id="TEAM-RES-02",
+            name="Civil Defense Zodiac Boat Unit 2",
+            role="Rescue Team",
+            skill="Submerged Settlement Evacuation",
+            location="WH-CENTRAL",
+            availability="AVAILABLE",
+            capacity=12,
+            current_assignment=None,
+            contact="+91-98640-22102"
+        ),
+        WorkforceTeam(
+            id="TEAM-LOG-01",
+            name="Heavy Freight Convoy Logistics 1",
+            role="Logistics Team",
+            skill="All-Terrain High-Axle Supply Transport",
+            location="WH-CENTRAL",
+            availability="ON_DUTY",
+            capacity=15,
+            current_assignment="Dispatch Convoy #DISP-001",
+            contact="+91-98640-33001"
+        ),
+        WorkforceTeam(
+            id="TEAM-ENG-01",
+            name="Military Engineering Sapper Unit 3",
+            role="Engineers",
+            skill="Culvert Shoring & Bailey Bridge Deployment",
+            location="North Bridge Corridor",
+            availability="ON_DUTY",
+            capacity=16,
+            current_assignment="Road R17 Reinforcement",
+            contact="+91-98640-44001"
+        )
+    ]
+
+def get_initial_dispatches():
+    from ..models.schemas import DispatchItem, DispatchStatus
+    return [
+        DispatchItem(
+            id="DISP-001",
+            allocation_id="ALLOC-001",
+            resource_type="medical_kits",
+            quantity=150,
+            team_id="TEAM-MED-01",
+            team_name="Surgical Trauma Unit Alpha",
+            destination_zone_id="zone_1",
+            destination_zone_name="Riverbank Colony",
+            source_warehouse_id="WH-CENTRAL",
+            source_warehouse_name="Central Logistics Depot",
+            vehicle_type="High-Clearance All-Terrain Ambulance",
+            eta_min=14.2,
+            status=DispatchStatus.IN_TRANSIT,
+            departure_time="2026-09-16T13:45:00Z",
+            notes="Traversing bypass road R1. En route to Riverbank Primary Clinic.",
+            timestamp="2026-09-16T13:45:00Z"
+        ),
+        DispatchItem(
+            id="DISP-002",
+            allocation_id="ALLOC-002",
+            resource_type="water",
+            quantity=8000,
+            team_id="TEAM-LOG-01",
+            team_name="Heavy Freight Convoy Logistics 1",
+            destination_zone_id="zone_2",
+            destination_zone_name="Sector 4 Lowland",
+            source_warehouse_id="WH-SOUTH",
+            source_warehouse_name="South Terminal Warehouse",
+            vehicle_type="Heavy Water Tanker Truck",
+            eta_min=18.5,
+            status=DispatchStatus.ASSIGNED,
+            departure_time="2026-09-16T13:55:00Z",
+            notes="Authorized by Command Center. Loading clean drinking water tanks.",
+            timestamp="2026-09-16T13:50:00Z"
+        ),
+        DispatchItem(
+            id="DISP-003",
+            allocation_id="ALLOC-003",
+            resource_type="shelter_kits",
+            quantity=250,
+            team_id="TEAM-RES-02",
+            team_name="Civil Defense Zodiac Boat Unit 2",
+            destination_zone_id="zone_3",
+            destination_zone_name="West Embankment Ward",
+            source_warehouse_id="WH-EAST",
+            source_warehouse_name="East Emergency Hub",
+            vehicle_type="Flatbed Cargo Transporter",
+            eta_min=22.0,
+            status=DispatchStatus.PLANNED,
+            departure_time=None,
+            notes="Scheduled for immediate loading upon clearance.",
+            timestamp="2026-09-16T14:00:00Z"
+        )
+    ]
+
+def get_synthetic_scenarios():
+    return {
+        "demo_flood": {
+            "id": "demo_flood",
+            "title": "DEMO 1 — FLOOD",
+            "tag": "High Population Impact + Water Shortage",
+            "disaster_type": "Flood",
+            "location": "Brahmaputra Basin Sector",
+            "rainfall_mm": 280.0,
+            "river_level_meters": 15.2,
+            "danger_mark_meters": 12.0,
+            "affected_population": 52000,
+            "description": "Monsoon cloudburst causing catastrophic embankment breaches across low-lying municipal sectors. Contaminated drinking water and stranded settlements.",
+            "synthetic": True
+        },
+        "demo_earthquake": {
+            "id": "demo_earthquake",
+            "title": "DEMO 2 — EARTHQUAKE",
+            "tag": "Infrastructure Damage + Medical Demand",
+            "disaster_type": "Earthquake",
+            "location": "Northern Urban Faultline Corridor",
+            "rainfall_mm": 0.0,
+            "river_level_meters": 8.0,
+            "danger_mark_meters": 12.0,
+            "affected_population": 38000,
+            "description": "6.8 Magnitude shallow earthquake inducing severe multi-story structural collapse, power grid failure, and high acute trauma casualty counts.",
+            "synthetic": True
+        },
+        "demo_cyclone": {
+            "id": "demo_cyclone",
+            "title": "DEMO 3 — CYCLONE",
+            "tag": "Large Geographic Impact + Shelter Requirements",
+            "disaster_type": "Cyclone",
+            "location": "Coastal Estuary Zone",
+            "rainfall_mm": 190.0,
+            "river_level_meters": 13.5,
+            "danger_mark_meters": 12.0,
+            "affected_population": 64000,
+            "description": "Category 4 Severe Cyclonic Storm landfall with 145km/h wind gusts, storm surges, roof loss, and extensive temporary shelter demand.",
+            "synthetic": True
+        },
+        "demo_shortage": {
+            "id": "demo_shortage",
+            "title": "DEMO 4 — RESOURCE SHORTAGE",
+            "tag": "Multi-Incident Supply Scarcity",
+            "disaster_type": "Compound Disaster",
+            "location": "Metropolitan Disaster Complex",
+            "rainfall_mm": 210.0,
+            "river_level_meters": 14.1,
+            "danger_mark_meters": 12.0,
+            "affected_population": 75000,
+            "description": "Depleted regional medical and clean water reserves. Demonstrates mathematical equity and priority weighting when total demand exceeds available stock.",
+            "synthetic": True
+        },
+        "demo_conflicting": {
+            "id": "demo_conflicting",
+            "title": "DEMO 5 — CONFLICTING REPORTS",
+            "tag": "Divergent Casualty & Flood Telemetry",
+            "disaster_type": "Flash Flood",
+            "location": "South Industrial Sub-basin",
+            "rainfall_mm": 220.0,
+            "river_level_meters": 13.9,
+            "danger_mark_meters": 12.0,
+            "affected_population": 29000,
+            "description": "Social media feeds report 400 deaths, while drone reconnaissance detects zero structural collapses. Verification Engine tags CONFLICTING and extracts bounded ground truth.",
+            "synthetic": True
+        },
+        "demo_dynamic": {
+            "id": "demo_dynamic",
+            "title": "DEMO 6 — DYNAMIC UPDATE",
+            "tag": "Live Road Breach & Dynamic Re-Optimization",
+            "disaster_type": "River Overflow",
+            "location": "North Island Causeway Ward",
+            "rainfall_mm": 260.0,
+            "river_level_meters": 14.9,
+            "danger_mark_meters": 12.0,
+            "affected_population": 46000,
+            "description": "Sudden culvert washout cuts primary bridge corridor ROAD-R17. Engine dynamically reroutes active convoys to secondary depot with zero interruption.",
+            "synthetic": True
+        }
+    }
