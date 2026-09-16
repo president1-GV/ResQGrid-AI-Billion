@@ -261,6 +261,4 @@ Navigate to **Killer Demo Flow** in the sidebar:
 
 ---
 
-## 11. License
 
-Licensed under the [MIT License](LICENSE). Built for the Smart India Hackathon (SIH).
