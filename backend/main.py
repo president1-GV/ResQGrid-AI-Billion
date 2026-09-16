@@ -59,14 +59,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Enterprise Security Headers Middleware
+# Enterprise Zero-Trust Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; frame-ancestors 'none';"
+    response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 # Startup: Calculate initial priorities and run initial optimization
@@ -116,9 +119,28 @@ def get_health():
 
 @app.post("/api/auth/login", response_model=LoginResponse)
 def login(request: LoginRequest):
-    """Authenticates emergency response officer and generates signed HMAC-SHA256 token."""
+    """Authenticates emergency response officer with sliding-window rate limiting and signed HMAC-SHA256 token."""
+    rate_key = f"login:{request.email.lower().strip()}"
+    if not AuthService.check_rate_limit(rate_key, max_requests=10, window_seconds=60):
+        state.add_audit_log(
+            action="RATE_LIMIT_EXCEEDED",
+            entity_type="AUTH_SESSION",
+            entity_id=request.email,
+            details=f"Rate limit exceeded on login attempts for {request.email}."
+        )
+        raise HTTPException(
+            status_code=429,
+            detail="Too many authentication attempts. Please wait 60 seconds before retrying."
+        )
+
     user = AuthService.authenticate_user(request.email, request.password)
     if not user:
+        state.add_audit_log(
+            action="LOGIN_FAILED",
+            entity_type="AUTH_SESSION",
+            entity_id=request.email,
+            details=f"Failed authentication attempt for {request.email}."
+        )
         raise HTTPException(
             status_code=401,
             detail="Invalid officer credentials. Check official email and password."
@@ -184,15 +206,19 @@ def list_available_officers():
 
 
 @app.post("/api/auth/logout")
-def logout(current_user: User = Depends(get_current_user)):
-    """Terminates session and records audit event."""
+def logout(authorization: Optional[str] = Header(None), current_user: User = Depends(get_current_user)):
+    """Terminates session, revokes token in revocation store, and records audit event."""
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        AuthService.revoke_token(token)
+
     state.add_audit_log(
         action="OFFICER_LOGOUT",
         entity_type="AUTH_SESSION",
         entity_id=current_user.user_id,
-        details=f"Officer {current_user.full_name} ({current_user.role.value}) logged out."
+        details=f"Officer {current_user.full_name} ({current_user.role.value}) logged out. Session invalidated."
     )
-    return {"status": "LOGGED_OUT", "message": "Session terminated successfully."}
+    return {"status": "LOGGED_OUT", "message": "Session terminated and token revoked successfully."}
 
 @app.get("/api/state")
 def get_full_state():
@@ -684,8 +710,29 @@ class FieldReportCreateRequest(BaseModel):
 
 @app.post("/api/field-reports")
 def submit_field_report(req: FieldReportCreateRequest):
-    # Run NLP extraction pipeline
-    extracted = nlp_extractor.extract(req.raw_text, req.location_name)
+    # 1. Geospatial coordinate validation
+    if req.lat is not None and req.lon is not None:
+        if not AuthService.validate_coordinates(req.lat, req.lon):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid geospatial coordinates: latitude ({req.lat}) or longitude ({req.lon}) out of bounds or invalid."
+            )
+
+    # 2. Prompt injection defense
+    sanitized_text, injection_detected = AuthService.sanitize_ai_input(req.raw_text)
+    if injection_detected:
+        state.add_audit_log(
+            action="PROMPT_INJECTION_DETECTED",
+            entity_type="FIELD_REPORT",
+            entity_id="SUBMISSION",
+            details=f"Adversarial prompt injection pattern detected and sanitized from {req.location_name}."
+        )
+
+    # 3. PII Redaction
+    clean_text = AuthService.redact_pii(sanitized_text)
+
+    # Run NLP extraction pipeline on sanitized, redacted text
+    extracted = nlp_extractor.extract(clean_text, req.location_name)
 
     report_id = f"REP-{len(state.field_reports) + 1:03d}"
     from .utils.time_utils import get_utc_now_iso
@@ -698,7 +745,7 @@ def submit_field_report(req: FieldReportCreateRequest):
         location_name=req.location_name,
         lat=req.lat or 26.18,
         lon=req.lon or 91.75,
-        raw_text=AuthService.redact_pii(req.raw_text),
+        raw_text=clean_text,
         extracted_population=extracted["extracted_population"],
         extracted_needs=extracted["extracted_needs"],
         urgency=extracted["urgency"],

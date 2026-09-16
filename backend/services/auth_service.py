@@ -1,7 +1,8 @@
 """
-ResQGrid AI Billion - Security & Authentication Engine
+ResQGrid AI Billion - Enterprise Zero-Trust Security & Authentication Engine
 HMAC-SHA256 Signed Tokens, Salted PBKDF2 Password Hashing,
-Role-Based Access Control (RBAC), and PII Redaction.
+Role-Based Access Control (RBAC), Sliding-Window Rate Limiting,
+Token Revocation / Invalidation, Prompt Injection Defense, and PII Redaction.
 """
 
 import os
@@ -11,6 +12,7 @@ import base64
 import json
 import secrets
 import datetime
+import time
 import re
 from typing import Dict, Any, Optional, List, Tuple
 from fastapi import Header, HTTPException, status, Depends
@@ -19,10 +21,30 @@ from pydantic import BaseModel
 
 
 class UserRole(str, Enum):
+    # Operational emergency roles
     INCIDENT_COMMANDER = "INCIDENT_COMMANDER"
     LOGISTICS_CHIEF = "LOGISTICS_CHIEF"
     FIELD_RESPONDER = "FIELD_RESPONDER"
     GOVERNANCE_AUDITOR = "GOVERNANCE_AUDITOR"
+
+    # Standard enterprise aliases
+    ADMIN = "ADMIN"
+    SUPERVISOR = "SUPERVISOR"
+    OFFICER = "OFFICER"
+    ANALYST = "ANALYST"
+
+
+# Role mapping for interoperability
+ROLE_EQUIVALENCE = {
+    UserRole.ADMIN: UserRole.INCIDENT_COMMANDER,
+    UserRole.INCIDENT_COMMANDER: UserRole.INCIDENT_COMMANDER,
+    UserRole.SUPERVISOR: UserRole.LOGISTICS_CHIEF,
+    UserRole.LOGISTICS_CHIEF: UserRole.LOGISTICS_CHIEF,
+    UserRole.OFFICER: UserRole.FIELD_RESPONDER,
+    UserRole.FIELD_RESPONDER: UserRole.FIELD_RESPONDER,
+    UserRole.ANALYST: UserRole.GOVERNANCE_AUDITOR,
+    UserRole.GOVERNANCE_AUDITOR: UserRole.GOVERNANCE_AUDITOR,
+}
 
 
 class User(BaseModel):
@@ -49,13 +71,19 @@ class LoginResponse(BaseModel):
 
 
 class AuthService:
-    """Manages cryptographic token issuing, password hashing, and user authentication."""
+    """Enterprise Zero-Trust Authentication, Authorization, and Defense Engine."""
 
     SECRET_KEY = os.getenv("RESQGRID_SECRET_KEY", "resqgrid-ai-billion-cryptographic-signing-key-2026-prod")
     ITERATIONS = 100000
 
     # In-memory secure user store with salted hashes
     _users_db: Dict[str, Dict[str, Any]] = {}
+
+    # In-memory revoked token signature set (for instant session invalidation)
+    _revoked_tokens: set = set()
+
+    # Sliding-window rate-limiting store: key -> list of timestamps
+    _rate_limits: Dict[str, List[float]] = {}
 
     @classmethod
     def _hash_password(cls, password: str, salt: Optional[str] = None) -> Tuple[str, str]:
@@ -85,7 +113,7 @@ class AuthService:
                 "role": UserRole.INCIDENT_COMMANDER,
                 "badge_number": "IC-01",
                 "password": "Commander#2026",
-                "permissions": ["all", "approve_allocation", "override_allocation", "retrain_model", "ingest_data", "simulate_events"]
+                "permissions": ["all", "approve_allocation", "override_allocation", "retrain_model", "ingest_data", "simulate_events", "manage_security"]
             },
             {
                 "user_id": "USR-LOG-04",
@@ -184,6 +212,10 @@ class AuthService:
                 return None
             payload_b64, signature = parts
 
+            # Check if token is explicitly revoked
+            if signature in cls._revoked_tokens or token in cls._revoked_tokens:
+                return None
+
             # Verify signature
             expected_sig = hmac.new(
                 cls.SECRET_KEY.encode("utf-8"),
@@ -195,7 +227,6 @@ class AuthService:
                 return None
 
             # Decode payload
-            # Add padding back if necessary
             pad = len(payload_b64) % 4
             if pad > 0:
                 payload_b64 += "=" * (4 - pad)
@@ -209,6 +240,74 @@ class AuthService:
             return payload
         except Exception:
             return None
+
+    @classmethod
+    def revoke_token(cls, token: str) -> bool:
+        """Adds token signature to revocation blacklist."""
+        try:
+            parts = token.split(".")
+            if len(parts) == 2:
+                cls._revoked_tokens.add(parts[1])
+            cls._revoked_tokens.add(token)
+            return True
+        except Exception:
+            return False
+
+    @classmethod
+    def check_rate_limit(cls, key: str, max_requests: int = 5, window_seconds: int = 60) -> bool:
+        """Sliding-window rate limiter. Returns True if allowed, False if exceeded."""
+        now = time.time()
+        timestamps = cls._rate_limits.setdefault(key, [])
+        # Prune older than window
+        cls._rate_limits[key] = [t for t in timestamps if now - t < window_seconds]
+        if len(cls._rate_limits[key]) >= max_requests:
+            return False
+        cls._rate_limits[key].append(now)
+        return True
+
+    @classmethod
+    def sanitize_ai_input(cls, text: str) -> Tuple[str, bool]:
+        """Detects prompt injection attacks and neutralizes dangerous instructions.
+        Returns: (sanitized_text, is_injection_detected)
+        """
+        if not text:
+            return "", False
+
+        injection_patterns = [
+            r"ignore\s+(?:all\s+)?(?:previous|prior)\s+instructions",
+            r"system\s+prompt",
+            r"developer\s+mode",
+            r"override\s+(?:security|system|rules)",
+            r"jailbreak",
+            r"delete\s+from\s+\w+",
+            r"drop\s+table",
+            r"bypass\s+authorization",
+            r"you\s+are\s+now\s+in\s+\w+\s+mode"
+        ]
+
+        detected = False
+        sanitized = text
+        for pat in injection_patterns:
+            if re.search(pat, sanitized, re.IGNORECASE):
+                detected = True
+                sanitized = re.sub(pat, "[FILTERED_ADVERSARIAL_INPUT]", sanitized, flags=re.IGNORECASE)
+
+        return sanitized, detected
+
+    @classmethod
+    def validate_coordinates(cls, lat: Any, lon: Any) -> bool:
+        """Validates latitude and longitude; rejects NaN, Inf, and out-of-range bounds."""
+        try:
+            if lat is None or lon is None:
+                return False
+            lat_f = float(lat)
+            lon_f = float(lon)
+            import math
+            if math.isnan(lat_f) or math.isnan(lon_f) or math.isinf(lat_f) or math.isinf(lon_f):
+                return False
+            return (-90.0 <= lat_f <= 90.0) and (-180.0 <= lon_f <= 180.0)
+        except (ValueError, TypeError):
+            return False
 
     @classmethod
     def get_user_by_id(cls, user_id: str) -> Optional[User]:
@@ -276,9 +375,12 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> User:
 
 
 def require_role(allowed_roles: List[UserRole]):
-    """Role-based access guard dependency."""
+    """Role-based access guard dependency supporting both operational and enterprise role aliases."""
+    normalized_allowed = {ROLE_EQUIVALENCE.get(r, r) for r in allowed_roles}
+
     def role_checker(current_user: User = Depends(get_current_user)):
-        if current_user.role not in allowed_roles and current_user.role != UserRole.INCIDENT_COMMANDER:
+        user_norm_role = ROLE_EQUIVALENCE.get(current_user.role, current_user.role)
+        if user_norm_role not in normalized_allowed and user_norm_role != UserRole.INCIDENT_COMMANDER:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Access forbidden: Role '{current_user.role.value}' does not have required permissions."
