@@ -108,6 +108,13 @@ class Road(BaseModel):
     flood_depth_cm: float = 0.0
     speed_multiplier: float = 1.0  # slows down if waterlogged
 
+class UserRole(str, Enum):
+    ADMIN = "ADMIN"
+    DISTRICT_OFFICER = "DISTRICT_OFFICER"
+    OPERATIONS_OFFICER = "OPERATIONS_OFFICER"
+    FIELD_RESPONDER = "FIELD_RESPONDER"
+    VIEWER = "VIEWER"
+
 class DemandEstimate(BaseModel):
     id: str
     zone_id: str
@@ -118,6 +125,11 @@ class DemandEstimate(BaseModel):
     source: str
     timestamp: str
     model_version: str
+    lower_bound: Optional[int] = None
+    upper_bound: Optional[int] = None
+    uncertainty_range: Optional[str] = None
+    data_freshness_min: Optional[float] = None
+    source_reliability: Optional[float] = None
 
 class PriorityScore(BaseModel):
     zone_id: str

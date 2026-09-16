@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { SystemState, OptimizationObjectiveWeights } from '../types';
 import { NavTab } from '../components/Sidebar';
-import { loadDemoScenario } from '../services/api';
+import { loadDemoScenario, runHardEvaluatorTest } from '../services/api';
 
 interface DemoModeViewProps {
   state: SystemState;
@@ -38,6 +38,7 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
   const [stepLoading, setStepLoading] = useState(false);
   const [autoRunning, setAutoRunning] = useState(false);
   const [activeScenarioId, setActiveScenarioId] = useState<string>('demo_flood');
+  const [hardEvalResult, setHardEvalResult] = useState<any>(null);
   const [demoLog, setDemoLog] = useState<string[]>([
     'Step 1 Active: Catastrophic monsoon flood initiated in Brahmaputra Basin (245mm/24h).',
     '[SYNTHETIC / DEMO DATA] High population impact & acute water shortage.',
@@ -52,13 +53,35 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
     { id: 'demo_shortage', label: 'DEMO 4 — RESOURCE SHORTAGE', sub: 'Multi-Zone Supply Scarcity' },
     { id: 'demo_conflicting', label: 'DEMO 5 — CONFLICTING REPORTS', sub: 'Telemetry Discrepancy Resolution' },
     { id: 'demo_dynamic', label: 'DEMO 6 — DYNAMIC UPDATE', sub: 'Road Breach & Real-Time Reroute' },
+    { id: 'demo_hard_eval', label: 'HARD-EVALUATOR TEST', sub: 'Zone C +40%, WH-A -20%, Road R17 CLOSED' },
   ];
 
   const handleSelectScenario = async (scId: string) => {
     setActiveScenarioId(scId);
     setStepLoading(true);
+    if (scId === 'demo_hard_eval') {
+      try {
+        const res = await runHardEvaluatorTest();
+        setHardEvalResult(res);
+        setDemoLog([
+          '⚡ HARD-EVALUATOR TEST: Compound Multi-Variable Disruption Ingested.',
+          '[TRIGGER] Zone C (North Bridge Enclave) demand +40%, WH-A water -20%, Road R17 (Causeway) CLOSED.',
+          `[MIP SOLVER] Avoided blocked ROAD-R17, rerouted ${res.delta?.rerouted_allocations?.length || 0} legs via East Strategic Depot.`,
+          `[DELTA RESULT] Response time shifted by ${res.delta?.response_time_diff > 0 ? '+' : ''}${res.delta?.response_time_diff} min.`,
+          `[EXPLANATION] ${res.explanation?.why_changed}`,
+        ]);
+        setCurrentStep(5);
+      } catch (e: any) {
+        console.error(e);
+      } finally {
+        setStepLoading(false);
+      }
+      return;
+    }
+
     try {
       const res = await loadDemoScenario(scId);
+      setHardEvalResult(null);
       setDemoLog([
         `Loaded Scenario: ${res.scenario.title} (${res.scenario.tag})`,
         `[SYNTHETIC / DEMO DATA] ${res.scenario.description}`,

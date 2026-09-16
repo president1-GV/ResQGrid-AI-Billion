@@ -37,8 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 TACTICAL AI OPTIMIZER
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Explainable Dynamic Disaster Resource Allocation Platform
+            <p className="text-[11px] text-slate-400 hidden sm:block font-medium">
+              INTELLIGENCE FOR EVERY RESPONSE.
             </p>
           </div>
         </div>

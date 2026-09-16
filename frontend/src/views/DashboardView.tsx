@@ -66,6 +66,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold">
                 DETECT &bull; VERIFY &bull; PRIORITIZE &bull; OPTIMIZE &bull; RESPOND
               </span>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-300 font-semibold">
+                INTELLIGENCE FOR EVERY RESPONSE.
+              </span>
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight">
               {state.event.location} Emergency Command Center

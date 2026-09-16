@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Award, ArrowRight, CheckCircle2, TrendingUp, TrendingDown, Clock, ShieldCheck, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Award, ArrowRight, CheckCircle2, TrendingUp, TrendingDown, Clock, ShieldCheck, Zap, Activity, Cpu, Server } from 'lucide-react';
 import { BenchmarkComparison, OptimizationRun } from '../types';
+import { fetchModelsMonitoring } from '../services/api';
 
 interface BenchmarkViewProps {
   onRunBenchmark: () => Promise<{ resqgrid_run: OptimizationRun; comparisons: BenchmarkComparison[] }>;
@@ -9,6 +10,15 @@ interface BenchmarkViewProps {
 export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ resqgrid_run: OptimizationRun; comparisons: BenchmarkComparison[] } | null>(null);
+  const [models, setModels] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchModelsMonitoring()
+      .then((res) => {
+        if (res && res.models) setModels(res.models);
+      })
+      .catch((err) => console.error('Error fetching models:', err));
+  }, []);
 
   const handleBenchmark = async () => {
     setLoading(true);
@@ -28,7 +38,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
           <div className="flex items-center space-x-2">
             <span className="text-xs font-mono text-amber-400 font-bold uppercase">Empirical Proof</span>
             <span className="text-xs px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-semibold">
-              MATHEMATICAL BENCHMARK ENGINE
+              MATHEMATICAL BENCHMARK & EVALUATION
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white mt-1">
@@ -98,24 +108,24 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
           {/* Full Benchmark Table */}
           <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              Comprehensive Metrics Verification Matrix
+              Auditable Objective Metrics Comparison
             </h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-mono text-[11px]">
-                    <th className="py-2.5 px-3">EVALUATION METRIC</th>
-                    <th className="py-2.5 px-3">BASELINE (GREEDY)</th>
-                    <th className="py-2.5 px-3">RESQGRID (OR-TOOLS)</th>
-                    <th className="py-2.5 px-3">MEASURED IMPROVEMENT</th>
-                    <th className="py-2.5 px-3">OPERATIONAL EXPLANATION</th>
+                  <tr className="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                    <th className="py-2.5 px-3">Objective Metric</th>
+                    <th className="py-2.5 px-3">Greedy Baseline</th>
+                    <th className="py-2.5 px-3">ResQGrid OR-Tools</th>
+                    <th className="py-2.5 px-3">Improvement</th>
+                    <th className="py-2.5 px-3">Optimization Mechanism</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {data.comparisons.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-slate-950/40 transition">
-                      <td className="py-3 px-3 font-semibold text-slate-200">
+                    <tr key={idx} className="hover:bg-slate-800/30 transition">
+                      <td className="py-3 px-3 font-semibold text-white">
                         {c.metric}
                       </td>
                       <td className="py-3 px-3 font-mono text-slate-400">
@@ -148,6 +158,44 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
           </p>
         </div>
       )}
+
+      {/* Model Monitoring & Evaluation Panel */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <Cpu className="w-5 h-5 text-sky-400" />
+            <div>
+              <h3 className="text-base font-bold text-white">AI / Mathematical Engine Monitoring</h3>
+              <p className="text-xs text-slate-400">Live health, solver status, latency, and verification metadata across all engines.</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded bg-slate-800 text-[11px] font-mono text-slate-300 border border-slate-700">
+            5 ENGINES ONLINE
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+          {models.map((m) => (
+            <div key={m.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white">{m.name}</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+                  {m.status}
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-400 space-y-1">
+                <div>Version: <span className="text-slate-200 font-mono">{m.version}</span></div>
+                <div>Latency: <span className="text-sky-400 font-mono">{m.latency_ms} ms</span></div>
+                {m.solver_status && <div>Solver Status: <span className="text-emerald-400 font-mono font-bold">{m.solver_status}</span></div>}
+                {m.confidence && <div>Confidence: <span className="text-emerald-400 font-mono font-bold">{Math.round(m.confidence * 100)}%</span></div>}
+                {m.f1_score && <div>F1 Score: <span className="text-slate-500 font-mono">{m.f1_score}</span></div>}
+                {m.precision && <div>Precision: <span className="text-slate-500 font-mono">{m.precision}</span></div>}
+                {m.benchmark_lift && <div className="text-amber-300 font-mono font-semibold">{m.benchmark_lift}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

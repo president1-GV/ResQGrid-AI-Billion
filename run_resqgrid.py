@@ -5,8 +5,8 @@ import os
 
 def run():
     print("=" * 60)
-    print("  RESQGRID AI - INTELLIGENT DISASTER RESOURCE ALLOCATION")
-    print("  OPTIMIZE RELIEF. SAVE TIME. REACH FASTER.")
+    print("  RESQGRID AI - INTELLIGENCE FOR EVERY RESPONSE.")
+    print("  DETECT. VERIFY. PRIORITIZE. OPTIMIZE. RESPOND.")
     print("=" * 60)
 
     # 1. Verify dependencies
@@ -24,7 +24,7 @@ def run():
     # 2. Launch Backend
     print("\n[2/3] Starting FastAPI Backend on http://127.0.0.1:8000 ...")
     backend_proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "backend.main:app", "--host", "127.0.0.1", "--port", "8000"],
+        [sys.executable, "-m", "uvicorn", "backend.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload"],
         cwd=os.getcwd()
     )
 

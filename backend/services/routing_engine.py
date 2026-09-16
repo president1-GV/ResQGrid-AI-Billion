@@ -105,6 +105,7 @@ class RoutingEngine:
             road_dist = round(straight_dist * 1.35, 2)
             est_time = round((road_dist / 32.0) * 60.0, 1)
             return {
+                "found": False,
                 "route_nodes": [start_id, "detour_bypass", end_id],
                 "distance_km": road_dist,
                 "travel_time_min": est_time,
@@ -113,6 +114,7 @@ class RoutingEngine:
             }
 
         return {
+            "found": True,
             "route_nodes": route_res["nodes"],
             "distance_km": route_res["distance_km"],
             "travel_time_min": route_res["travel_time_min"],
@@ -121,3 +123,134 @@ class RoutingEngine:
         }
 
 routing_engine = RoutingEngine()
+
+class OfflineDemoRoutingService:
+    """
+    Clearly labeled DEMO / MOCK Routing Engine.
+    Uses Dijkstra shortest path graph over regional road segments
+    and Haversine geodesic metrics for realistic transit times.
+    """
+    def __init__(self):
+        self.service_type = "DEMO / OFFLINE MOCK"
+        self._cache = {}
+
+    def calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        return haversine_distance_km(lat1, lon1, lat2, lon2)
+
+    def calculate_travel_time(self, distance_km: float, speed_kmh: float = 35.0) -> float:
+        return round((distance_km / max(5.0, speed_kmh)) * 60.0, 1)
+
+    def calculate_route(self, start_id: str, start_lat: float, start_lon: float,
+                        end_id: str, end_lat: float, end_lon: float,
+                        roads: Optional[List[Road]] = None) -> Dict[str, Any]:
+        cache_key = f"{start_id}_{end_id}"
+        if roads:
+            # Hash blocked roads
+            blocked = tuple(sorted(r.id for r in roads if r.status == RoadStatus.BLOCKED))
+            cache_key += f"_{blocked}"
+
+        if cache_key in self._cache:
+            cached_res = dict(self._cache[cache_key])
+            cached_res["cached"] = True
+            return cached_res
+
+        if roads:
+            res = routing_engine.compute_route_for_pair(
+                start_id, start_lat, start_lon, end_id, end_lat, end_lon, roads
+            )
+        else:
+            dist = self.calculate_distance(start_lat, start_lon, end_lat, end_lon)
+            res = {
+                "found": True,
+                "route_nodes": [start_id, end_id],
+                "distance_km": dist,
+                "travel_time_min": self.calculate_travel_time(dist),
+                "status": "Direct Geodesic Estimate",
+                "is_detour": False
+            }
+
+        res["service_provider"] = "OfflineDemoRoutingService [DEMO / OFFLINE MOCK]"
+        res["cached"] = False
+        self._cache[cache_key] = dict(res)
+        return res
+
+    def build_travel_time_matrix(self, origins: List[Dict[str, Any]], destinations: List[Dict[str, Any]],
+                                 roads: Optional[List[Road]] = None) -> Dict[str, Any]:
+        matrix = {}
+        for o in origins:
+            matrix[o["id"]] = {}
+            for d in destinations:
+                r = self.calculate_route(
+                    o["id"], o["lat"], o["lon"],
+                    d["id"], d["lat"], d["lon"],
+                    roads
+                )
+                matrix[o["id"]][d["id"]] = {
+                    "distance_km": r["distance_km"],
+                    "travel_time_min": r["travel_time_min"],
+                    "is_detour": r.get("is_detour", False)
+                }
+        return {
+            "origins": [o["id"] for o in origins],
+            "destinations": [d["id"] for d in destinations],
+            "matrix": matrix,
+            "provider": self.service_type
+        }
+
+offline_demo_routing_service = OfflineDemoRoutingService()
+
+class RoutingService:
+    """
+    Configurable Routing Service with automatic fallback.
+    Connects to live Open Source Routing Machine (OSRM) server when configured,
+    or smoothly falls back to OfflineDemoRoutingService.
+    """
+    def __init__(self, osrm_url: Optional[str] = None):
+        import os
+        self.osrm_url = osrm_url or os.getenv("OSRM_URL", "")
+        self.offline_fallback = offline_demo_routing_service
+
+    def calculate_route(self, start_id: str, start_lat: float, start_lon: float,
+                        end_id: str, end_lat: float, end_lon: float,
+                        roads: Optional[List[Road]] = None) -> Dict[str, Any]:
+        if self.osrm_url:
+            try:
+                import urllib.request, json
+                url = f"{self.osrm_url.rstrip('/')}/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}?overview=false"
+                req = urllib.request.Request(url, headers={"User-Agent": "ResQGrid-OSRM-Client/1.0"})
+                with urllib.request.urlopen(req, timeout=1.5) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode('utf-8'))
+                        if data.get("routes"):
+                            route = data["routes"][0]
+                            dist_km = round(route["distance"] / 1000.0, 2)
+                            time_min = round(route["duration"] / 60.0, 1)
+                            return {
+                                "found": True,
+                                "route_nodes": [start_id, "osrm_waypoint", end_id],
+                                "distance_km": dist_km,
+                                "travel_time_min": time_min,
+                                "status": "Live OSRM Routing",
+                                "service_provider": "OSRM (OpenStreetMap)",
+                                "is_detour": False
+                            }
+            except Exception:
+                pass  # Fallback to offline demo routing
+
+        # Fallback to offline demo router
+        return self.offline_fallback.calculate_route(
+            start_id, start_lat, start_lon, end_id, end_lat, end_lon, roads
+        )
+
+    def calculate_travel_time(self, distance_km: float, speed_kmh: float = 35.0) -> float:
+        return self.offline_fallback.calculate_travel_time(distance_km, speed_kmh)
+
+    def calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        return self.offline_fallback.calculate_distance(lat1, lon1, lat2, lon2)
+
+    def build_travel_time_matrix(self, origins: List[Dict[str, Any]], destinations: List[Dict[str, Any]],
+                                 roads: Optional[List[Road]] = None) -> Dict[str, Any]:
+        return self.offline_fallback.build_travel_time_matrix(origins, destinations, roads)
+
+routing_service = RoutingService()
+

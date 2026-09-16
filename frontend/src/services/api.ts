@@ -208,3 +208,44 @@ export async function fetchExecutiveReports(): Promise<ExecutiveReports> {
   if (!res.ok) throw new Error('Failed to generate executive reports');
   return res.json();
 }
+
+export async function runHardEvaluatorTest(): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulation/hard-evaluator-test`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Hard evaluator test execution failed');
+  }
+  return res.json();
+}
+
+export async function fetchModelsMonitoring(): Promise<any> {
+  const res = await fetch(`${API_BASE}/admin/models`);
+  if (!res.ok) throw new Error('Failed to fetch models monitoring');
+  return res.json();
+}
+
+export async function fetchSystemStatus(): Promise<any> {
+  const res = await fetch(`${API_BASE}/system/status`);
+  if (!res.ok) throw new Error('Failed to fetch system status');
+  return res.json();
+}
+
+export async function fetchGisLayers(): Promise<any> {
+  const res = await fetch(`${API_BASE}/gis/layers`);
+  if (!res.ok) throw new Error('Failed to fetch GIS layers');
+  return res.json();
+}
+
+export async function approveAllAllocations(officerName: string = 'Chief Operations Officer', role: string = 'OPERATIONS_OFFICER'): Promise<any> {
+  const res = await fetch(`${API_BASE}/allocations/approve-all`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ officer_name: officerName, role }),
+  });
+  if (!res.ok) throw new Error('Failed to bulk approve allocations');
+  return res.json();
+}
+

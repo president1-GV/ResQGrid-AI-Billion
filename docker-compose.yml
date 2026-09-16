@@ -1,0 +1,62 @@
+﻿version: '3.8'
+
+services:
+  # --- ResQGrid Backend & Combined Static Server ---
+  resqgrid-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resqgrid-core
+    ports:
+      - 8000:8000
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_URL=redis://resqgrid-redis:6379/0
+      - DATABASE_URL=postgresql://resqgrid_user:resqgrid_pass@resqgrid-db:5432/resqgrid_db
+      - OSRM_URL=
+    depends_on:
+      - resqgrid-redis
+      - resqgrid-db
+    restart: unless-stopped
+
+  # --- Frontend Dev Server (Optional Standalone) ---
+  resqgrid-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: resqgrid-ui
+    ports:
+      - 5173:5173
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - resqgrid-backend
+    restart: unless-stopped
+
+  # --- Redis Cache & Streams ---
+  resqgrid-redis:
+    image: redis:7-alpine
+    container_name: resqgrid-redis
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  # --- PostgreSQL + PostGIS ---
+  resqgrid-db:
+    image: postgis/postgis:15-3.4-alpine
+    container_name: resqgrid-db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=resqgrid_user
+      - POSTGRES_PASSWORD=resqgrid_pass
+      - POSTGRES_DB=resqgrid_db
+    restart: unless-stopped
+    volumes:
+      - postgis-data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  postgis-data:

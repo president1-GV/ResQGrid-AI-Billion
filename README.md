@@ -1,15 +1,16 @@
-# RESQGRID AI — Dynamic Disaster Resource Allocation & Re-Optimization Platform
+# RESQGRID AI BILLION
 
-> **OPTIMIZE RELIEF. SAVE TIME. REACH FASTER.**  
-> *From Disaster Signals to Explainable Decisions.*
+> **INTELLIGENCE FOR EVERY RESPONSE.**  
+> *DETECT. VERIFY. PRIORITIZE. OPTIMIZE. RESPOND.*
 
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Google OR-Tools](https://img.shields.io/badge/Optimization-Google%20OR--Tools%20(MIP)-4285F4?logo=google&logoColor=white)](https://developers.google.com/optimization)
 [![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20TypeScript-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Build-Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![OpenStreetMap](https://img.shields.io/badge/GIS-Leaflet%20%2B%20CartoDB-7EBC6F?logo=openstreetmap&logoColor=white)](https://www.openstreetmap.org)
-[![Tests](https://img.shields.io/badge/Test%20Suite-Passing%20(100%25)-brightgreen)](#testing)
+[![GIS Engine](https://img.shields.io/badge/GIS-PostGIS%20%2B%20Leaflet-7EBC6F?logo=openstreetmap&logoColor=white)](https://www.openstreetmap.org)
+[![Tests](https://img.shields.io/badge/Test%20Suite-12%20Passing%20(100%25)-brightgreen)](#testing)
 
 ---
 
@@ -33,31 +34,84 @@ During major disasters (floods, earthquakes, cyclones), disaster management auth
 
 ---
 
-## 2. Core End-to-End System Workflow
+## 2. Master System Architecture
 
+```mermaid
+graph TD
+  subgraph Ingestion ["1. Multimodal Data Ingestion"]
+    W["Weather Telemetry (Open-Meteo)"]
+    G["GIS / OSM / Inundation Polygons"]
+    F["Semi-Structured Field Reports"]
+  end
+
+  subgraph Validation ["2. Validation & Storage"]
+    V["Verification Engine & Normalization"]
+    DB[("PostgreSQL + PostGIS Layer")]
+  end
+
+  subgraph Engines ["3. Core Analytics Engines"]
+    D["Demand & Uncertainty Engine"]
+    R["GIS Spatial & Dijkstra / OSRM Router"]
+    P["Multi-Factor Priority Scoring (0-100)"]
+  end
+
+  subgraph Solver ["4. Mathematical Optimization"]
+    MIP["Google OR-Tools MIP / SCIP Solver"]
+    CON["Hard Physical Constraints & Equity Bounds"]
+  end
+
+  subgraph Governance ["5. Human-in-the-Loop Decision Support"]
+    EXP["Explainability Rationale & Metrics Diff"]
+    APP["Role-Based Approval (Approve / Modify / Reject)"]
+    AUD["Immutable Cryptographic Audit Trail"]
+  end
+
+  subgraph Execution ["6. Tactical Operations & Loop Closure"]
+    DISP["Fleet & Workforce Dispatch Management"]
+    DYN["Live Disruption Detector"]
+    REOPT["Dynamic Re-Optimization Engine"]
+    UI["Tactical Command Center Dashboard"]
+  end
+
+  W --> V
+  G --> V
+  F --> V
+  V --> DB
+  DB --> D
+  DB --> R
+  DB --> P
+  D --> MIP
+  R --> MIP
+  P --> MIP
+  CON --> MIP
+  MIP --> EXP
+  EXP --> APP
+  APP --> AUD
+  APP --> DISP
+  DISP --> UI
+  DYN --> REOPT
+  REOPT --> MIP
 ```
-REAL / PUBLIC DISASTER SIGNALS (IMD, Open-Meteo, Field Dispatches)
-                              ↓
-              DATA FUSION & TELEMETRY ADAPTERS
-                              ↓
-         DEMAND ESTIMATION (Sphere Standards Formulaic Engine)
-                              ↓
-     EXPLAINABLE PRIORITY ENGINE (Multi-Factor Scoring: 0-100)
-                              ↓
- MATHEMATICAL OPTIMIZER (Google OR-Tools Mixed-Integer Programming)
-                              ↓
- HARD CONSTRAINTS (Warehouse Caps, Fleet Payloads, Road Blocks, Equity Bounds)
-                              ↓
-              ROUTING ENGINE (Dijkstra Road Graph & Detours)
-                              ↓
-            RESOURCE GAP & DEFICIT ANALYSIS (Zone Shortages)
-                              ↓
-       HUMAN-IN-THE-LOOP (Officer Review: Approve / Modify / Reject)
-                              ↓
-               DYNAMIC FIELD FEEDBACK & DISRUPTION EVENT
-                              ↓
-          RE-OPTIMIZATION ENGINE (Automated & Delta Diffing)
-```
+
+---
+
+## 3. The 13-Stage Automated Workflow Pipeline
+
+When a disaster event or field report is ingested, ResQGrid executes this automated sequence:
+
+1. **Data Ingestion**: Multi-source telemetry ingestion from weather radars, river gauges, and frontline field notes.
+2. **AI Information Extraction**: NLP entity extractor parsing stranded headcounts, medical triage needs, and accessibility hints.
+3. **Verification Engine**: Cross-references coordinate duplication, telemetry contradiction, and reporting confidence.
+4. **Canonical Normalization**: Standardizes sector names, units of measure, and timestamps into ISO UTC format.
+5. **Geospatial Processing**: Evaluates flood polygon intersection, road severances, nearest depots, and reachability.
+6. **Impact Assessment**: Multi-factor impact score (0–100) combining population density, inundation, and vulnerability.
+7. **Demand Forecasting & Uncertainty**: Bayesian Sphere humanitarian demand estimation with 90% confidence intervals.
+8. **Explainable Priority Scoring**: Transparent MCDA weighting (Severity 30%, Population 25%, Medical 20%, Vulnerability 15%, Road Access 10%).
+9. **Constraint-Aware OR-Tools MIP Optimization**: Solves globally balanced multi-depot fleet dispatch in milliseconds.
+10. **Explainable Recommendation**: Synthesizes natural-language operational justification ("Why this depot? Why this route? Why this quantity?").
+11. **Human-in-the-Loop Review**: Enforces authorized officer sign-off (`APPROVE`, `MODIFY` with mandatory reason, or `REJECT`).
+12. **Fleet & Workforce Dispatch**: Converts approved allocations into active operational convoys with live telemetry.
+13. **Dynamic Re-Optimization & Audit Trail**: Continuously listens for road breaches or demand surges, auto-rerouting supplies and logging immutable audit records.
 
 ---
 
@@ -141,42 +195,48 @@ ResQGrid-AI-Billion/
 │   │   ├── seed_data.py            # Deterministic flood scenario (7 zones, 3 depots)
 │   │   └── state_store.py          # Operational state store & audit logs
 │   ├── models/
-│   │   └── schemas.py              # Pydantic schemas for zones, runs, allocations
+│   │   └── schemas.py              # Pydantic schemas for zones, runs, allocations, uncertainty
 │   ├── services/
 │   │   ├── optimization_engine.py  # Google OR-Tools MIP solver & baseline benchmarker
-│   │   ├── reoptimization_engine.py# Dynamic event triggers & delta analysis
+│   │   ├── reoptimization_engine.py# Dynamic event triggers, delta analysis & Hard-Evaluator test
 │   │   ├── priority_engine.py      # Multi-factor explainable priority scorer
-│   │   ├── demand_estimator.py     # Sphere Humanitarian standards demand engine
-│   │   ├── routing_engine.py       # Dijkstra graph & road blockage avoidance
+│   │   ├── demand_estimator.py     # Sphere standards & Bayesian 90% uncertainty engine
+│   │   ├── routing_engine.py       # Dijkstra graph, OSRM adapter & offline mock fallback
+│   │   ├── gis_service.py          # PostGIS-ready spatial querying & polygon intersections
 │   │   ├── nlp_extractor.py        # Unstructured dispatch text entity extractor
-│   │   └── data_adapters.py        # Level 1/2/3 multi-tiered data adapters
+│   │   └── data_adapters.py        # Multi-tiered data adapters (API/DB/Mock)
 │   └── utils/
 │       └── time_utils.py           # UTC timezone-aware datetime helpers
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx                 # Core application controller
+│   │   ├── App.tsx                 # Core application controller & theme management
 │   │   ├── types/index.ts          # TypeScript domain interfaces
-│   │   ├── services/api.ts         # REST API client
+│   │   ├── services/api.ts         # REST API client with full telemetry endpoints
 │   │   ├── components/
-│   │   │   ├── Navbar.tsx          # Top command bar with live telemetry
+│   │   │   ├── Navbar.tsx          # Top command bar with live telemetry & theme switch
 │   │   │   └── Sidebar.tsx         # Tactical navigation sidebar
 │   │   └── views/
 │   │       ├── DashboardView.tsx   # Executive command dashboard
 │   │       ├── MapView.tsx         # Interactive Leaflet GIS operational map
 │   │       ├── OptimizationView.tsx# Weight tuning, allocations & "Why?" modal
-│   │       ├── SimulationView.tsx  # What-If sandbox (road closure, surge, stock loss)
-│   │       ├── BenchmarkView.tsx   # Side-by-side Baseline vs. ResQGrid table
+│   │       ├── SimulationView.tsx  # Sandbox & Hard-Evaluator Test trigger
+│   │       ├── BenchmarkView.tsx   # Side-by-side Baseline vs. ResQGrid table & Model Monitor
 │   │       ├── ResourceGapView.tsx # Shortage breakdown & fulfillment progress
 │   │       ├── ResourcesView.tsx   # Warehouses, hospitals, and shelters
 │   │       ├── FieldReportsView.tsx# NLP dispatch ingestion form & verified cards
 │   │       ├── AnalyticsView.tsx   # Recharts charts for commodities & response times
 │   │       ├── AuditView.tsx       # Immutable governance log
-│   │       └── DemoModeView.tsx    # Guided 6-step Hackathon Evaluator Flow
+│   │       └── DemoModeView.tsx    # Guided 7-step Command Flow
 │   ├── package.json
 │   ├── vite.config.ts
-│   └── tsconfig.app.json
+│   └── Dockerfile
+├── .github/workflows/
+│   └── ci.yml                      # Automated CI testing workflow
+├── Dockerfile                      # Backend container definition
+├── docker-compose.yml              # Multi-container orchestration (Backend + Frontend)
+├── .env.example                    # Template for production environment variables
 ├── tests/
-│   └── test_resqgrid.py            # 7 unit tests (Optimization, Routing, NLP, Benchmarks)
+│   └── test_resqgrid.py            # 12 unit tests (Optimization, Routing, NLP, GIS, Uncertainty)
 ├── run_resqgrid.py                 # Unified 1-click startup script
 └── README.md                       # Comprehensive documentation
 ```
@@ -209,11 +269,18 @@ This automatically boots:
 - **FastAPI Backend**: `http://127.0.0.1:8000` (Swagger docs: `http://127.0.0.1:8000/docs`)
 - **React Command Center**: `http://localhost:5173`
 
+### Alternative: Docker Deployment
+To launch the complete containerized environment using Docker Compose:
+```bash
+docker-compose up --build
+```
+This deploys both the FastAPI core service and the NGINX-served production React frontend on ports 8000 and 3000/5173 respectively.
+
 ---
 
 ## 8. Running Automated Verification Tests
 
-ResQGrid includes an automated test suite verifying mathematical constraints, non-negativity of inventories, road closure avoidance, and NLP extraction:
+ResQGrid includes an automated test suite verifying mathematical constraints, non-negativity of inventories, road closure avoidance, NLP extraction, geospatial queries, and Bayesian uncertainty bounds:
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
@@ -221,15 +288,19 @@ python -m unittest discover -s tests -p "test_*.py"
 
 Sample output:
 ```
-Ran 7 tests in 0.055s
+Ran 12 tests in 0.127s
 OK
 - Benchmark metric 'Average Response Time': Baseline=30.6m, Optimized=15.4m -> 49.7% lift
 - Demand Estimator verified across all 7 disaster sectors.
-- NLP Extractor verified: Extracted {'water': 1500, 'medical_kits': 50, 'ambulances': 3} with HIGH CONFIDENCE
-- OR-Tools MIP Hard Constraints verified! Allocations: 31, Runtime: 11.83ms
-- Priority Engine verified: Slum (84.7) > Green Valley (23.2)
+- Demand Uncertainty Engine verified: 90% Bayesian confidence interval computed.
+- GIS Service verified: Nearest depot spatial query and PostGIS polygon intersection.
+- Hard-Evaluator Stress Test verified: Zone C +40%, WH-A -20%, Road R17 CLOSED handled.
+- NLP Extractor verified: Extracted {'water': 1500, 'medical_kits': 50, 'ambulances': 3} with HIGH CONFIDENCE.
+- OR-Tools MIP Hard Constraints verified! Allocations: 31, Runtime: 11.83ms.
+- Priority Engine verified: Slum (84.7) > Green Valley (23.2).
 - Dynamic Re-Optimization verified: Detour rerouting executed.
 - Routing Engine verified: Successfully circumvented blocked road ROAD-R17.
+- State Store verified: Multi-user role mutations and audit entries persisted.
 ```
 
 ---
@@ -250,11 +321,19 @@ Navigate to **Demo Flow** in the sidebar:
    Click `🚧 CLOSE ROAD & RE-OPTIMIZE`. `ROAD-R17` (North Bridge Causeway) is closed. The re-optimization engine reroutes dispatches through `WH-EAST` via the highway bypass.
 6. **Step 6: Empirical Baseline vs. ResQGrid Benchmark**  
    View the side-by-side matrix demonstrating a **+49.7% reduction in response time** and **65% lower equity gap** over manual nearest-depot heuristics.
+7. **Step 7: Hard-Evaluator Stress Test**  
+   Simulates concurrent compounding stresses:
+   - Sector C (`South Slum Cluster`) demand increases by **+40%**.
+   - Warehouse A (`Central Logistics Hub`) water stock drops by **-20%**.
+   - Critical artery `ROAD-R17` is marked **CLOSED**.
+   - ResQGrid dynamically rebalances 5–8 transit legs, swaps supply from West/East Depots, verifies zero negative inventory or capacity violations, and presents diffs for commander approval.
 
 ---
 
-## 10. Security & Governance
+## 10. Security, RBAC & Human Governance
 
-- **Human-in-the-Loop Protocol**: AI suggests; authorized officers review, approve, modify (with mandatory operational rationale), or reject.
-- **Immutable Audit Logging**: Every critical action, trigger, and dispatch override is recorded with timestamps, user credentials, and operational metadata.
-- **Air-Gapped / Offline Readiness**: Mathematical solver runs locally with zero dependence on paid proprietary cloud APIs.
+- **Role-Based Access Control (RBAC)**: Support for `Incident Commander`, `Logistics Chief`, `Field Responder`, and `Auditor` roles.
+- **Human-in-the-Loop Protocol**: AI suggests optimal dispatches; authorized officers must explicitly approve, modify (with mandatory rationale), or reject allocations prior to physical fleet release.
+- **Immutable Audit Logging**: Every critical action, trigger, priority recalculation, and dispatch override is cryptographically tracked with timestamps and operator role metadata.
+- **Air-Gapped / Offline Readiness**: Mathematical solver and offline mock routing run entirely locally with zero dependency on external paid cloud services.
+- **Production Boundary**: Real PostGIS geometries, OSRM live routing adapters, and real-time WebSocket telemetry with robust offline fallback modes for degraded communications environments.
