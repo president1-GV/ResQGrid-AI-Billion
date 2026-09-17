@@ -55,19 +55,25 @@
 [data-theme="light"] .bg-slate-900\/60,
 [data-theme="light"] .bg-slate-900\/50,
 [data-theme="light"] .bg-slate-950\/80,
-[data-theme="light"] .bg-slate-950\/70 {
+[data-theme="light"] .bg-slate-950\/70,
+[data-theme="light"] .bg-slate-950\/60,
+[data-theme="light"] .bg-slate-950\/50,
+[data-theme="light"] .bg-slate-950\/40 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
 }
 
-/* Inset Boxes & Secondary Panels */
-[data-theme="light"] .bg-slate-950\/60,
-[data-theme="light"] .bg-slate-950\/40,
+/* Inset Boxes, Secondary Panels & Telemetry Cards */
 [data-theme="light"] .bg-slate-800,
+[data-theme="light"] .bg-slate-800\/90,
 [data-theme="light"] .bg-slate-800\/80,
-[data-theme="light"] .bg-slate-800\/60 {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
+[data-theme="light"] .bg-slate-800\/70,
+[data-theme="light"] .bg-slate-800\/60,
+[data-theme="light"] .bg-slate-800\/50,
+[data-theme="light"] .bg-slate-800\/40,
+[data-theme="light"] .bg-slate-800\/30 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
 }
 
 /* Hero Banners: convert dark gradients to crisp light surfaces */
@@ -88,7 +94,12 @@
 [data-theme="light"] .border-slate-800,
 [data-theme="light"] .border-slate-800\/80,
 [data-theme="light"] .border-slate-800\/60,
-[data-theme="light"] .border-slate-700 {
+[data-theme="light"] .border-slate-800\/50,
+[data-theme="light"] .border-slate-800\/40,
+[data-theme="light"] .border-slate-700,
+[data-theme="light"] .border-slate-700\/60,
+[data-theme="light"] .border-slate-700\/50,
+[data-theme="light"] .border-slate-700\/40 {
   border-color: #cbd5e1 !important;
 }
 
@@ -97,7 +108,7 @@
   border-color: #e2e8f0 !important;
 }
 
-/* Typography & Headings */
+/* Typography & Headings: High-Contrast Slate Hierarchy */
 [data-theme="light"] .text-white {
   color: #0f172a !important;
 }
@@ -106,14 +117,27 @@
 [data-theme="light"] .text-slate-200,
 [data-theme="light"] .text-slate-300 {
   color: #1e293b !important;
+  font-weight: 500;
 }
 
 [data-theme="light"] .text-slate-400 {
-  color: #475569 !important;
+  color: #334155 !important;
+  font-weight: 500;
 }
 
 [data-theme="light"] .text-slate-500 {
-  color: #64748b !important;
+  color: #475569 !important;
+  font-weight: 500;
+}
+
+[data-theme="light"] .text-slate-600 {
+  color: #334155 !important;
+}
+
+/* Form labels in light mode */
+[data-theme="light"] label {
+  color: #1e293b !important;
+  font-weight: 600 !important;
 }
 
 /* High-Contrast KPI & Metric Accents */
@@ -129,7 +153,12 @@
 
 [data-theme="light"] .text-sky-400,
 [data-theme="light"] .text-sky-300 {
-  color: #0369a1 !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .text-blue-400,
+[data-theme="light"] .text-blue-300 {
+  color: #1d4ed8 !important;
 }
 
 [data-theme="light"] .text-purple-400,
@@ -181,14 +210,16 @@
 /* Secondary & Table Action Buttons */
 [data-theme="light"] button.bg-slate-800,
 [data-theme="light"] button.bg-slate-800\/80,
-[data-theme="light"] button.bg-slate-900 {
+[data-theme="light"] button.bg-slate-900,
+[data-theme="light"] button.bg-slate-950 {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
   color: #1e293b !important;
 }
 
 [data-theme="light"] button.bg-slate-800:hover,
-[data-theme="light"] button.bg-slate-900:hover {
+[data-theme="light"] button.bg-slate-900:hover,
+[data-theme="light"] button.bg-slate-950:hover {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
@@ -215,7 +246,8 @@
 [data-theme="light"] .bg-amber-950,
 [data-theme="light"] .bg-amber-950\/60,
 [data-theme="light"] .bg-amber-950\/40,
-[data-theme="light"] .bg-amber-950\/30 {
+[data-theme="light"] .bg-amber-950\/30,
+[data-theme="light"] .bg-amber-500\/20 {
   background-color: #fef3c7 !important;
   border-color: #fcd34d !important;
   color: #92400e !important;
@@ -229,7 +261,8 @@
 [data-theme="light"] .bg-red-950,
 [data-theme="light"] .bg-red-950\/60,
 [data-theme="light"] .bg-red-950\/40,
-[data-theme="light"] .bg-red-950\/30 {
+[data-theme="light"] .bg-red-950\/30,
+[data-theme="light"] .bg-red-500\/20 {
   background-color: #fee2e2 !important;
   border-color: #fca5a5 !important;
   color: #991b1b !important;
@@ -243,7 +276,9 @@
 [data-theme="light"] .bg-emerald-950,
 [data-theme="light"] .bg-emerald-950\/60,
 [data-theme="light"] .bg-emerald-950\/40,
-[data-theme="light"] .bg-emerald-950\/30 {
+[data-theme="light"] .bg-emerald-950\/30,
+[data-theme="light"] .bg-emerald-500\/20,
+[data-theme="light"] .bg-emerald-500\/10 {
   background-color: #d1fae5 !important;
   border-color: #6ee7b7 !important;
   color: #065f46 !important;
@@ -254,8 +289,10 @@
 }
 
 [data-theme="light"] .bg-purple-950,
+[data-theme="light"] .bg-purple-950\/80,
 [data-theme="light"] .bg-purple-950\/60,
-[data-theme="light"] .bg-purple-950\/40 {
+[data-theme="light"] .bg-purple-950\/40,
+[data-theme="light"] .bg-purple-950\/30 {
   background-color: #f3e8ff !important;
   border-color: #d8b4fe !important;
   color: #6b21a8 !important;
@@ -265,9 +302,26 @@
   color: #6b21a8 !important;
 }
 
+[data-theme="light"] .bg-cyan-950,
+[data-theme="light"] .bg-cyan-950\/80,
+[data-theme="light"] .bg-cyan-950\/60,
+[data-theme="light"] .bg-cyan-950\/40,
+[data-theme="light"] .bg-cyan-950\/30 {
+  background-color: #cffafe !important;
+  border-color: #67e8f9 !important;
+  color: #0e7490 !important;
+}
+
+[data-theme="light"] .bg-cyan-950 *,
+[data-theme="light"] .bg-cyan-950\/60 * {
+  color: #0e7490 !important;
+}
+
 [data-theme="light"] .bg-sky-950,
+[data-theme="light"] .bg-sky-950\/80,
 [data-theme="light"] .bg-sky-950\/60,
-[data-theme="light"] .bg-sky-950\/40 {
+[data-theme="light"] .bg-sky-950\/40,
+[data-theme="light"] .bg-sky-950\/30 {
   background-color: #e0f2fe !important;
   border-color: #7dd3fc !important;
   color: #0369a1 !important;
@@ -278,8 +332,11 @@
 }
 
 [data-theme="light"] .bg-blue-950,
+[data-theme="light"] .bg-blue-950\/80,
 [data-theme="light"] .bg-blue-950\/60,
-[data-theme="light"] .bg-blue-950\/40 {
+[data-theme="light"] .bg-blue-950\/40,
+[data-theme="light"] .bg-blue-950\/30,
+[data-theme="light"] .bg-blue-600\/20 {
   background-color: #dbeafe !important;
   border-color: #93c5fd !important;
   color: #1e40af !important;

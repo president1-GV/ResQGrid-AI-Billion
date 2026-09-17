@@ -204,7 +204,7 @@ export function App() {
                   />
                 )}
 
-                {currentTab === 'datasets' && <DatasetsView />}
+                {currentTab === 'datasets' && <DatasetsView isDarkMode={theme === 'dark'} />}
                 {currentTab === 'analyzer' && <FieldReportAnalyzerView />}
 
                 {currentTab === 'map' && (
@@ -249,6 +249,7 @@ export function App() {
                   <FieldReportsView
                     reports={fieldReports}
                     onSubmitReport={handleSubmitReport}
+                    isDarkMode={theme === 'dark'}
                   />
                 )}
 

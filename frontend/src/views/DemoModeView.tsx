@@ -296,12 +296,20 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
       </div>
 
       {/* 6 Synthetic Scenarios Selector */}
-      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+      <div className={`p-4 rounded-xl border space-y-2 ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
+          <span className={`text-xs font-mono uppercase tracking-wider ${
+            isDarkMode ? 'text-slate-400' : 'text-slate-700 font-bold'
+          }`}>
             Select Synthetic Disaster Scenario:
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
+            isDarkMode
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              : 'bg-amber-100 text-amber-900 border-amber-300'
+          }`}>
             ALL SCENARIOS ARE GROUNDED IN SYNTHETIC / DEMO DATA
           </span>
         </div>
@@ -315,14 +323,28 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
                 disabled={stepLoading || autoRunning}
                 className={`p-2.5 rounded-lg text-left transition-all border ${
                   isSelected
-                    ? 'bg-purple-950/80 border-purple-500/60 shadow-md shadow-purple-500/10'
-                    : 'bg-slate-950/70 hover:bg-slate-800/80 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? isDarkMode
+                      ? 'bg-purple-950/80 border-purple-500/60 shadow-md shadow-purple-500/10'
+                      : 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-300/40'
+                    : isDarkMode
+                    ? 'bg-slate-950/70 hover:bg-slate-800/80 border-slate-800 text-slate-400 hover:text-slate-200'
+                    : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 hover:text-slate-950 shadow-sm'
                 }`}
               >
-                <div className={`text-[11px] font-bold ${isSelected ? 'text-purple-300' : 'text-slate-300'}`}>
+                <div className={`text-[11px] font-bold ${
+                  isSelected
+                    ? isDarkMode ? 'text-purple-300' : 'text-white'
+                    : isDarkMode ? 'text-slate-300' : 'text-slate-900'
+                }`}>
                   {sc.label}
                 </div>
-                <div className="text-[9px] opacity-75 truncate">{sc.sub}</div>
+                <div className={`text-[9px] truncate ${
+                  isSelected
+                    ? isDarkMode ? 'text-purple-200 opacity-90' : 'text-purple-100 font-medium'
+                    : isDarkMode ? 'text-slate-400 opacity-80' : 'text-slate-700 font-semibold'
+                }`}>
+                  {sc.sub}
+                </div>
               </button>
             );
           })}
@@ -330,7 +352,9 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
       </div>
 
       {/* Stepper Progress Bar */}
-      <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+      <div className={`p-4 rounded-xl border ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         <div className="flex items-center justify-between overflow-x-auto gap-2 text-xs">
           {[
             { num: 1, title: 'Disaster Ingestion' },
@@ -347,10 +371,16 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
                 key={s.num}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg shrink-0 ${
                   isCurrent
-                    ? 'bg-purple-950/80 text-purple-300 border border-purple-500/40 font-bold'
+                    ? isDarkMode
+                      ? 'bg-purple-950/80 text-purple-300 border border-purple-500/40 font-bold'
+                      : 'bg-purple-100 text-purple-900 border border-purple-300 font-bold'
                     : isDone
-                    ? 'bg-slate-950 text-emerald-400 font-medium'
-                    : 'text-slate-500'
+                    ? isDarkMode
+                      ? 'bg-slate-950 text-emerald-400 font-medium border border-slate-800'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold'
+                    : isDarkMode
+                    ? 'text-slate-500 border border-transparent'
+                    : 'bg-slate-100 text-slate-800 border border-slate-200 font-semibold'
                 }`}
               >
                 <div
@@ -359,7 +389,9 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
                       ? 'bg-purple-600 text-white'
                       : isDone
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-800 text-slate-400'
+                      : isDarkMode
+                      ? 'bg-slate-800 text-slate-400'
+                      : 'bg-slate-300 text-slate-900'
                   }`}
                 >
                   {isDone ? '✓' : s.num}
@@ -375,20 +407,26 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Active Step Action & Explanation */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+          <div className={`p-6 rounded-2xl border space-y-4 shadow-xl ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-sky-400">
                   <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 1: Disaster Event Triggered</h3>
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
+                    Step 1: Disaster Event Triggered
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   Heavy monsoon precipitation (&gt;245mm) triggers a flash flood in the Brahmaputra-Kamrup Basin. River water rises 2.8m above danger mark, putting 45,800 citizens across 7 sectors at immediate risk.
                 </p>
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
-                  <div className="text-slate-400 font-mono">DETECTED TELEMETRY:</div>
-                  <div className="text-white">Rainfall: 245mm/24h | River Gauge: 14.8m | Danger Mark: 12.0m</div>
-                  <div className="text-slate-400">Status: Active Emergency Declaration #DISASTER-IND-FLD-094</div>
+                <div className={`p-3.5 rounded-xl border text-xs space-y-1 ${
+                  isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div className={`font-mono font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>DETECTED TELEMETRY:</div>
+                  <div className={`font-semibold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Rainfall: 245mm/24h | River Gauge: 14.8m | Danger Mark: 12.0m</div>
+                  <div className={`${isDarkMode ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>Status: Active Emergency Declaration #DISASTER-IND-FLD-094</div>
                 </div>
               </div>
             )}
@@ -397,19 +435,33 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-cyan-400">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 2: Multi-Source Data Fusion</h3>
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-cyan-400' : 'text-cyan-800'}`}>
+                    Step 2: Multi-Source Data Fusion
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   Heterogeneous disaster signals arrive: weather feeds, OpenStreetMap road networks, hospital ICU occupancies, relief warehouse stock levels, and NLP-extracted field reports from frontline responders.
                 </p>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px] uppercase">Infrastructure Discovered:</span>
-                    <strong className="text-white">3 Depots, 3 Hospitals, 3 Shelters</strong>
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Infrastructure Discovered:
+                    </span>
+                    <strong className={isDarkMode ? 'text-white' : 'text-slate-900 font-bold'}>
+                      3 Depots, 3 Hospitals, 3 Shelters
+                    </strong>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px] uppercase">Road Network Nodes:</span>
-                    <strong className="text-white">10 Transit Corridors Active</strong>
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Road Network Nodes:
+                    </span>
+                    <strong className={isDarkMode ? 'text-white' : 'text-slate-900 font-bold'}>
+                      10 Transit Corridors Active
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -419,22 +471,34 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-amber-400">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 3: Multi-Factor Priority Scoring</h3>
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
+                    Step 3: Multi-Factor Priority Scoring
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   The Priority Engine computes explainable urgency scores across all 7 affected zones. Factors include flood severity, vulnerable populations, acute medical casualties, and compromised road accessibility.
                 </p>
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
-                  <div className="flex justify-between items-center text-slate-300 font-semibold border-b border-slate-800 pb-1.5">
+                <div className={`p-3 rounded-xl border text-xs space-y-2 ${
+                  isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div className={`flex justify-between items-center font-bold border-b pb-1.5 ${
+                    isDarkMode ? 'text-slate-300 border-slate-800' : 'text-slate-900 border-slate-200'
+                  }`}>
                     <span>Zone Name</span>
                     <span>Priority Score</span>
                     <span>Status</span>
                   </div>
                   {state.zones.slice(0, 4).map((z) => (
-                    <div key={z.id} className="flex justify-between items-center text-slate-400">
-                      <span className="text-slate-200">{z.name}</span>
-                      <strong className="text-amber-400 font-mono">{z.priority_score}</strong>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-red-950 text-red-400">CRITICAL</span>
+                    <div key={z.id} className={`flex justify-between items-center ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>
+                      <span className={isDarkMode ? 'text-slate-200' : 'text-slate-900 font-medium'}>{z.name}</span>
+                      <strong className="text-amber-500 font-mono font-bold">{z.priority_score}</strong>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
+                        isDarkMode
+                          ? 'bg-red-950 text-red-400 border-red-500/40'
+                          : 'bg-red-100 text-red-800 border-red-300'
+                      }`}>
+                        CRITICAL
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -445,24 +509,44 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-emerald-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 4: Mathematical Optimization (OR-Tools)</h3>
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-emerald-400' : 'text-emerald-800'}`}>
+                    Step 4: Mathematical Optimization (OR-Tools)
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   Google OR-Tools solver runs the Mixed Integer Program. It simultaneously minimizes response time, unmet shortages, and transit distance while enforcing warehouse inventory capacities, vehicle limits, and humanitarian equity.
                 </p>
                 {latestRun && (
                   <div className="grid grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px] uppercase">Allocations:</span>
-                      <strong className="text-sky-400 font-mono text-sm">{latestRun.allocations.length} dispatches</strong>
+                    <div className={`p-3 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        Allocations:
+                      </span>
+                      <strong className={`font-mono text-sm ${isDarkMode ? 'text-sky-400' : 'text-sky-700 font-bold'}`}>
+                        {latestRun.allocations.length} dispatches
+                      </strong>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px] uppercase">Avg Response Time:</span>
-                      <strong className="text-emerald-400 font-mono text-sm">{latestRun.avg_response_time_min} min</strong>
+                    <div className={`p-3 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        Avg Response Time:
+                      </span>
+                      <strong className={`font-mono text-sm ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700 font-bold'}`}>
+                        {latestRun.avg_response_time_min} min
+                      </strong>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px] uppercase">Solver Runtime:</span>
-                      <strong className="text-purple-400 font-mono text-sm">{latestRun.runtime_ms} ms</strong>
+                    <div className={`p-3 rounded-lg border ${
+                      isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        Solver Runtime:
+                      </span>
+                      <strong className={`font-mono text-sm ${isDarkMode ? 'text-purple-400' : 'text-purple-700 font-bold'}`}>
+                        {latestRun.runtime_ms} ms
+                      </strong>
                     </div>
                   </div>
                 )}
@@ -473,17 +557,23 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-red-400">
                   <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 5: Dynamic Road Breach & Automated Re-Optimization</h3>
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-red-400' : 'text-red-800'}`}>
+                    Step 5: Dynamic Road Breach & Automated Re-Optimization
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   <strong>Simulated Disruption:</strong> Road R17 (North Bridge Causeway) is inundated! ResQGrid instantly detects the event, flags the road as BLOCKED, recalculates shortest feasible detours, and re-routes aid from alternate depot <strong>WH-EAST</strong>.
                 </p>
-                <div className="p-3.5 rounded-xl bg-red-950/30 border border-red-500/30 text-xs text-red-200 space-y-1">
+                <div className={`p-3.5 rounded-xl border text-xs space-y-1 ${
+                  isDarkMode
+                    ? 'bg-red-950/30 border-red-500/30 text-red-200'
+                    : 'bg-red-50 border-red-300 text-red-900'
+                }`}>
                   <div className="font-bold flex items-center space-x-1.5">
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <AlertTriangle className={`w-4 h-4 ${isDarkMode ? 'text-red-400' : 'text-red-700'}`} />
                     <span>ROAD R17 BLOCKED &rarr; ALTERNATIVE DEPOT ACTIVATED</span>
                   </div>
-                  <p className="text-[11px] text-slate-300">
+                  <p className={`text-[11px] ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                     The optimizer rerouted North Bridge Enclave supplies from North Hub to East Healthcare Depot via Highway Expressway bypass.
                   </p>
                 </div>
@@ -493,28 +583,44 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
             {currentStep === 6 && (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 text-amber-400">
-                  <Award className="w-5 h-5 text-amber-400" />
-                  <h3 className="text-base font-bold uppercase tracking-wider">Step 6: Empirical Proof vs. Greedy Baseline</h3>
+                  <Award className={`w-5 h-5 ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`} />
+                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
+                    Step 6: Empirical Proof vs. Greedy Baseline
+                  </h3>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
                   The evaluation engine benchmarked ResQGrid against the standard manual greedy dispatch. ResQGrid achieved lower latency, fewer shortages, and eliminated the equity gap for vulnerable communities.
                 </p>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px] uppercase">Speed Improvement:</span>
-                    <strong className="text-emerald-400 text-base font-bold">+42% Faster</strong>
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Speed Improvement:
+                    </span>
+                    <strong className={`text-base font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                      +42% Faster
+                    </strong>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                    <span className="text-slate-400 block text-[10px] uppercase">Shortage Reduced:</span>
-                    <strong className="text-sky-400 text-base font-bold">-46% Deficit</strong>
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Shortage Reduced:
+                    </span>
+                    <strong className={`text-base font-bold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
+                      -46% Deficit
+                    </strong>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Stepper CTA Button */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-mono">
+            <div className={`pt-4 border-t flex items-center justify-between ${
+              isDarkMode ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              <span className={`text-xs font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-600 font-bold'}`}>
                 Step {currentStep} of 6
               </span>
 
@@ -522,7 +628,7 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
                 <button
                   onClick={nextStep}
                   disabled={stepLoading}
-                  className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/20 transition disabled:opacity-50"
+                  className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/20 transition disabled:opacity-50 cursor-pointer"
                 >
                   <span>{stepLoading ? 'PROCESSING STEP...' : `PROCEED TO STEP ${currentStep + 1}`}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -530,7 +636,7 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
               ) : (
                 <button
                   onClick={() => onSelectTab('benchmark')}
-                  className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition"
+                  className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer"
                 >
                   <span>VIEW FULL BENCHMARK MATRIX</span>
                   <ArrowRight className="w-4 h-4" />
@@ -542,45 +648,76 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
 
         {/* Right Col: Live Demo Execution Telemetry */}
         <div className="space-y-4">
-          <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-2">
+          <div className={`p-5 rounded-xl border space-y-3 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wider border-b pb-2 ${
+              isDarkMode ? 'text-white border-slate-800' : 'text-slate-900 border-slate-200'
+            }`}>
               Demonstration Audit Trail
             </h3>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1 font-mono text-[11px]">
               {demoLog.map((logItem, idx) => (
-                <div key={idx} className="p-2 rounded bg-slate-950 border border-slate-800/80 text-slate-300">
+                <div
+                  key={idx}
+                  className={`p-2 rounded border ${
+                    isDarkMode
+                      ? 'bg-slate-950 border-slate-800/80 text-slate-300'
+                      : 'bg-slate-50 border-slate-200 text-slate-800 font-medium'
+                  }`}
+                >
                   {logItem}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-2">
-            <span className="font-bold text-slate-300 uppercase text-[10px] font-mono block text-sky-400">
+          <div className={`p-4 rounded-xl border text-xs space-y-2 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <span className={`font-bold uppercase text-[10px] font-mono block ${
+              isDarkMode ? 'text-sky-400' : 'text-sky-700'
+            }`}>
               Evaluator Quick Access
             </span>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => onSelectTab('map')}
-                className="p-2 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[11px] text-center"
+                className={`p-2 rounded border text-[11px] text-center font-medium transition cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                    : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-semibold'
+                }`}
               >
                 Inspect GIS Map
               </button>
               <button
                 onClick={() => onSelectTab('optimization')}
-                className="p-2 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[11px] text-center"
+                className={`p-2 rounded border text-[11px] text-center font-medium transition cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                    : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-semibold'
+                }`}
               >
                 View Allocations
               </button>
               <button
                 onClick={() => onSelectTab('simulation')}
-                className="p-2 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[11px] text-center"
+                className={`p-2 rounded border text-[11px] text-center font-medium transition cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                    : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-semibold'
+                }`}
               >
                 What-If Sandbox
               </button>
               <button
                 onClick={() => onSelectTab('benchmark')}
-                className="p-2 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[11px] text-center"
+                className={`p-2 rounded border text-[11px] text-center font-medium transition cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                    : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 font-semibold'
+                }`}
               >
                 Benchmark Proof
               </button>
