@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/nasa_firms",
+  "generated_at": "2026-09-17T12:06:15.019397",
+  "files": {
+    "nasa_firms_verified.geojson": {
+      "checksum_sha256": "40666d9e74491c60e02d104182a664aacd3effde39f923b798b4ace2d40422e9",
+      "size_bytes": 3185,
+      "last_modified": "2026-09-17T21:06:15.000410"
+    }
+  }
+}

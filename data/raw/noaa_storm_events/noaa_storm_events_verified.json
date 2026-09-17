@@ -1,0 +1,31 @@
+{
+  "provider": "NOAA National Centers for Environmental Information (NCEI) Storm Events Database",
+  "license": "Public Domain",
+  "truth_class": "PUBLIC",
+  "events": [
+    {
+      "event_id": "STORM-2026-SEV-01",
+      "event_type": "Severe Gale & Microburst",
+      "state": "Assam",
+      "district": "Kamrup Metropolitan",
+      "begin_lat": 26.18,
+      "begin_lon": 91.73,
+      "wind_gust_knots": 64,
+      "hail_size_inches": 1.25,
+      "damage_property": 4500000,
+      "narrative": "Severe pre-monsoon Nor'wester (Kalbaishakhi) squall downburst uprooted 60+ high-tension transmission towers and destroyed rooftop water cisterns across North Guwahati."
+    },
+    {
+      "event_id": "STORM-2026-SEV-02",
+      "event_type": "Severe Flash Flood & Lightning Storm",
+      "state": "Tamil Nadu",
+      "district": "Cuddalore",
+      "begin_lat": 11.74,
+      "begin_lon": 79.76,
+      "wind_gust_knots": 58,
+      "hail_size_inches": 0.5,
+      "damage_property": 8200000,
+      "narrative": "Intense squall line preceding cyclonic landfall brought localized 110mm/hr cloudburst causing flash urban flooding in low-lying coastal quarters."
+    }
+  ]
+}

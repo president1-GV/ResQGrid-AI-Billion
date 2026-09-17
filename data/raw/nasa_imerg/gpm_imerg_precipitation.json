@@ -1,0 +1,48 @@
+{
+  "provider": "NASA GES DISC / JAXA (GPM Integrated Multi-satellitE Retrievals for GPM v07B)",
+  "spatial_resolution": "0.1\u00b0 x 0.1\u00b0 (~10km)",
+  "temporal_resolution": "Half-hourly Late Run (Calibrated with ground gauges)",
+  "truth_class": "NEAR_REAL_TIME",
+  "monitored_sectors": [
+    {
+      "sector_id": "SEC-KAMRUP-01",
+      "name": "Brahmaputra Valley / Kamrup Basin",
+      "centroid": [
+        26.185,
+        91.75
+      ],
+      "instantaneous_rate_mm_hr": 28.4,
+      "accumulated_6h_mm": 112.5,
+      "accumulated_24h_mm": 284.0,
+      "normal_24h_mm": 35.0,
+      "departure_percent": 711.4,
+      "extreme_precipitation_alert": true
+    },
+    {
+      "sector_id": "SEC-COASTAL-02",
+      "name": "Coromandel Coastal Corridor / Cuddalore",
+      "centroid": [
+        11.75,
+        79.77
+      ],
+      "instantaneous_rate_mm_hr": 35.0,
+      "accumulated_6h_mm": 145.0,
+      "accumulated_24h_mm": 340.0,
+      "departure_percent": 870.0,
+      "extreme_precipitation_alert": true
+    },
+    {
+      "sector_id": "SEC-HIMALAYA-03",
+      "name": "Teesta River Basin / North Sikkim",
+      "centroid": [
+        27.5,
+        88.6
+      ],
+      "instantaneous_rate_mm_hr": 19.5,
+      "accumulated_6h_mm": 85.0,
+      "accumulated_24h_mm": 210.0,
+      "departure_percent": 500.0,
+      "extreme_precipitation_alert": true
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "directory": "data/raw/emdat_india",
+  "generated_at": "2026-09-17T12:06:15.007321",
+  "files": {
+    "test-00000-of-00001.parquet": {
+      "checksum_sha256": "c7ec8c9fe492c1fa47d57f89edf89b6b345073ddf6550ee0cfb37db9dadcfbbd",
+      "size_bytes": 8106,
+      "last_modified": "2026-09-17T03:29:26.429497"
+    },
+    "train-00000-of-00001.parquet": {
+      "checksum_sha256": "126cd92b785227acb86eaeb20f7fc3a0bdf65d3d5bff773ddd76cc021253d736",
+      "size_bytes": 10438,
+      "last_modified": "2026-09-17T03:29:24.192063"
+    }
+  }
+}

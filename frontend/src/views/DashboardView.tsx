@@ -21,6 +21,7 @@ import { SystemState } from '../types';
 import { NavTab } from '../components/Sidebar';
 import { MasterOperationalWorkflow } from '../components/MasterOperationalWorkflow';
 import { EvaluatorLiveTestbench } from '../components/EvaluatorLiveTestbench';
+import { RoleCommandCenter } from '../components/RoleCommandCenter';
 import { OptimizationObjectiveWeights } from '../types';
 
 interface DashboardViewProps {
@@ -169,6 +170,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         currentScenario={state.event.type}
         onSelectTab={onSelectTab}
         isDarkMode={isDarkMode}
+      />
+
+      {/* Role-Specific Operational Command Center (16:9 Landscape & Multi-Hazard Cascade) */}
+      <RoleCommandCenter
+        state={state}
+        isDarkMode={isDarkMode}
+        onSelectTab={onSelectTab}
+        onApproveAllocation={onApproveAllocation}
+        onRejectAllocation={onRejectAllocation}
+        onOptimize={onOptimize}
+        onCloseRoad={onCloseRoad}
+        onSwitchScenario={onSwitchScenario}
       />
 
       {/* Evaluator Master Demonstration & Policy Control Bench */}

@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/usgs_earthquake",
+  "generated_at": "2026-09-17T12:06:15.109669",
+  "files": {
+    "usgs_earthquake_verified.geojson": {
+      "checksum_sha256": "6016280e6fc26471c520ed9a3ec5d1e8a1356a289547d1992bcfc576b1e4126d",
+      "size_bytes": 4550,
+      "last_modified": "2026-09-17T21:06:14.999765"
+    }
+  }
+}

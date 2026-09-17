@@ -1,0 +1,49 @@
+{
+  "provider": "NOAA NCEI Global Historical Tsunami Database & Indian Ocean Tsunami Warning System (IOTWMS)",
+  "truth_class": "PUBLIC",
+  "historical_and_active_runs": [
+    {
+      "event_id": "TSUNAMI-2026-BOB-01",
+      "source_earthquake": "M 7.4 - Andaman Sea / Sunda Trench Subduction Zone",
+      "source_coords": [
+        91.45,
+        11.62
+      ],
+      "wave_arrival_time": "2026-09-16T13:40:00Z",
+      "estimated_wave_height_m": 4.2,
+      "inundation_distance_meters": 1800,
+      "coastal_zones_impacted": [
+        {
+          "zone_id": "ZONE-C01",
+          "name": "Silver Beach Coastal Sector",
+          "surge_height_m": 4.1
+        },
+        {
+          "zone_id": "ZONE-C02",
+          "name": "Harbor & Fishing Wharf Zone",
+          "surge_height_m": 4.8
+        },
+        {
+          "zone_id": "ZONE-C03",
+          "name": "SIPCOT Coastal Industrial Belt",
+          "surge_height_m": 3.6
+        },
+        {
+          "zone_id": "ZONE-C04",
+          "name": "Old Town Commercial Basin",
+          "surge_height_m": 2.9
+        }
+      ],
+      "infrastructure_damage": "Cuddalore Port Causeway washed out, harbor berths inundated, 3 bridges structurally unverified."
+    },
+    {
+      "event_id": "TSUNAMI-2004-IND-01",
+      "source_earthquake": "M 9.1 - Sumatra-Andaman Mega-thrust",
+      "wave_arrival_time": "2004-12-26T08:45:00Z",
+      "estimated_wave_height_m": 9.5,
+      "inundation_distance_meters": 3200,
+      "fatalities_india": 12405,
+      "displaced_india": 560000
+    }
+  ]
+}

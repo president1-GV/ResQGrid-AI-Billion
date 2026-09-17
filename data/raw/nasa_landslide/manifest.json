@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/nasa_landslide",
+  "generated_at": "2026-09-17T12:06:15.041686",
+  "files": {
+    "nasa_glc_landslides_verified.json": {
+      "checksum_sha256": "d012cf1bdafa9368de2c43f0c6621924bd40e4b1130c4242543f9d00b46b2aec",
+      "size_bytes": 1877,
+      "last_modified": "2026-09-17T21:06:15.003316"
+    }
+  }
+}

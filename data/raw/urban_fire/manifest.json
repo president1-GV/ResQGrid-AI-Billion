@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/urban_fire",
+  "generated_at": "2026-09-17T12:06:15.095036",
+  "files": {
+    "nfirs_urban_fire_incidents.json": {
+      "checksum_sha256": "a72a82cd2cff5f49b8de512ccfe6e2666261693e79bed58938aa65ca5770d01d",
+      "size_bytes": 1734,
+      "last_modified": "2026-09-17T21:06:15.004372"
+    }
+  }
+}

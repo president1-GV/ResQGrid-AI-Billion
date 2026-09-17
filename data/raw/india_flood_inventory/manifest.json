@@ -1,0 +1,21 @@
+{
+  "directory": "data/raw/india_flood_inventory",
+  "generated_at": "2026-09-17T12:06:15.011037",
+  "files": {
+    "District_FloodedArea.csv": {
+      "checksum_sha256": "738d5edf8a29c70de520b3b7b8e148eb7eed2ce89bbd9f0ecacd3cbc17b07610",
+      "size_bytes": 32567,
+      "last_modified": "2026-09-17T12:26:02.685470"
+    },
+    "District_FloodImpact.csv": {
+      "checksum_sha256": "0cc7381e8153cdd34e287540e64947e4cd2e5ff46d2461581e7b6c041b3655fb",
+      "size_bytes": 19122,
+      "last_modified": "2026-09-17T12:26:01.336941"
+    },
+    "India_Flood_Inventory_v3.csv": {
+      "checksum_sha256": "ef9ab2cd0db7bf917dcc22c7cb094ec599f5013ef1b96ba525d816f26ff1b108",
+      "size_bytes": 1801579,
+      "last_modified": "2026-09-17T12:25:59.864930"
+    }
+  }
+}

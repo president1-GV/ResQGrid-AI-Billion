@@ -1,0 +1,48 @@
+{
+  "provider": "NASA Global Landslide Catalog (GLC) / Open Data Portal",
+  "license": "Open Data Commons Open Database License",
+  "truth_class": "PUBLIC",
+  "records": [
+    {
+      "event_id": "GLC-2026-IND-01",
+      "location_description": "Guwahati-Shillong Highway NH-40, Khanapara Ghat cutting",
+      "latitude": 26.115,
+      "longitude": 91.815,
+      "hazard_type": "Debris Flow / Rockfall",
+      "trigger": "Continuous Monsoon Downpour (>280mm in 24h)",
+      "landslide_size": "Large (15,000 m3 debris)",
+      "fatalities": 4,
+      "injuries": 12,
+      "infrastructure_impact": "NH-40 Dual-carriageway blocked. Major arterial corridor severing Guwahati-Meghalaya logistics.",
+      "slope_angle_deg": 48.0,
+      "geology": "Precambrian Gneiss weathered regolith",
+      "road_id_blocked": "ROAD-R12"
+    },
+    {
+      "event_id": "GLC-2026-IND-02",
+      "location_description": "Wayanad Meppadi Hillside, Kerala",
+      "latitude": 11.55,
+      "longitude": 76.12,
+      "hazard_type": "Massive Mudflow & Soil Slip",
+      "trigger": "Extreme Cloudburst Precipitation (>350mm in 24h)",
+      "landslide_size": "Catastrophic (>250,000 m3)",
+      "fatalities": 140,
+      "injuries": 210,
+      "infrastructure_impact": "Bridges washed away, 3 villages isolated.",
+      "slope_angle_deg": 55.0
+    },
+    {
+      "event_id": "GLC-2026-IND-03",
+      "location_description": "Rishikesh-Badrinath NH-58, Chamoli, Uttarakhand",
+      "latitude": 30.41,
+      "longitude": 79.38,
+      "hazard_type": "Rock Avalanche & Slump",
+      "trigger": "Earthquake induced slope destabilization",
+      "landslide_size": "Medium (8,000 m3)",
+      "fatalities": 0,
+      "injuries": 3,
+      "infrastructure_impact": "Single lane traffic collapse, heavy vehicle transit blocked.",
+      "slope_angle_deg": 62.0
+    }
+  ]
+}

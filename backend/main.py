@@ -40,6 +40,7 @@ from .services.llm_extractor import LLMExtractor
 from .services.feature_store import FeatureStore
 from .services.ml_demand_engine import MLDemandEngine
 from .services.training_service import TrainingService
+from .services.multi_hazard_engine import multi_hazard_engine, HazardType, TruthClass
 from .services.auth_service import (
     AuthService, UserRole, User, LoginRequest, LoginResponse,
     get_current_user, require_role
@@ -1392,6 +1393,47 @@ def get_dataset_quality(dataset_id: str):
 def get_dataset_lineage(dataset_id: str):
     """Returns end-to-end data lineage DAG from raw ingestion to OR-Tools solver."""
     return DatasetService.get_lineage(dataset_id)
+
+
+@app.get("/api/catalog")
+def get_authoritative_catalog():
+    """Returns the authoritative dataset registry, checksums, and mandatory disclaimers from data/catalog.yaml."""
+    return DatasetService.get_catalog()
+
+
+@app.get("/api/hazards")
+def list_all_hazards():
+    """Returns multi-hazard summary status across all 9 disaster hazards."""
+    return multi_hazard_engine.get_all_hazards_summary()
+
+
+@app.get("/api/hazards/{hazard_type}")
+def get_hazard_telemetry(hazard_type: str):
+    """Returns normalized telemetry and event features for a specific hazard vector."""
+    return multi_hazard_engine.get_hazard_telemetry(hazard_type)
+
+
+@app.post("/api/simulation/cascade")
+def simulate_multi_hazard_cascade(request: Dict[str, Any]):
+    """
+    Executes a cascading disaster shock simulation.
+    Propagates compound secondary and tertiary impacts across physical networks,
+    re-scores priorities, and calls Google OR-Tools MIP solver for dynamic re-allocation.
+    """
+    try:
+        return multi_hazard_engine.simulate_cascade(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/provenance/{record_id}")
+def get_record_provenance(record_id: str):
+    """Returns immutable cryptographic SHA-256 provenance trace and data truth classification."""
+    prov = multi_hazard_engine.get_provenance(record_id)
+    if not prov:
+        raise HTTPException(status_code=404, detail="Provenance record not found.")
+    return prov
+
 
 
 @app.post("/api/llm/extract-event")

@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/tsunami",
+  "generated_at": "2026-09-17T12:06:15.082423",
+  "files": {
+    "ncei_tsunami_events.json": {
+      "checksum_sha256": "7eeb480a376f0ea13a9c4b80db56985bf45dd83ec06f58b8ac3a266583e8e462",
+      "size_bytes": 1581,
+      "last_modified": "2026-09-17T21:06:15.004902"
+    }
+  }
+}

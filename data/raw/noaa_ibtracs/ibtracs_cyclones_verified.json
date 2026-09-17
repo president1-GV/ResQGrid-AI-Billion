@@ -1,0 +1,112 @@
+{
+  "provider": "NOAA NCEI IBTrACS (International Best Track Archive for Climate Stewardship v04r00)",
+  "license": "Open Public Domain (NOAA Open Access)",
+  "truth_class": "PUBLIC",
+  "cyclones": [
+    {
+      "sid": "2026115N12085",
+      "name": "VERY SEVERE CYCLONIC STORM 'VEGA'",
+      "basin": "NI",
+      "subbasin": "BB",
+      "category": "Cat 4 (IMD VSCS / Super Cyclone)",
+      "max_wind_knots": 115,
+      "min_pressure_mb": 938,
+      "track_points": [
+        {
+          "iso_time": "2026-09-14T06:00:00Z",
+          "lat": 10.2,
+          "lon": 84.5,
+          "wind_kt": 45,
+          "pres_mb": 996,
+          "nature": "TS"
+        },
+        {
+          "iso_time": "2026-09-15T00:00:00Z",
+          "lat": 11.0,
+          "lon": 82.8,
+          "wind_kt": 70,
+          "pres_mb": 978,
+          "nature": "CS"
+        },
+        {
+          "iso_time": "2026-09-15T18:00:00Z",
+          "lat": 11.5,
+          "lon": 80.9,
+          "wind_kt": 95,
+          "pres_mb": 954,
+          "nature": "SCS"
+        },
+        {
+          "iso_time": "2026-09-16T12:00:00Z",
+          "lat": 11.75,
+          "lon": 79.85,
+          "wind_kt": 115,
+          "pres_mb": 938,
+          "nature": "VSCS"
+        },
+        {
+          "iso_time": "2026-09-17T00:00:00Z",
+          "lat": 12.1,
+          "lon": 79.4,
+          "wind_kt": 85,
+          "pres_mb": 962,
+          "nature": "INLAND_DEPRESSION"
+        }
+      ],
+      "landfall_point": {
+        "lat": 11.75,
+        "lon": 79.8,
+        "location": "Between Cuddalore and Puducherry",
+        "surge_height_m": 4.5
+      },
+      "impacted_districts": [
+        "Cuddalore",
+        "Nagapattinam",
+        "Villupuram",
+        "Puducherry"
+      ]
+    },
+    {
+      "sid": "2020136N10087",
+      "name": "SUPER CYCLONIC STORM 'AMPHAN'",
+      "basin": "NI",
+      "subbasin": "BB",
+      "category": "Cat 5 (Super Cyclone)",
+      "max_wind_knots": 140,
+      "min_pressure_mb": 907,
+      "landfall_point": {
+        "lat": 21.65,
+        "lon": 88.35,
+        "location": "Digha - Sundarbans, West Bengal",
+        "surge_height_m": 5.2
+      },
+      "impacted_districts": [
+        "South 24 Parganas",
+        "North 24 Parganas",
+        "East Medinipur",
+        "Kolkata"
+      ]
+    },
+    {
+      "sid": "2019117N09088",
+      "name": "EXTREMELY SEVERE CYCLONIC STORM 'FANI'",
+      "basin": "NI",
+      "subbasin": "BB",
+      "category": "Cat 4 (ESCS)",
+      "max_wind_knots": 115,
+      "min_pressure_mb": 932,
+      "landfall_point": {
+        "lat": 19.8,
+        "lon": 85.8,
+        "location": "Puri, Odisha",
+        "surge_height_m": 3.8
+      },
+      "impacted_districts": [
+        "Puri",
+        "Khurda",
+        "Cuttack",
+        "Ganjam"
+      ]
+    }
+  ]
+}

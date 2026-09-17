@@ -481,3 +481,41 @@ export async function switchScenario(scenario: 'flood' | 'tsunami'): Promise<any
   return res.json();
 }
 
+export async function fetchCatalog(): Promise<any> {
+  const res = await fetch(`${API_BASE}/catalog`);
+  if (!res.ok) throw new Error('Failed to fetch authoritative catalog');
+  return res.json();
+}
+
+export async function fetchHazards(): Promise<any> {
+  const res = await fetch(`${API_BASE}/hazards`);
+  if (!res.ok) throw new Error('Failed to fetch hazards summary');
+  return res.json();
+}
+
+export async function fetchHazardTelemetry(hazardType: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/hazards/${hazardType}`);
+  if (!res.ok) throw new Error(`Failed to fetch hazard telemetry for ${hazardType}`);
+  return res.json();
+}
+
+export async function simulateCascade(cascadeType: string = 'EARTHQUAKE_TSUNAMI', severityMultiplier: number = 1.5): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulation/cascade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cascade_type: cascadeType,
+      severity_multiplier: severityMultiplier,
+    }),
+  });
+  if (!res.ok) throw new Error('Failed to simulate multi-hazard cascade');
+  return res.json();
+}
+
+export async function fetchProvenance(recordId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/provenance/${recordId}`);
+  if (!res.ok) throw new Error(`Failed to fetch provenance for ${recordId}`);
+  return res.json();
+}
+
+

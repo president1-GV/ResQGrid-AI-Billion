@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/noaa_storm_events",
+  "generated_at": "2026-09-17T12:06:15.067050",
+  "files": {
+    "noaa_storm_events_verified.json": {
+      "checksum_sha256": "88024dc75b9a1eaf3f870e503a3a190df8d9c37021cdb1b73c90515a8bc4387e",
+      "size_bytes": 1191,
+      "last_modified": "2026-09-17T21:06:15.003839"
+    }
+  }
+}

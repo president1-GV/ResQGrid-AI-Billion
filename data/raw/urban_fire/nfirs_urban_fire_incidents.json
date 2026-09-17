@@ -1,0 +1,45 @@
+{
+  "standard": "National Fire Incident Reporting System (NFIRS 5.0) & National Emergency Response Information System (NERIS)",
+  "truth_class": "SYNTHETIC",
+  "disclaimer": "Operational resource inventory is simulated because no authorized live resource system is connected.",
+  "incidents": [
+    {
+      "incident_number": "FIR-2026-IND-01",
+      "incident_type": "111 - Building Fire / Industrial Petrochemical Complex",
+      "alarm_time": "2026-09-16T14:20:00Z",
+      "arrival_time": "2026-09-16T14:32:00Z",
+      "controlled_time": "2026-09-16T17:45:00Z",
+      "location": "Noonmati Refinery Logistics Hub, Sector Industrial, Guwahati",
+      "latitude": 26.192,
+      "longitude": 91.805,
+      "hazmat_released": "Petroleum Distillates & Toxic Smoke Plume",
+      "civilian_injuries": 18,
+      "fire_service_casualties": 2,
+      "evacuated_radius_km": 2.5,
+      "evacuated_population": 4200,
+      "demands_generated": {
+        "burn_treatment_kits": 80,
+        "oxygen_cylinders": 120,
+        "foam_tender_dispatches": 6,
+        "emergency_shelters": 2
+      }
+    },
+    {
+      "incident_number": "FIR-2026-IND-02",
+      "incident_type": "131 - Commercial Chemical Warehouse Fire",
+      "alarm_time": "2026-09-16T16:10:00Z",
+      "location": "SIPCOT Industrial Complex, Cuddalore Coastal Sector",
+      "latitude": 11.685,
+      "longitude": 79.745,
+      "hazmat_released": "Chlorine Gas & Vinyl Chloride derivatives",
+      "civilian_injuries": 34,
+      "evacuated_radius_km": 3.2,
+      "evacuated_population": 6800,
+      "demands_generated": {
+        "atropine_antidotes": 150,
+        "nebulizers": 80,
+        "decontamination_units": 4
+      }
+    }
+  ]
+}

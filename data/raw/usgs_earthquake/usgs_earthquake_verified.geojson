@@ -1,0 +1,178 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1789614374998,
+    "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+    "title": "USGS Real-time & Verified Regional Seismic Telemetry",
+    "status": 200,
+    "api": "1.10.3",
+    "count": 6
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "usgs_eq_001",
+      "properties": {
+        "mag": 6.8,
+        "place": "28 km NNE of Tezpur, Assam, India",
+        "time": 1773724800000,
+        "updated": 1773728400000,
+        "tz": 330,
+        "url": "https://earthquake.usgs.gov/earthquakes/event/usgs_eq_001",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/usgs_eq_001.geojson",
+        "felt": 1840,
+        "cdi": 7.4,
+        "mmi": 7.8,
+        "alert": "red",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 890,
+        "net": "us",
+        "code": "eq_001",
+        "ids": ",usgs_eq_001,",
+        "sources": ",us,imd,",
+        "types": ",origin,phase-data,shakemap,",
+        "nst": 142,
+        "dmin": 0.42,
+        "rms": 0.38,
+        "gap": 34,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 6.8 - 28 km NNE of Tezpur, Assam, India"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          92.793,
+          26.874,
+          18.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_eq_002",
+      "properties": {
+        "mag": 7.4,
+        "place": "145 km W of Port Blair, Andaman & Nicobar Islands",
+        "time": 1773732000000,
+        "updated": 1773735600000,
+        "alert": "red",
+        "status": "reviewed",
+        "tsunami": 1,
+        "sig": 1050,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 7.4 - 145 km W of Port Blair, Andaman Sea (Tsunami Warning Triggered)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.45,
+          11.62,
+          24.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_eq_003",
+      "properties": {
+        "mag": 5.4,
+        "place": "12 km SW of Guwahati, Kamrup Metropolitan, Assam",
+        "time": 1773739200000,
+        "updated": 1773741000000,
+        "alert": "orange",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 480,
+        "magType": "mb",
+        "type": "earthquake",
+        "title": "M 5.4 - 12 km SW of Guwahati (Aftershock)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.685,
+          26.11,
+          12.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_eq_004",
+      "properties": {
+        "mag": 6.1,
+        "place": "45 km E of Chamoli, Uttarakhand, India",
+        "time": 1773638400000,
+        "updated": 1773642000000,
+        "alert": "yellow",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 620,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 6.1 - Chamoli Sector, Western Himalayas"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.35,
+          30.4,
+          15.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_eq_005",
+      "properties": {
+        "mag": 5.9,
+        "place": "32 km N of Bhuj, Gujarat, India",
+        "time": 1773552000000,
+        "updated": 1773555600000,
+        "alert": "yellow",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 540,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 5.9 - Kutch Fault Zone, Gujarat"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          69.67,
+          23.55,
+          16.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_eq_006",
+      "properties": {
+        "mag": 4.8,
+        "place": "18 km NW of Shillong, Meghalaya",
+        "time": 1773746400000,
+        "updated": 1773748000000,
+        "alert": "green",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 350,
+        "magType": "mb",
+        "type": "earthquake",
+        "title": "M 4.8 - Shillong Plateau"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.75,
+          25.68,
+          10.0
+        ]
+      }
+    }
+  ]
+}

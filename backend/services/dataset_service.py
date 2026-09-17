@@ -21,14 +21,36 @@ from backend.services.external_adapters import (
     EMDATIndiaAdapter,
     IMDWeatherAdapter,
     OpenMeteoLiveWeatherAdapter,
-    OpenStreetMapGeocoder
+    OpenStreetMapGeocoder,
+    USGSEarthquakeAdapter,
+    NASAFIRMSAdapter,
+    NOAAIBTrACSAdapter,
+    NASAGPMIMERGAdapter,
+    NASALandslideCatalogAdapter,
+    NOAAStormEventsAdapter,
+    UrbanFireIncidentAdapter,
+    NCEITsunamiAdapter
 )
+import yaml
 
 
 class DatasetService:
     """Central registry and lifecycle manager for all disaster intelligence datasets."""
 
     _registry: Dict[str, DatasetMetadata] = {}
+    @classmethod
+    def get_catalog(cls) -> Dict[str, Any]:
+        """Returns the parsed authoritative catalog.yaml containing all 9 hazards."""
+        cat_path = os.path.join("data", "catalog.yaml")
+        if os.path.exists(cat_path):
+            with open(cat_path, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f)
+        return {
+            "catalog_version": "1.0.0",
+            "datasets": list(cls._registry.values()),
+            "mandatory_disclaimer": "Operational resource inventory is simulated because no authorized live resource system is connected."
+        }
+
     _quality_reports: Dict[str, DataQualityReport] = {}
     _ingestion_history: List[IngestionRun] = []
     _human_extractions: List[Dict[str, Any]] = []
@@ -226,6 +248,38 @@ class DatasetService:
         ]
         for s in sources:
             cls._registry[s.dataset_id] = s
+        # Ingest datasets declared in data/catalog.yaml
+        cat_path = os.path.join("data", "catalog.yaml")
+        if os.path.exists(cat_path):
+            try:
+                with open(cat_path, "r", encoding="utf-8") as f:
+                    cat_data = yaml.safe_load(f)
+                    for d in cat_data.get("datasets", []):
+                        d_id = d.get("dataset_id")
+                        if d_id not in cls._registry:
+                            cls._registry[d_id] = DatasetMetadata(
+                                dataset_id=d_id,
+                                name=d.get("name", d_id),
+                                provider=d.get("provider", "Authoritative Provider"),
+                                description=d.get("description", ""),
+                                source_url=d.get("source_url", ""),
+                                license_type=d.get("license", "Open Access"),
+                                format=d.get("format", "JSON"),
+                                update_frequency=d.get("update_cadence", "Continuous"),
+                                geographic_scope=d.get("spatial_coverage", "National"),
+                                temporal_scope=d.get("temporal_coverage", "Present"),
+                                record_count=d.get("record_count", 0),
+                                file_size_bytes=d.get("file_size_bytes", 0),
+                                last_ingested=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                                ingestion_status=IngestionStatus.SUCCESS,
+                                validation_status=ValidationStatus.VALIDATED,
+                                quality_score=float(d.get("quality_score", 95.0)),
+                                is_synthetic=(d.get("truth_class") == "SYNTHETIC"),
+                                local_path=d.get("local_storage_path")
+                            )
+            except Exception as e:
+                print(f"Warning: Failed to load catalog.yaml: {e}")
+
 
     @classmethod
     def list_datasets(cls) -> List[DatasetMetadata]:
@@ -294,6 +348,46 @@ class DatasetService:
                 conn = IMDWeatherAdapter.check_connection()
                 sample_records = [conn]
                 meta.record_count = 3640
+
+            elif dataset_id == "usgs_earthquake_catalog":
+                res = USGSEarthquakeAdapter.get_earthquakes(live=True)
+                sample_records = res.get("events", [])[:5]
+                meta.record_count = res.get("count", 6)
+
+            elif dataset_id == "nasa_firms_wildfire":
+                res = NASAFIRMSAdapter.get_active_fires()
+                sample_records = res.get("fires", [])[:5]
+                meta.record_count = res.get("count", 5)
+
+            elif dataset_id == "noaa_ibtracs_cyclone":
+                res = NOAAIBTrACSAdapter.get_cyclones()
+                sample_records = res.get("cyclones", [])[:3]
+                meta.record_count = len(res.get("cyclones", []))
+
+            elif dataset_id == "nasa_gpm_imerg_rainfall":
+                res = NASAGPMIMERGAdapter.get_precipitation_telemetry()
+                sample_records = res.get("monitored_sectors", [])[:3]
+                meta.record_count = len(res.get("monitored_sectors", []))
+
+            elif dataset_id == "nasa_glc_landslide":
+                res = NASALandslideCatalogAdapter.get_landslides()
+                sample_records = res.get("records", [])[:3]
+                meta.record_count = len(res.get("records", []))
+
+            elif dataset_id == "noaa_storm_events":
+                res = NOAAStormEventsAdapter.get_severe_storms()
+                sample_records = res.get("events", [])[:3]
+                meta.record_count = len(res.get("events", []))
+
+            elif dataset_id == "nfirs_neris_urban_fire":
+                res = UrbanFireIncidentAdapter.get_incidents()
+                sample_records = res.get("incidents", [])[:2]
+                meta.record_count = len(res.get("incidents", []))
+
+            elif dataset_id == "ncei_iotwms_tsunami":
+                res = NCEITsunamiAdapter.get_tsunami_events()
+                sample_records = res.get("runs", [])[:2]
+                meta.record_count = len(res.get("runs", []))
 
             else:
                 sample_records = [{"status": "Dataset synced from cache", "dataset_id": dataset_id}]

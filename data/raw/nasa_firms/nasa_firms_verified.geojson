@@ -1,0 +1,127 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "satellite": "Suomi NPP / NOAA-20 VIIRS & Aqua/Terra MODIS",
+    "provider": "NASA FIRMS (Fire Information for Resource Management System)",
+    "spatial_resolution": "375m (VIIRS) / 1km (MODIS)",
+    "truth_class": "NEAR_REAL_TIME",
+    "latency": "3 hours nominal",
+    "count": 5
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "firms_001",
+      "properties": {
+        "latitude": 26.24,
+        "longitude": 91.82,
+        "brightness": 348.5,
+        "scan": 0.38,
+        "track": 0.36,
+        "acq_date": "2026-09-16",
+        "acq_time": "0745",
+        "satellite": "N",
+        "instrument": "VIIRS",
+        "confidence": "high",
+        "version": "2.0NRT",
+        "bright_t31": 298.2,
+        "frp": 68.4,
+        "daynight": "D",
+        "sector": "Garhbhanga Reserve Forest / Kamrup East",
+        "fire_type": "Wildfire / Ridge Forest Blaze",
+        "containment_pct": 20
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.82,
+          26.24
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "firms_002",
+      "properties": {
+        "latitude": 26.245,
+        "longitude": 91.835,
+        "brightness": 362.1,
+        "confidence": "high",
+        "frp": 112.8,
+        "sector": "Garhbhanga South Flank",
+        "fire_type": "Crown Fire Spread",
+        "containment_pct": 10
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          91.835,
+          26.245
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "firms_003",
+      "properties": {
+        "latitude": 30.25,
+        "longitude": 79.15,
+        "brightness": 335.2,
+        "confidence": "nominal",
+        "frp": 44.0,
+        "sector": "Rudraprayag Pine Forest, Uttarakhand",
+        "fire_type": "Himalayan Forest Fire",
+        "containment_pct": 35
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79.15,
+          30.25
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "firms_004",
+      "properties": {
+        "latitude": 18.42,
+        "longitude": 80.56,
+        "brightness": 328.0,
+        "confidence": "nominal",
+        "frp": 32.5,
+        "sector": "Dandakaranya Forest Corridor, Telangana-Chhattisgarh",
+        "fire_type": "Deciduous Understory Fire",
+        "containment_pct": 50
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.56,
+          18.42
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "firms_005",
+      "properties": {
+        "latitude": 11.68,
+        "longitude": 76.54,
+        "brightness": 341.0,
+        "confidence": "high",
+        "frp": 58.2,
+        "sector": "Bandipur National Park Buffer, Karnataka",
+        "fire_type": "Dry Bamboo & Scrub Blaze",
+        "containment_pct": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.54,
+          11.68
+        ]
+      }
+    }
+  ]
+}

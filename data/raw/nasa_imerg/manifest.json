@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/nasa_imerg",
+  "generated_at": "2026-09-17T12:06:15.032517",
+  "files": {
+    "gpm_imerg_precipitation.json": {
+      "checksum_sha256": "fe7497e8f02f518e46873c15b790d04775ee8dc123fbc0aef201771174341979",
+      "size_bytes": 1411,
+      "last_modified": "2026-09-17T21:06:15.002174"
+    }
+  }
+}

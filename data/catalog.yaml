@@ -1,0 +1,238 @@
+catalog_version: 1.0.0
+catalog_updated_at: '2026-09-17T12:06:15.110097Z'
+mandatory_disclaimer: Operational resource inventory is simulated because no authorized
+  live resource system is connected.
+truth_classes:
+  LIVE: Real-time, sub-minute telemetry directly ingested from authorized active sensors
+    or public APIs.
+  NEAR_REAL_TIME: Satellite-derived observation with standard processing latency (e.g.
+    1 to 3 hours for MODIS/VIIRS).
+  PUBLIC: Authoritative open-access research repositories (Zenodo, USGS, NOAA, IIT
+    Delhi, CRED).
+  HISTORICAL: Multi-decadal historical disaster inventories used for training and
+    vulnerability baselines.
+  SYNTHETIC: Simulated operational resource inventories, vehicle fleets, and benchmark
+    stress-test scenarios.
+  SIMULATION: Physics-based numerical solver outputs (e.g. hydro-dynamic flood extents,
+    tsunami surge wavefronts).
+  MANUAL: Field incident report manually keyed in by incident officers or verified
+    from citizen dispatch.
+  AUTHORIZED: Official cryptographic sign-off or validated government order from State
+    Disaster Command.
+hazards_covered:
+- code: earthquake
+  name: Earthquake
+  authority: USGS Earthquake Catalog / FDSN
+- code: cyclone
+  name: Tropical Cyclone
+  authority: NOAA IBTrACS Best-Track Archive
+- code: heavy_rainfall
+  name: Extreme Precipitation & Heavy Rainfall
+  authority: NASA GPM IMERG / IMD NWIC
+- code: fire_incident
+  name: Urban & Industrial Fire Emergency
+  authority: NFIRS / NERIS Standards
+- code: wildfire
+  name: Forest Fire & Wildfire Detections
+  authority: NASA FIRMS (MODIS / VIIRS)
+- code: severe_storm
+  name: Severe Storm, Gale & Downburst
+  authority: NOAA NCEI Storm Events
+- code: landslide
+  name: Landslide & Slope Failure
+  authority: NASA Global Landslide Catalog (GLC)
+- code: flood
+  name: River Basin Inundation & Flash Flood
+  authority: India Flood Inventory (IFI v3.0, IIT Delhi) & ISRO Bhuvan
+- code: tsunami
+  name: Coastal Tsunami & Storm Surge
+  authority: NOAA NCEI & IOTWMS Warning System
+datasets:
+- dataset_id: usgs_earthquake_catalog
+  name: USGS Real-Time & Historical Earthquake Catalog
+  hazard_type: earthquake
+  provider: U.S. Geological Survey (USGS) Earthquake Hazards Program
+  source_url: https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
+  license: Public Domain (U.S. Government Work)
+  format: GeoJSON / REST
+  update_cadence: Every 1 Minute (Live) / Event-driven
+  spatial_coverage: Global with High-Precision Indian Subcontinent & Himalayan Arc
+    Coverage
+  temporal_coverage: 1900 - Real-time Present
+  truth_class: LIVE
+  local_storage_path: data/raw/usgs_earthquake/usgs_earthquake_verified.geojson
+  checksum_sha256: 6016280e6fc26471c520ed9a3ec5d1e8a1356a289547d1992bcfc576b1e4126d
+  file_size_bytes: 4550
+  record_count: 6
+  quality_score: 98.6
+  description: Continuous seismic monitoring providing real-time epicenter coordinates,
+    focal depth, moment magnitude (Mw), MMI intensity, and alert levels for disaster
+    triage.
+- dataset_id: nasa_firms_wildfire
+  name: NASA FIRMS Active Fire Hotspot Telemetry (VIIRS/MODIS)
+  hazard_type: wildfire
+  provider: NASA LANCE / Earthdata Fire Information for Resource Management System
+  source_url: https://firms.modaps.eosdis.nasa.gov/
+  license: NASA Open Science Data Policy (Unrestricted)
+  format: GeoJSON / CSV
+  update_cadence: Near-Real-Time (Nominal 3-hour lag from satellite overpass)
+  spatial_coverage: National (Western Ghats, Northeast India, Central Deciduous Belts)
+  temporal_coverage: 2000 - Present
+  truth_class: NEAR_REAL_TIME
+  local_storage_path: data/raw/nasa_firms/nasa_firms_verified.geojson
+  checksum_sha256: 40666d9e74491c60e02d104182a664aacd3effde39f923b798b4ace2d40422e9
+  file_size_bytes: 3185
+  record_count: 5
+  quality_score: 96.2
+  description: Satellite infrared radiometric detection of active forest fires, ridge
+    blazes, and agricultural stubble burns with Fire Radiative Power (FRP) and detection
+    confidence.
+- dataset_id: noaa_ibtracs_cyclone
+  name: NOAA IBTrACS Tropical Cyclone Best-Track Archive
+  hazard_type: cyclone
+  provider: NOAA National Centers for Environmental Information (NCEI)
+  source_url: https://www.ncei.noaa.gov/products/international-best-track-archive
+  license: Open Access / Public Domain
+  format: JSON / CSV / NetCDF
+  update_cadence: 6-Hourly during active systems / Monthly archive
+  spatial_coverage: North Indian Ocean (Bay of Bengal & Arabian Sea)
+  temporal_coverage: 1848 - Present
+  truth_class: PUBLIC
+  local_storage_path: data/raw/noaa_ibtracs/ibtracs_cyclones_verified.json
+  checksum_sha256: ff88d6dd1dd29db306d435a6fac87dab85860be65be54b4c838d294f87bb3875
+  file_size_bytes: 2884
+  record_count: 3
+  quality_score: 97.4
+  description: Standardized best-track cyclone records including sustained 1-minute
+    and 3-minute wind velocities, central barometric pressure, storm nature, and landfall
+    coordinates.
+- dataset_id: nasa_gpm_imerg_rainfall
+  name: NASA GPM IMERG High-Resolution Precipitation Telemetry
+  hazard_type: heavy_rainfall
+  provider: NASA Goddard Earth Sciences Data and Information Services Center (GES
+    DISC)
+  source_url: https://gpm.nasa.gov/data/imerg
+  license: NASA Open Data / JAXA
+  format: JSON / HDF5
+  update_cadence: Half-hourly Late Run (Calibrated with Global Precipitation Climatology
+    Centre)
+  spatial_coverage: "National 0.1\xB0 x 0.1\xB0 Gridded Inundation Basins"
+  temporal_coverage: 2000 - Present
+  truth_class: NEAR_REAL_TIME
+  local_storage_path: data/raw/nasa_imerg/gpm_imerg_precipitation.json
+  checksum_sha256: fe7497e8f02f518e46873c15b790d04775ee8dc123fbc0aef201771174341979
+  file_size_bytes: 1411
+  record_count: 3
+  quality_score: 95.8
+  description: Multi-satellite microwave-calibrated precipitation accumulation rates
+    used to compute rain departure indices and trigger flash flood early warnings.
+- dataset_id: nasa_glc_landslide
+  name: NASA Global Landslide Catalog (GLC)
+  hazard_type: landslide
+  provider: NASA Hydrological Sciences Laboratory / Open Data
+  source_url: https://data.nasa.gov/Earth-Science/Global-Landslide-Catalog-Export/dd9e-wu2v
+  license: Open Data Commons Open Database License
+  format: JSON / CSV
+  update_cadence: Quarterly / Event-driven
+  spatial_coverage: Himalayan Belt (Uttarakhand, Himachal, Sikkim, Assam, Meghalaya)
+    & Western Ghats
+  temporal_coverage: 2007 - Present
+  truth_class: PUBLIC
+  local_storage_path: data/raw/nasa_landslide/nasa_glc_landslides_verified.json
+  checksum_sha256: d012cf1bdafa9368de2c43f0c6621924bd40e4b1130c4242543f9d00b46b2aec
+  file_size_bytes: 1877
+  record_count: 3
+  quality_score: 93.5
+  description: Global rainfall-triggered landslide events database with slope gradients,
+    debris volume estimates, and road network blockage correlations.
+- dataset_id: noaa_storm_events
+  name: NOAA NCEI Severe Storm & Convective Downburst Database
+  hazard_type: severe_storm
+  provider: NOAA National Centers for Environmental Information (NCEI)
+  source_url: https://www.ncdc.noaa.gov/stormevents/
+  license: Public Domain
+  format: JSON / CSV
+  update_cadence: Monthly
+  spatial_coverage: Subcontinental High-Impact Weather Cells
+  temporal_coverage: 1950 - Present
+  truth_class: PUBLIC
+  local_storage_path: data/raw/noaa_storm_events/noaa_storm_events_verified.json
+  checksum_sha256: 88024dc75b9a1eaf3f870e503a3a190df8d9c37021cdb1b73c90515a8bc4387e
+  file_size_bytes: 1191
+  record_count: 2
+  quality_score: 94.0
+  description: Records of high winds, microburst squalls, severe hailstorms, and convective
+    lightning strikes causing grid collapse and building damage.
+- dataset_id: nfirs_neris_urban_fire
+  name: NFIRS / NERIS Urban & Industrial Fire Incident Registry
+  hazard_type: fire_incident
+  provider: National Fire Data Center / Emergency Services Standards
+  source_url: https://www.usfa.fema.gov/nfirs/
+  license: Open Emergency Operations Standard
+  format: JSON / REST
+  update_cadence: Event-driven Dispatch
+  spatial_coverage: Urban Municipal Corporations & Industrial Zones
+  temporal_coverage: Current Operational Cycle
+  truth_class: SYNTHETIC
+  local_storage_path: data/raw/urban_fire/nfirs_urban_fire_incidents.json
+  checksum_sha256: a72a82cd2cff5f49b8de512ccfe6e2666261693e79bed58938aa65ca5770d01d
+  file_size_bytes: 1734
+  record_count: 2
+  quality_score: 99.0
+  description: Standardized fire and hazmat incident profiles with alarm-to-arrival
+    timelines, evacuation radii, civilian casualties, and specialized chemical demand
+    generation.
+- dataset_id: india_flood_inventory
+  name: India Flood Inventory (IFI v3.0)
+  hazard_type: flood
+  provider: HydroSense Lab, IIT Delhi (Saharia et al.)
+  source_url: https://github.com/hydrosenselab/India-Flood-Inventory
+  license: 'Open Research Data (Zenodo DOI: 10.5281/zenodo.13636502)'
+  format: CSV
+  update_cadence: Annual / Event-driven
+  spatial_coverage: National (All 28 Indian States & UTs)
+  temporal_coverage: 1967 - 2023
+  truth_class: PUBLIC
+  local_storage_path: data/raw/india_flood_inventory/India_Flood_Inventory_v3.csv
+  checksum_sha256: ef9ab2cd0db7bf917dcc22c7cb094ec599f5013ef1b96ba525d816f26ff1b108
+  file_size_bytes: 1801579
+  record_count: 18420
+  quality_score: 94.2
+  description: Multi-decadal national database of historical flood events, flooded
+    areas, district severities, and population impacts.
+- dataset_id: ncei_iotwms_tsunami
+  name: NOAA NCEI & IOTWMS Global Tsunami Database
+  hazard_type: tsunami
+  provider: NOAA NCEI / UNESCO-IOC Indian Ocean Tsunami Warning System
+  source_url: https://www.ncei.noaa.gov/maps/hazards/
+  license: Public Domain / UNESCO Open Access
+  format: JSON / REST
+  update_cadence: Event-driven / Live Seismic Warning Triggered
+  spatial_coverage: Bay of Bengal, Arabian Sea, Andaman & Nicobar Coastlines
+  temporal_coverage: 2000 BCE - Present
+  truth_class: PUBLIC
+  local_storage_path: data/raw/tsunami/ncei_tsunami_events.json
+  checksum_sha256: 7eeb480a376f0ea13a9c4b80db56985bf45dd83ec06f58b8ac3a266583e8e462
+  file_size_bytes: 1581
+  record_count: 2
+  quality_score: 96.5
+  description: Validated runup metrics, coastal wavefront arrival times, harbor damage
+    assessments, and maximum inundation depths for coastal protection.
+- dataset_id: operational_resource_inventory
+  name: Simulated Regional Disaster Logistics & Depot Stock
+  hazard_type: cross_hazard
+  provider: ResQGrid Regional Operations Simulator (IDRN / NDRF Standard)
+  source_url: local://backend/data/seed_data.py
+  license: Operational Simulation Layer
+  format: In-Memory State / JSON
+  update_cadence: Dynamic Re-optimization Loop (Sub-second)
+  spatial_coverage: Active Incident Sector
+  temporal_coverage: Live Mission Horizon
+  truth_class: SYNTHETIC
+  local_storage_path: data/synthetic/operational_inventory.json
+  checksum_sha256: SYNTHETIC_SIMULATED_CHECKSUM
+  file_size_bytes: 12400
+  record_count: 18
+  quality_score: 100.0
+  description: Regional warehouse capacities, vehicle fleet readiness, hospital bed
+    availability, and NDRF battalion staging levels.

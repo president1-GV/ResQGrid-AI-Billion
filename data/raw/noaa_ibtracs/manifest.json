@@ -1,0 +1,11 @@
+{
+  "directory": "data/raw/noaa_ibtracs",
+  "generated_at": "2026-09-17T12:06:15.051987",
+  "files": {
+    "ibtracs_cyclones_verified.json": {
+      "checksum_sha256": "ff88d6dd1dd29db306d435a6fac87dab85860be65be54b4c838d294f87bb3875",
+      "size_bytes": 2884,
+      "last_modified": "2026-09-17T21:06:15.001564"
+    }
+  }
+}
