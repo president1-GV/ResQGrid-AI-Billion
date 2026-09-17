@@ -91,27 +91,30 @@ class SupabaseService:
             }
 
     async def _get_table_counts(self, client: httpx.AsyncClient) -> Dict[str, int]:
-        """Fetch row counts for primary operational tables."""
+        """Fetch row counts for primary operational tables in parallel."""
         tables = [
             "incidents", "affected_zones", "warehouses", "roads",
             "allocations", "optimization_runs", "field_reports",
             "resq_audit_logs", "dataset_sources"
         ]
-        counts = {}
-        for t in tables:
+        
+        async def fetch_one(t: str):
             try:
-                r = await client.get(f"{self.records_url}/{t}?limit=1", headers=self._get_headers())
+                headers = self._get_headers()
+                headers["Prefer"] = "count=exact"
+                r = await client.get(f"{self.records_url}/{t}?limit=1", headers=headers, timeout=2.5)
                 content_range = r.headers.get("content-range")
                 if content_range and "/" in content_range:
                     total = content_range.split("/")[-1]
-                    counts[t] = int(total) if total != "*" else len(r.json())
-                elif r.status_code == 200:
-                    counts[t] = len(r.json())
-                else:
-                    counts[t] = 0
+                    return t, int(total) if total != "*" else len(r.json())
+                elif r.status_code in (200, 206):
+                    return t, len(r.json())
             except Exception:
-                counts[t] = 0
-        return counts
+                pass
+            return t, 0
+
+        results = await asyncio.gather(*(fetch_one(t) for t in tables))
+        return dict(results)
 
     async def query_records(self, table: str, params: Optional[Dict[str, str]] = None) -> List[Dict[str, Any]]:
         """Retrieve records from any table using PostgREST query parameters."""
