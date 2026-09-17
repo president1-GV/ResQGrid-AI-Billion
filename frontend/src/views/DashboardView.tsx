@@ -265,59 +265,67 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: High Urgency Zones & Priority Breakdown */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className={`p-5 rounded-xl border space-y-4 ${
+            isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDarkMode ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div className="flex items-center space-x-2">
-                <ShieldAlert className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+                <ShieldAlert className="w-5 h-5 text-amber-500" />
+                <h3 className={`text-sm font-semibold uppercase tracking-wider ${
+                  isDarkMode ? 'text-white' : 'text-slate-900'
+                }`}>
                   Critical Impact Sectors & Urgent Demand Signals
                 </h3>
               </div>
               <button
                 onClick={() => onSelectTab('map')}
-                className="text-xs text-sky-400 hover:text-sky-300 font-medium flex items-center space-x-1"
+                className={`text-xs font-medium flex items-center space-x-1 ${
+                  isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-700 hover:text-sky-800'
+                }`}
               >
                 <span>View on GIS Map</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <div className="divide-y divide-slate-800/60">
+            <div className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-200'}`}>
               {state.zones.map((zone) => {
                 const isHigh = zone.priority_score >= 80;
                 return (
                   <div key={zone.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-sm text-slate-200">{zone.name}</span>
+                        <span className={`font-semibold text-sm ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{zone.name}</span>
                         <span
                           className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                             isHigh
-                              ? 'bg-red-950 text-red-400 border border-red-500/40'
-                              : 'bg-slate-800 text-slate-400'
+                              ? (isDarkMode ? 'bg-red-950 text-red-400 border border-red-500/40' : 'bg-red-100 text-red-800 border border-red-300')
+                              : (isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-700 border border-slate-200')
                           }`}
                         >
                           Score: {zone.priority_score}
                         </span>
-                        <span className="text-xs text-slate-500">
+                        <span className={`text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>
                           ({zone.affected_population.toLocaleString()} affected)
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 italic">
+                      <p className={`text-xs italic ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                         {zone.notes || 'Monitoring flood level and route navigability.'}
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-4 text-xs shrink-0">
                       <div className="text-right">
-                        <div className="text-slate-400 font-mono">Med / Water / Food</div>
-                        <div className="font-semibold text-slate-300">
+                        <div className={`font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Med / Water / Food</div>
+                        <div className={`font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>
                           {zone.medical_need} kits | {(zone.water_need / 1000).toFixed(1)}k L | {(zone.food_need / 1000).toFixed(1)}k rk
                         </div>
                       </div>
                       <div className="w-16 text-right">
-                        <div className="text-[10px] text-slate-400">Road Access</div>
-                        <div className={`font-mono font-bold ${zone.road_accessibility < 0.7 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <div className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Road Access</div>
+                        <div className={`font-mono font-bold ${zone.road_accessibility < 0.7 ? (isDarkMode ? 'text-amber-400' : 'text-amber-700') : (isDarkMode ? 'text-emerald-400' : 'text-emerald-700')}`}>
                           {Math.round(zone.road_accessibility * 100)}%
                         </div>
                       </div>
@@ -329,24 +337,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Pending Human-In-The-Loop Approvals */}
-          <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+          <div className={`p-5 rounded-xl border space-y-3 ${
+            isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-sky-400" />
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+                <CheckCircle2 className="w-4 h-4 text-sky-500" />
+                <h3 className={`text-sm font-semibold uppercase tracking-wider ${
+                  isDarkMode ? 'text-white' : 'text-slate-900'
+                }`}>
                   Human-in-the-Loop Allocations Awaiting Officer Review ({pendingAllocations.length})
                 </h3>
               </div>
               <button
                 onClick={() => onSelectTab('optimization')}
-                className="text-xs text-sky-400 hover:text-sky-300 font-medium"
+                className={`text-xs font-medium ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-700 hover:text-sky-800'}`}
               >
                 Manage All
               </button>
             </div>
 
             {pendingAllocations.length === 0 ? (
-              <div className="text-xs text-slate-500 py-4 text-center bg-slate-950/40 rounded-lg">
+              <div className={`text-xs py-4 text-center rounded-lg ${
+                isDarkMode ? 'text-slate-500 bg-slate-950/40' : 'text-slate-600 bg-slate-50 border border-slate-200'
+              }`}>
                 All generated allocations have been reviewed and approved.
               </div>
             ) : (
@@ -354,17 +368,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {pendingAllocations.slice(0, 5).map((alloc) => (
                   <div
                     key={alloc.id}
-                    className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-3 text-xs"
+                    className={`p-3 rounded-lg border flex items-center justify-between gap-3 text-xs ${
+                      isDarkMode ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center space-x-2">
-                        <span className="font-mono text-sky-400 font-bold">{alloc.id}</span>
-                        <span className="text-slate-300 font-semibold">{alloc.destination_zone_name}</span>
-                        <span className="text-slate-500">&larr;</span>
-                        <span className="text-slate-400">{alloc.source_warehouse_name}</span>
+                        <span className={`font-mono font-bold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>{alloc.id}</span>
+                        <span className={`font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-900'}`}>{alloc.destination_zone_name}</span>
+                        <span className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}>&larr;</span>
+                        <span className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>{alloc.source_warehouse_name}</span>
                       </div>
-                      <div className="text-slate-400">
-                        Dispatching <strong className="text-white">{alloc.quantity.toLocaleString()} {alloc.resource_type.replace('_', ' ')}</strong> via {alloc.vehicle_type} (ETA: {alloc.estimated_time_min}m, {alloc.distance_km}km)
+                      <div className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>
+                        Dispatching <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{alloc.quantity.toLocaleString()} {alloc.resource_type.replace('_', ' ')}</strong> via {alloc.vehicle_type} (ETA: {alloc.estimated_time_min}m, {alloc.distance_km}km)
                       </div>
                     </div>
 
@@ -379,7 +395,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </button>
                       <button
                         onClick={() => onRejectAllocation(alloc.id)}
-                        className="px-2.5 py-1.5 rounded bg-red-950 hover:bg-red-900 border border-red-700/50 text-red-300 font-semibold flex items-center space-x-1"
+                        className="px-2.5 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-semibold flex items-center space-x-1"
                         title="Reject Allocation"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -395,9 +411,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Right 1 Col: Live Tactical Event Feed */}
         <div className="space-y-4">
-          <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+          <div className={`p-5 rounded-xl border space-y-4 ${
+            isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDarkMode ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              <h3 className={`text-sm font-semibold uppercase tracking-wider ${
+                isDarkMode ? 'text-white' : 'text-slate-900'
+              }`}>
                 Live Sensor & Field Feed
               </h3>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -407,24 +429,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {state.notifications.map((n) => (
                 <div
                   key={n.id}
-                  className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 text-xs space-y-1"
+                  className={`p-3 rounded-lg border text-xs space-y-1 ${
+                    isDarkMode ? 'bg-slate-950/60 border-slate-800/80' : 'bg-slate-50 border-slate-200'
+                  }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-300">{n.title}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className={`font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-900'}`}>{n.title}</span>
+                    <span className={`text-[10px] font-mono ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>
                       {n.timestamp.slice(11, 16)} UTC
                     </span>
                   </div>
-                  <p className="text-slate-400">{n.message}</p>
+                  <p className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>{n.message}</p>
                 </div>
               ))}
 
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 text-xs space-y-1">
+              <div className={`p-3 rounded-lg border text-xs space-y-1 ${
+                isDarkMode ? 'bg-slate-950/60 border-slate-800/80' : 'bg-slate-50 border-slate-200'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sky-400">Telemetry Ingestion</span>
-                  <span className="text-[10px] text-slate-500 font-mono">NOW</span>
+                  <span className={`font-semibold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>Telemetry Ingestion</span>
+                  <span className={`text-[10px] font-mono ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>NOW</span>
                 </div>
-                <p className="text-slate-400">
+                <p className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>
                   IMD Radar confirms 245mm/24h cumulative rainfall. River swell stabilized at +2.8m.
                 </p>
               </div>
@@ -432,17 +458,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Quick Simulation CTA */}
-          <div className="p-5 rounded-xl bg-gradient-to-br from-purple-950/40 to-slate-900 border border-purple-500/30 space-y-3">
-            <div className="flex items-center space-x-2 text-purple-300">
-              <AlertTriangle className="w-4 h-4 text-purple-400" />
+          <div className={`p-5 rounded-xl border space-y-3 ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-purple-950/40 to-slate-900 border-purple-500/30'
+              : 'bg-purple-50/70 border-purple-200 shadow-sm'
+          }`}>
+            <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+              <AlertTriangle className={`w-4 h-4 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
               <h4 className="text-sm font-bold">Evaluator Demonstration</h4>
             </div>
-            <p className="text-xs text-slate-300">
+            <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
               Test dynamic constraint adaptation in real time: close roads, simulate medical shortages, and watch the optimizer recalculate in milliseconds.
             </p>
             <button
               onClick={() => onSelectTab('simulation')}
-              className="w-full py-2 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition"
+              className="w-full py-2 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-sm"
             >
               Open What-If Simulation Sandbox &rarr;
             </button>

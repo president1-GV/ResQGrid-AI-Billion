@@ -50,10 +50,13 @@
 /* Card & Surface Containers */
 [data-theme="light"] .bg-slate-950,
 [data-theme="light"] .bg-slate-900,
+[data-theme="light"] .bg-slate-900\/95,
 [data-theme="light"] .bg-slate-900\/90,
 [data-theme="light"] .bg-slate-900\/80,
 [data-theme="light"] .bg-slate-900\/60,
 [data-theme="light"] .bg-slate-900\/50,
+[data-theme="light"] .bg-slate-950\/95,
+[data-theme="light"] .bg-slate-950\/90,
 [data-theme="light"] .bg-slate-950\/80,
 [data-theme="light"] .bg-slate-950\/70,
 [data-theme="light"] .bg-slate-950\/60,
@@ -174,6 +177,16 @@
 [data-theme="light"] .text-cyan-400,
 [data-theme="light"] .text-cyan-300 {
   color: #0e7490 !important;
+}
+
+[data-theme="light"] .text-orange-400,
+[data-theme="light"] .text-orange-300 {
+  color: #c2410c !important;
+}
+
+[data-theme="light"] .text-teal-400,
+[data-theme="light"] .text-teal-300 {
+  color: #0f766e !important;
 }
 
 /* Primary Action Buttons: Preserve vivid backgrounds & pure white text */
@@ -344,6 +357,38 @@
 
 [data-theme="light"] .bg-blue-950 * {
   color: #1e40af !important;
+}
+
+[data-theme="light"] .bg-orange-950,
+[data-theme="light"] .bg-orange-950\/80,
+[data-theme="light"] .bg-orange-950\/60,
+[data-theme="light"] .bg-orange-950\/40,
+[data-theme="light"] .bg-orange-950\/30,
+[data-theme="light"] .bg-orange-500\/20 {
+  background-color: #ffedd5 !important;
+  border-color: #fdba74 !important;
+  color: #9a3412 !important;
+}
+
+[data-theme="light"] .bg-orange-950 *,
+[data-theme="light"] .bg-orange-500\/20 * {
+  color: #9a3412 !important;
+}
+
+[data-theme="light"] .bg-teal-950,
+[data-theme="light"] .bg-teal-950\/80,
+[data-theme="light"] .bg-teal-950\/60,
+[data-theme="light"] .bg-teal-950\/40,
+[data-theme="light"] .bg-teal-950\/30,
+[data-theme="light"] .bg-teal-500\/20 {
+  background-color: #ccfbf1 !important;
+  border-color: #5eead4 !important;
+  color: #115e59 !important;
+}
+
+[data-theme="light"] .bg-teal-950 *,
+[data-theme="light"] .bg-teal-500\/20 * {
+  color: #115e59 !important;
 }
 
 /* Tables in Light Mode */

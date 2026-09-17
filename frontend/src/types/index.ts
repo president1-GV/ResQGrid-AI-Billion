@@ -369,7 +369,7 @@ export interface DatasetMetadata {
   record_count: number;
   file_size_bytes: number;
   last_ingested?: string;
-  ingestion_status: 'IDLE' | 'INGESTING' | 'SUCCESS' | 'FAILED' | 'STALE';
+  ingestion_status: 'IDLE' | 'INGESTING' | 'SUCCESS' | 'FAILED' | 'STALE' | 'VERIFIED_ACTIVE';
   validation_status: 'PENDING' | 'VALIDATED' | 'FLAGGED' | 'FAILED';
   quality_score: number;
   is_synthetic: boolean;

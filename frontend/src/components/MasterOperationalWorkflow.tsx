@@ -388,7 +388,9 @@ export const MasterOperationalWorkflow: React.FC<MasterOperationalWorkflowProps>
         ? 'bg-slate-900/95 border-slate-800'
         : 'bg-white border-slate-200 shadow-slate-200/50'
     }`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 border-slate-800/60">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 ${
+        isDarkMode ? 'border-slate-800/60' : 'border-slate-200'
+      }`}>
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
@@ -448,16 +450,16 @@ export const MasterOperationalWorkflow: React.FC<MasterOperationalWorkflowProps>
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className={`text-[10px] font-mono font-bold ${
-                      isDarkMode ? 'text-slate-500 group-hover:text-sky-400' : 'text-slate-400 group-hover:text-sky-700'
+                      isDarkMode ? 'text-slate-500 group-hover:text-sky-400' : 'text-slate-500 group-hover:text-sky-700'
                     }`}>
                       {stage.number}
                     </span>
                     <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                      stage.truthClass === 'LIVE' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                      stage.truthClass === 'NEAR_REAL_TIME' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                      stage.truthClass === 'SYNTHETIC' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                      stage.truthClass === 'AUTHORIZED' ? 'bg-teal-500/20 text-teal-300 border-teal-500/30' :
-                      'bg-slate-800 text-slate-300 border-slate-700'
+                      stage.truthClass === 'LIVE' ? (isDarkMode ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-100 text-red-900 border-red-300') :
+                      stage.truthClass === 'NEAR_REAL_TIME' ? (isDarkMode ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-100 text-amber-900 border-amber-300') :
+                      stage.truthClass === 'SYNTHETIC' ? (isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-100 text-amber-900 border-amber-300') :
+                      stage.truthClass === 'AUTHORIZED' ? (isDarkMode ? 'bg-teal-500/20 text-teal-300 border-teal-500/30' : 'bg-teal-100 text-teal-900 border-teal-300') :
+                      (isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-200 text-slate-800 border-slate-300')
                     }`}>
                       {stage.truthClass}
                     </span>
@@ -514,17 +516,21 @@ export const MasterOperationalWorkflow: React.FC<MasterOperationalWorkflowProps>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-mono font-bold text-sky-400">
+                <span className={`text-xs font-mono font-bold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
                   STAGE {selectedStage.number} OF 18
                 </span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border font-mono ${
                   selectedStage.truthClass === 'SYNTHETIC'
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                    ? (isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-100 text-amber-900 border-amber-300')
+                    : selectedStage.truthClass === 'LIVE'
+                    ? (isDarkMode ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-100 text-red-900 border-red-300')
+                    : selectedStage.truthClass === 'AUTHORIZED'
+                    ? (isDarkMode ? 'bg-teal-500/20 text-teal-300 border-teal-500/30' : 'bg-teal-100 text-teal-900 border-teal-300')
+                    : (isDarkMode ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-900 border-emerald-300')
                 }`}>
                   TRUTH CLASS: {selectedStage.truthClass}
                 </span>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className={`text-xs font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                   Algorithm: {selectedStage.algorithm}
                 </span>
               </div>
@@ -545,7 +551,7 @@ export const MasterOperationalWorkflow: React.FC<MasterOperationalWorkflowProps>
               </button>
               <button
                 onClick={() => setSelectedStage(null)}
-                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 transition"
+                className={`p-1 rounded-lg transition ${isDarkMode ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-200 text-slate-600'}`}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -558,25 +564,27 @@ export const MasterOperationalWorkflow: React.FC<MasterOperationalWorkflowProps>
                 ? 'bg-amber-950/40 border-amber-500/40 text-amber-300'
                 : 'bg-amber-50 border-amber-300 text-amber-900'
             }`}>
-              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
               <span>
                 <strong>MANDATORY TRUTH NOTICE:</strong> {selectedStage.disclaimer}
               </span>
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800/60 text-xs">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t text-xs ${
+            isDarkMode ? 'border-slate-800/60' : 'border-sky-200'
+          }`}>
             <div>
-              <span className="text-slate-400 font-mono font-semibold">Inputs to this stage:</span>
-              <ul className="list-disc list-inside mt-1 text-slate-300 space-y-0.5">
+              <span className={`font-mono font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Inputs to this stage:</span>
+              <ul className={`list-disc list-inside mt-1 space-y-0.5 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 {selectedStage.inputs.map((inp, i) => (
                   <li key={i}>{inp}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <span className="text-slate-400 font-mono font-semibold">Outputs generated:</span>
-              <ul className="list-disc list-inside mt-1 text-slate-300 space-y-0.5">
+              <span className={`font-mono font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-700'}`}>Outputs generated:</span>
+              <ul className={`list-disc list-inside mt-1 space-y-0.5 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 {selectedStage.outputs.map((out, i) => (
                   <li key={i}>{out}</li>
                 ))}

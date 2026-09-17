@@ -5,9 +5,10 @@ import { fetchModelsMonitoring } from '../services/api';
 
 interface BenchmarkViewProps {
   onRunBenchmark: () => Promise<{ resqgrid_run: OptimizationRun; comparisons: BenchmarkComparison[] }>;
+  isDarkMode?: boolean;
 }
 
-export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) => {
+export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark, isDarkMode = true }) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ resqgrid_run: OptimizationRun; comparisons: BenchmarkComparison[] } | null>(null);
   const formatEngineTitle = (engine: any) => {
@@ -111,18 +112,32 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className={`p-6 rounded-2xl border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+        isDarkMode
+          ? 'bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border-amber-500/30'
+          : 'bg-amber-50/80 border-amber-300 shadow-sm'
+      }`}>
         <div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-mono text-amber-400 font-bold uppercase">Empirical Proof</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-semibold">
+            <span className={`text-xs font-mono font-bold uppercase ${
+              isDarkMode ? 'text-amber-400' : 'text-amber-800'
+            }`}>Empirical Proof</span>
+            <span className={`text-xs px-2 py-0.5 rounded font-semibold border ${
+              isDarkMode
+                ? 'bg-amber-950 border-amber-500/40 text-amber-300'
+                : 'bg-amber-100 border-amber-300 text-amber-900 font-bold'
+            }`}>
               MATHEMATICAL BENCHMARK & EVALUATION
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-white mt-1">
+          <h1 className={`text-2xl font-bold mt-1 ${
+            isDarkMode ? 'text-white' : 'text-slate-900'
+          }`}>
             Baseline Heuristic vs. ResQGrid Optimization
           </h1>
-          <p className="text-xs text-slate-400 max-w-2xl mt-0.5">
+          <p className={`text-xs max-w-2xl mt-0.5 ${
+            isDarkMode ? 'text-slate-400' : 'text-slate-600'
+          }`}>
             Strict scientific comparison against the standard operational baseline (Greedy Nearest-Depot Allocation) to mathematically prove the performance delta of Google OR-Tools MIP.
           </p>
         </div>
@@ -138,12 +153,16 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
       </div>
 
       {/* Explanatory Methodology Card */}
-      <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 space-y-2">
-        <div className="flex items-center space-x-2 text-slate-200 font-semibold uppercase font-mono text-[11px]">
-          <ShieldCheck className="w-4 h-4 text-sky-400" />
+      <div className={`p-4 rounded-xl border text-xs space-y-2 ${
+        isDarkMode ? 'bg-slate-900/80 border-slate-800 text-slate-300' : 'bg-white border-slate-200 text-slate-700 shadow-sm'
+      }`}>
+        <div className={`flex items-center space-x-2 font-semibold uppercase font-mono text-[11px] ${
+          isDarkMode ? 'text-slate-200' : 'text-slate-800'
+        }`}>
+          <ShieldCheck className="w-4 h-4 text-sky-500" />
           <span>Verified Benchmark Protocol</span>
         </div>
-        <p className="text-slate-400">
+        <p className={isDarkMode ? 'text-slate-400' : 'text-slate-600'}>
           The <strong>Baseline</strong> models conventional manual disaster response: each zone draws from the closest warehouse until local stocks deplete, ignoring network congestion and global equity. <strong>ResQGrid</strong> solves the full Mixed Integer Program simultaneously, optimizing fleet payloads, avoiding blocked bridges, and ensuring remote slums receive life-saving quotas.
         </p>
       </div>
@@ -152,47 +171,59 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
       {data ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <span className="text-[10px] font-mono uppercase text-slate-400">Response Speed Improvement</span>
-              <div className="text-3xl font-extrabold text-emerald-400">
+            <div className={`p-5 rounded-xl border space-y-2 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-mono uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Response Speed Improvement</span>
+              <div className="text-3xl font-extrabold text-emerald-500">
                 {data.comparisons.find((c) => c.metric.includes('Response'))?.improvement_pct}% FASTER
               </div>
-              <p className="text-xs text-slate-400">
+              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Reduced transit latency by eliminating dispatch bottlenecks.
               </p>
             </div>
 
-            <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <span className="text-[10px] font-mono uppercase text-slate-400">Unmet Shortage Reduction</span>
-              <div className="text-3xl font-extrabold text-sky-400">
+            <div className={`p-5 rounded-xl border space-y-2 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-mono uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Unmet Shortage Reduction</span>
+              <div className="text-3xl font-extrabold text-sky-500">
                 {data.comparisons.find((c) => c.metric.includes('Unmet'))?.improvement_pct}% BETTER
               </div>
-              <p className="text-xs text-slate-400">
+              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Satisfies thousands more critical relief units across 7 sectors.
               </p>
             </div>
 
-            <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <span className="text-[10px] font-mono uppercase text-slate-400">Humanitarian Equity Lift</span>
-              <div className="text-3xl font-extrabold text-purple-400">
+            <div className={`p-5 rounded-xl border space-y-2 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <span className={`text-[10px] font-mono uppercase ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Humanitarian Equity Lift</span>
+              <div className="text-3xl font-extrabold text-purple-500">
                 {data.comparisons.find((c) => c.metric.includes('Equity'))?.improvement_pct}% REDUCTION
               </div>
-              <p className="text-xs text-slate-400">
+              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Eliminates the disparity between easy-to-reach wards and slums.
               </p>
             </div>
           </div>
 
           {/* Full Benchmark Table */}
-          <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+          <div className={`p-5 rounded-xl border space-y-4 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <h3 className={`text-sm font-bold uppercase tracking-wider ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
               Auditable Objective Metrics Comparison
             </h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
+                  <tr className={`border-b uppercase font-mono text-[10px] ${
+                    isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-600'
+                  }`}>
                     <th className="py-2.5 px-3">Objective Metric</th>
                     <th className="py-2.5 px-3">Greedy Baseline</th>
                     <th className="py-2.5 px-3">ResQGrid OR-Tools</th>
@@ -200,24 +231,28 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
                     <th className="py-2.5 px-3">Optimization Mechanism</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-200'}`}>
                   {data.comparisons.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/30 transition">
-                      <td className="py-3 px-3 font-semibold text-white">
+                    <tr key={idx} className={isDarkMode ? 'hover:bg-slate-800/30 transition' : 'hover:bg-slate-50 transition'}>
+                      <td className={`py-3 px-3 font-semibold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                         {c.metric}
                       </td>
-                      <td className="py-3 px-3 font-mono text-slate-400">
+                      <td className={`py-3 px-3 font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                         {c.baseline_value.toLocaleString()} {c.unit}
                       </td>
-                      <td className="py-3 px-3 font-mono font-bold text-sky-400">
+                      <td className="py-3 px-3 font-mono font-bold text-sky-600 dark:text-sky-400">
                         {c.optimized_value.toLocaleString()} {c.unit}
                       </td>
                       <td className="py-3 px-3">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border ${
+                          isDarkMode
+                            ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
+                            : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        }`}>
                           {c.improvement_pct > 0 ? `+${c.improvement_pct}%` : `${c.improvement_pct}%`}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-slate-300 text-xs max-w-xs">
+                      <td className={`py-3 px-3 text-xs max-w-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                         {c.explanation}
                       </td>
                     </tr>
@@ -228,99 +263,134 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
           </div>
         </div>
       ) : (
-        <div className="p-12 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
-          <Award className="w-10 h-10 text-amber-500/40 mx-auto" />
-          <h4 className="text-base font-bold text-slate-200">Ready to Benchmark</h4>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+        <div className={`p-12 rounded-2xl border text-center space-y-3 ${
+          isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <Award className={`w-10 h-10 mx-auto ${isDarkMode ? 'text-amber-500/40' : 'text-amber-500/80'}`} />
+          <h4 className={`text-base font-bold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Ready to Benchmark</h4>
+          <p className={`text-xs max-w-md mx-auto ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Click the button above to execute the dual-engine comparison test. All values are computed deterministically by the Python solver.
           </p>
         </div>
       )}
 
       {/* Model Monitoring & Evaluation Panel */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+      <div className={`p-6 rounded-2xl border space-y-4 shadow-xl ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-slate-200/50'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <Cpu className="w-5 h-5 text-sky-400" />
+            <Cpu className="w-5 h-5 text-sky-500" />
             <div>
-              <h3 className="text-base font-bold text-white">AI / Mathematical Engine Monitoring</h3>
-              <p className="text-xs text-slate-400">Live health, solver status, latency, and verification metadata across all engines.</p>
+              <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                AI / Mathematical Engine Monitoring
+              </h3>
+              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Live health, solver status, latency, and verification metadata across all engines.
+              </p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded bg-slate-800 text-[11px] font-mono text-emerald-400 border border-emerald-500/30 font-bold">
+          <span className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold border ${
+            isDarkMode
+              ? 'bg-slate-800 text-emerald-400 border-emerald-500/30'
+              : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+          }`}>
             {models.length > 0 ? `${models.length} ENGINES ONLINE` : '5 ENGINES ONLINE'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-2">
           {models.map((m) => (
-            <div key={m.id || m.name} className="p-4 rounded-xl bg-slate-950/90 border border-slate-800/90 space-y-3 hover:border-slate-700 transition shadow-sm flex flex-col justify-between">
+            <div
+              key={m.id || m.name}
+              className={`p-4 rounded-xl border space-y-3 transition shadow-sm flex flex-col justify-between ${
+                isDarkMode
+                  ? 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                  : 'bg-slate-50 border-slate-200 hover:border-sky-400 hover:bg-white shadow-slate-200/40'
+              }`}
+            >
               <div>
                 <div className="flex items-center justify-between gap-1.5 mb-2">
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-950/60 text-sky-400 border border-sky-500/30">
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                    isDarkMode
+                      ? 'bg-sky-950/60 text-sky-400 border-sky-500/30'
+                      : 'bg-sky-100 text-sky-800 border-sky-300'
+                  }`}>
                     {m.id || 'ENG'}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 shrink-0">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border shrink-0 ${
+                    isDarkMode
+                      ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30'
+                      : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  }`}>
                     {m.status}
                   </span>
                 </div>
-                <h4 className="text-[13px] font-bold text-white tracking-tight leading-snug">
+                <h4 className={`text-[13px] font-bold tracking-tight leading-snug ${
+                  isDarkMode ? 'text-white' : 'text-slate-900'
+                }`}>
                   {formatEngineTitle(m)}
                 </h4>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate" title={m.name}>
+                <div className={`text-[10px] font-mono mt-0.5 truncate ${
+                  isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                }`} title={m.name}>
                   {m.name}
                 </div>
               </div>
 
-              <div className="text-[11px] space-y-1.5 pt-2 border-t border-slate-800/80">
+              <div className={`text-[11px] space-y-1.5 pt-2 border-t ${
+                isDarkMode ? 'border-slate-800/80' : 'border-slate-200'
+              }`}>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Version</span>
-                  <span className="text-slate-200 font-mono font-semibold">{m.version}</span>
+                  <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Version</span>
+                  <span className={`font-mono font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{m.version}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Latency</span>
-                  <span className="text-sky-400 font-mono font-bold">{m.latency_ms} ms</span>
+                  <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Latency</span>
+                  <span className={`font-mono font-bold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>{m.latency_ms} ms</span>
                 </div>
                 {m.solver_status && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Solver Status</span>
-                    <span className="text-emerald-400 font-mono font-bold">{m.solver_status}</span>
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Solver Status</span>
+                    <span className={`font-mono font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{m.solver_status}</span>
                   </div>
                 )}
                 {m.confidence && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Confidence</span>
-                    <span className="text-emerald-400 font-mono font-bold">{Math.round(m.confidence * 100)}%</span>
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Confidence</span>
+                    <span className={`font-mono font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{Math.round(m.confidence * 100)}%</span>
                   </div>
                 )}
                 {m.accuracy && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Accuracy</span>
-                    <span className="text-emerald-400 font-mono font-bold">
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Accuracy</span>
+                    <span className={`font-mono font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
                       {typeof m.accuracy === 'number' ? `${Math.round(m.accuracy * 100)}%` : m.accuracy}
                     </span>
                   </div>
                 )}
                 {m.f1_score && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">F1 Score</span>
-                    <span className="text-slate-200 font-mono font-semibold">{m.f1_score}</span>
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>F1 Score</span>
+                    <span className={`font-mono font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{m.f1_score}</span>
                   </div>
                 )}
                 {m.precision && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Precision</span>
-                    <span className="text-slate-200 font-mono font-semibold">{m.precision}</span>
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Precision</span>
+                    <span className={`font-mono font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}>{m.precision}</span>
                   </div>
                 )}
                 {m.throughput_qps && (
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Throughput</span>
-                    <span className="text-slate-300 font-mono">{m.throughput_qps} QPS</span>
+                    <span className={isDarkMode ? 'text-slate-400 font-medium' : 'text-slate-600 font-medium'}>Throughput</span>
+                    <span className={`font-mono ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>{m.throughput_qps} QPS</span>
                   </div>
                 )}
                 {m.benchmark_lift && (
-                  <div className="pt-2 mt-1 border-t border-slate-800/80 text-[10px] text-amber-300 font-mono font-medium leading-tight">
+                  <div className={`pt-2 mt-1 border-t text-[10px] font-mono font-medium leading-tight ${
+                    isDarkMode ? 'border-slate-800/80 text-amber-300' : 'border-slate-200 text-amber-900 font-bold'
+                  }`}>
                     {m.benchmark_lift}
                   </div>
                 )}

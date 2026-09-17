@@ -29,13 +29,56 @@ import { DemoModeView } from './views/DemoModeView';
 import { DatasetsView } from './views/DatasetsView';
 import { FieldReportAnalyzerView } from './views/FieldReportAnalyzerView';
 import { CreateIncidentModal } from './components/CreateIncidentModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { getInitialSystemState, getInitialFieldReports } from './data/initialState';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 export function App() {
   const [state, setState] = useState<SystemState>(() => getInitialSystemState('flood'));
-  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+  const validTabs: NavTab[] = [
+    'dashboard',
+    'datasets',
+    'map',
+    'optimization',
+    'simulation',
+    'benchmark',
+    'gaps',
+    'resources',
+    'reports',
+    'analytics',
+    'audit',
+    'demo',
+    'analyzer',
+  ];
+  const [currentTab, setCurrentTab] = useState<NavTab>(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && validTabs.includes(hash as NavTab)) {
+      return hash as NavTab;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && validTabs.includes(tabParam as NavTab)) {
+      return tabParam as NavTab;
+    }
+    return 'dashboard';
+  });
   const [loading, setLoading] = useState(false);
+
+  const handleSelectTab = (tab: NavTab) => {
+    setCurrentTab(tab);
+    window.location.hash = tab;
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && validTabs.includes(hash as NavTab)) {
+        setCurrentTab(hash as NavTab);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [fieldReports, setFieldReports] = useState<any[]>(() => getInitialFieldReports());
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('resqgrid_theme') as 'dark' | 'light') || 'dark';
@@ -196,7 +239,7 @@ export function App() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           currentTab={currentTab}
-          onSelectTab={setCurrentTab}
+          onSelectTab={handleSelectTab}
           unapprovedCount={unapprovedCount}
           isDarkMode={theme === 'dark'}
         />
@@ -206,11 +249,11 @@ export function App() {
         }`}>
           <div className="max-w-7xl mx-auto pb-12">
             {state && (
-              <>
+              <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="View Rendering Issue Detected">
                 {currentTab === 'dashboard' && (
                   <DashboardView
                     state={state}
-                    onSelectTab={setCurrentTab}
+                    onSelectTab={handleSelectTab}
                     onApproveAllocation={handleApprove}
                     onRejectAllocation={(id) => handleReject(id, 'Command Center Rejected')}
                     isDarkMode={theme === 'dark'}
@@ -222,7 +265,11 @@ export function App() {
                   />
                 )}
 
-                {currentTab === 'datasets' && <DatasetsView isDarkMode={theme === 'dark'} />}
+                {currentTab === 'datasets' && (
+                  <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="Datasets & Quality Intelligence View">
+                    <DatasetsView isDarkMode={theme === 'dark'} />
+                  </ErrorBoundary>
+                )}
                 {currentTab === 'analyzer' && <FieldReportAnalyzerView />}
 
                 {currentTab === 'map' && (
@@ -256,7 +303,10 @@ export function App() {
                 )}
 
                 {currentTab === 'benchmark' && (
-                  <BenchmarkView onRunBenchmark={handleRunBenchmark} />
+                  <BenchmarkView
+                    onRunBenchmark={handleRunBenchmark}
+                    isDarkMode={theme === 'dark'}
+                  />
                 )}
 
                 {currentTab === 'gaps' && <ResourceGapView state={state} />}
@@ -281,12 +331,12 @@ export function App() {
                     onOptimize={handleOptimize}
                     onCloseRoad={handleCloseRoad}
                     onRunBenchmark={handleRunBenchmark}
-                    onSelectTab={setCurrentTab}
+                    onSelectTab={handleSelectTab}
                     onReset={handleReset}
                     isDarkMode={theme === 'dark'}
                   />
                 )}
-              </>
+              </ErrorBoundary>
             )}
           </div>
         </main>
