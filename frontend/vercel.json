@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/database/(.*)",
-      "destination": "https://heicn84u.us-east.insforge.app/api/database/$1"
+      "source": "/api/database/records/(.*)",
+      "destination": "https://heicn84u.us-east.insforge.app/api/database/records/$1"
     },
     {
       "source": "/(.*)",

@@ -14,10 +14,10 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({ onRunBenchmark }) 
 
   useEffect(() => {
     fetchModelsMonitoring()
-      .then((res) => {
+      .then((res: any) => {
         if (res && res.models) setModels(res.models);
       })
-      .catch((err) => console.error('Error fetching models:', err));
+      .catch((err: any) => console.error('Error fetching models:', err));
   }, []);
 
   const handleBenchmark = async () => {
