@@ -4,25 +4,27 @@ import 'leaflet/dist/leaflet.css';
 import { SystemState, AffectedZone, Warehouse, Hospital, Shelter, Road } from '../types';
 import {
   Layers, MapPin, AlertTriangle, Check, Shield, Navigation, Globe,
-  Key, X, CheckCircle, Info, RefreshCw, Activity, ArrowRight, Zap, Database, Clock
+  Key, X, CheckCircle, Info, RefreshCw, Activity, ArrowRight, Zap, Database, Clock, Languages
 } from 'lucide-react';
 import { fetchGisLayers, fetchGisStatus, toggleRoadStatus } from '../services/api';
 
-export type BaseMapStyle = 'tactical_dark' | 'osm' | 'satellite';
+export type BaseMapStyle = 'tactical_dark' | 'street' | 'topo' | 'satellite';
+export type MapLanguage = 'en' | 'local';
 
 interface BaseMapOption {
   id: BaseMapStyle;
   name: string;
   badge: string;
-  getUrl: (cartoKey?: string) => string;
-  getOptions: () => L.TileLayerOptions;
+  getUrl: (cartoKey?: string, lang?: MapLanguage) => string;
+  getOptions: (lang?: MapLanguage) => L.TileLayerOptions;
+  getReferenceUrl?: (lang?: MapLanguage) => string | null;
 }
 
 const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
   tactical_dark: {
     id: 'tactical_dark',
     name: 'Tactical Dark',
-    badge: 'Keyless Charcoal',
+    badge: 'English Charcoal',
     getUrl: (cartoKey) => {
       if (cartoKey && cartoKey.trim().length > 0) {
         return `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cartoKey.trim())}`;
@@ -36,27 +38,54 @@ const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
       maxZoom: 19,
     }),
   },
-  osm: {
-    id: 'osm',
-    name: 'OpenStreetMap',
-    badge: 'Keyless Street',
-    getUrl: () => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  street: {
+    id: 'street',
+    name: 'Street Map',
+    badge: '100% English Standard',
+    getUrl: (_cartoKey, lang = 'en') => {
+      if (lang === 'en') {
+        // ESRI World Street Map: 100% English across all countries (Pakistan, China, India, Bangladesh, etc.)
+        return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+      }
+      // Native local scripts from OpenStreetMap (Urdu, Chinese, Devanagari, Bengali)
+      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    },
+    getOptions: (lang = 'en') => ({
+      attribution: lang === 'en'
+        ? 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, TomTom'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxNativeZoom: 18,
+      maxZoom: 19,
+    }),
+  },
+  topo: {
+    id: 'topo',
+    name: 'Topographic',
+    badge: 'English Elevation & Rivers',
+    getUrl: () => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
     getOptions: () => ({
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      subdomains: 'abc',
+      attribution: 'Tiles &copy; Esri &mdash; National Geographic, USGS, NOAA',
+      maxNativeZoom: 18,
       maxZoom: 19,
     }),
   },
   satellite: {
     id: 'satellite',
     name: 'Satellite Aerial',
-    badge: 'Keyless HD Imagery',
+    badge: 'HD Imagery + English Labels',
     getUrl: () => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     getOptions: () => ({
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and GIS User Community',
       maxNativeZoom: 18,
       maxZoom: 19,
     }),
+    getReferenceUrl: (lang = 'en') => {
+      if (lang === 'en') {
+        // High-contrast English boundaries and place names overlay
+        return 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+      }
+      return null;
+    }
   },
 };
 
@@ -80,16 +109,25 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const referenceLayerRef = useRef<L.TileLayer | null>(null);
 
   const [cartoKey, setCartoKey] = useState<string>(() => {
     return localStorage.getItem('resqgrid_carto_key') || '';
   });
+  const [mapLanguage, setMapLanguage] = useState<MapLanguage>(() => {
+    return (localStorage.getItem('resqgrid_map_language') as MapLanguage) || 'en';
+  });
   const [baseMapStyle, setBaseMapStyle] = useState<BaseMapStyle>(() => {
-    return isDarkMode ? 'tactical_dark' : 'osm';
+    return isDarkMode ? 'tactical_dark' : 'street';
   });
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [tempKeyInput, setTempKeyInput] = useState('');
   const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
+
+  const handleSetLanguage = (lang: MapLanguage) => {
+    setMapLanguage(lang);
+    localStorage.setItem('resqgrid_map_language', lang);
+  };
 
   // Layer Visibility Toggles
   const [showFlood, setShowFlood] = useState(true);
@@ -162,10 +200,10 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
 
   // Automatically adapt basemap when global theme toggles
   useEffect(() => {
-    if (isDarkMode && baseMapStyle === 'osm') {
+    if (isDarkMode && (baseMapStyle === 'street' || baseMapStyle === 'topo')) {
       setBaseMapStyle('tactical_dark');
     } else if (!isDarkMode && baseMapStyle === 'tactical_dark') {
-      setBaseMapStyle('osm');
+      setBaseMapStyle('street');
     }
   }, [isDarkMode]);
 
@@ -182,10 +220,21 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
       });
 
       const config = BASEMAP_CONFIGS[baseMapStyle];
-      const tileUrl = config.getUrl(cartoKey);
-      const tileOpts = config.getOptions();
+      const tileUrl = config.getUrl(cartoKey, mapLanguage);
+      const tileOpts = config.getOptions(mapLanguage);
 
       tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(map);
+
+      if (config.getReferenceUrl) {
+        const refUrl = config.getReferenceUrl(mapLanguage);
+        if (refUrl) {
+          referenceLayerRef.current = L.tileLayer(refUrl, {
+            maxNativeZoom: 18,
+            maxZoom: 19,
+            zIndex: 10,
+          }).addTo(map);
+        }
+      }
 
       floodLayerRef.current.addTo(map);
       roadsLayerRef.current.addTo(map);
@@ -204,20 +253,35 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
     }
   }, []);
 
-  // Update tile layer whenever baseMapStyle or cartoKey changes
+  // Update tile layer whenever baseMapStyle, cartoKey, or mapLanguage changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     if (tileLayerRef.current) {
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
       tileLayerRef.current = null;
     }
+    if (referenceLayerRef.current) {
+      mapInstanceRef.current.removeLayer(referenceLayerRef.current);
+      referenceLayerRef.current = null;
+    }
 
     const config = BASEMAP_CONFIGS[baseMapStyle];
-    const tileUrl = config.getUrl(cartoKey);
-    const tileOpts = config.getOptions();
+    const tileUrl = config.getUrl(cartoKey, mapLanguage);
+    const tileOpts = config.getOptions(mapLanguage);
 
     tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(mapInstanceRef.current);
-  }, [baseMapStyle, cartoKey]);
+
+    if (config.getReferenceUrl) {
+      const refUrl = config.getReferenceUrl(mapLanguage);
+      if (refUrl) {
+        referenceLayerRef.current = L.tileLayer(refUrl, {
+          maxNativeZoom: 18,
+          maxZoom: 19,
+          zIndex: 10,
+        }).addTo(mapInstanceRef.current);
+      }
+    }
+  }, [baseMapStyle, cartoKey, mapLanguage]);
 
   // Render Operational Layers
   useEffect(() => {
@@ -614,6 +678,14 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-500/30 flex items-center gap-1">
                 <Database className="w-2.5 h-2.5" /> Provenance: DATABASE (1.0)
               </span>
+              <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                mapLanguage === 'en'
+                  ? 'bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border-blue-500/30'
+                  : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border-amber-500/30'
+              }`}>
+                <Languages className="w-2.5 h-2.5" />
+                <span>Language: {mapLanguage === 'en' ? 'English (EN)' : 'Native Scripts'}</span>
+              </span>
             </div>
             <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
               Multi-Layer Spatial Intelligence &bull; Brahmaputra 2.8m Flood Inundation &bull; Dijkstra Dynamic Re-routing &bull; Google OR-Tools MIP Solver
@@ -660,6 +732,40 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             );
           })()}
 
+          {/* Map Language Controller */}
+          <div className={`flex items-center p-1 rounded-lg border text-xs ${
+            isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
+            <div className="flex items-center space-x-1 px-1.5 text-slate-500 font-mono text-[10px] font-bold uppercase">
+              <Languages className="w-3.5 h-3.5 text-sky-500" />
+              <span>Language:</span>
+            </div>
+            <button
+              onClick={() => handleSetLanguage('en')}
+              className={`px-2 py-1 rounded font-medium transition flex items-center space-x-1 ${
+                mapLanguage === 'en'
+                  ? 'bg-sky-500 text-white shadow font-bold'
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Convert entire map into English standardized global cartography"
+            >
+              <span>English (EN)</span>
+              {mapLanguage === 'en' && <Check className="w-3 h-3" />}
+            </button>
+            <button
+              onClick={() => handleSetLanguage('local')}
+              className={`px-2 py-1 rounded font-medium transition flex items-center space-x-1 ${
+                mapLanguage === 'local'
+                  ? 'bg-amber-500 text-white shadow font-bold'
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Display native local scripts (Urdu, Chinese, Devanagari, Bengali via OpenStreetMap)"
+            >
+              <span>Native Scripts</span>
+              {mapLanguage === 'local' && <Check className="w-3 h-3" />}
+            </button>
+          </div>
+
           {/* Basemap Switcher */}
           <div className={`flex items-center p-1 rounded-lg border text-xs ${
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
@@ -668,34 +774,46 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               onClick={() => setBaseMapStyle('tactical_dark')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
                 baseMapStyle === 'tactical_dark'
-                  ? 'bg-sky-500 text-white shadow'
+                  ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="High-Contrast Tactical Charcoal Canvas (Keyless & Watermark-Free)"
+              title="High-Contrast Tactical Charcoal Canvas (English Labels, Keyless & Watermark-Free)"
             >
               <Shield className="w-3 h-3" />
               <span>Tactical Dark</span>
             </button>
             <button
-              onClick={() => setBaseMapStyle('osm')}
+              onClick={() => setBaseMapStyle('street')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'osm'
-                  ? 'bg-sky-500 text-white shadow'
+                baseMapStyle === 'street'
+                  ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="OpenStreetMap Standard (Zero Key Required)"
+              title={mapLanguage === 'en' ? "ESRI World Street Map (100% English Global Cartography)" : "OpenStreetMap (Native local scripts)"}
             >
               <Globe className="w-3 h-3" />
-              <span>Street Map</span>
+              <span>{mapLanguage === 'en' ? 'Street Map (EN)' : 'Street Map (Local)'}</span>
+            </button>
+            <button
+              onClick={() => setBaseMapStyle('topo')}
+              className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
+                baseMapStyle === 'topo'
+                  ? 'bg-sky-500 text-white shadow font-bold'
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Topographic Elevation, Contours & River Basins (English Labels)"
+            >
+              <Navigation className="w-3 h-3" />
+              <span>Topographic</span>
             </button>
             <button
               onClick={() => setBaseMapStyle('satellite')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
                 baseMapStyle === 'satellite'
-                  ? 'bg-sky-500 text-white shadow'
+                  ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="ESRI High-Definition Aerial Satellite (Zero Key Required)"
+              title="ESRI High-Definition Aerial Satellite with English Place Names Overlay"
             >
               <Layers className="w-3 h-3" />
               <span>Satellite</span>
@@ -1164,11 +1282,56 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
                 {BASEMAP_CONFIGS[baseMapStyle].name}
               </div>
               <p className="text-slate-500 text-[11px]">
-                {baseMapStyle === 'tactical_dark' && !cartoKey && 'Rendering ESRI Dark Gray Canvas tiles. 100% free, high-performance, and completely watermark-free.'}
-                {baseMapStyle === 'osm' && 'Rendering official OpenStreetMap standard tiles. 100% open-source, fully labeled, and keyless.'}
-                {baseMapStyle === 'satellite' && 'Rendering ESRI World Imagery high-resolution satellite tiles. Unmetered and keyless.'}
+                {baseMapStyle === 'tactical_dark' && !cartoKey && 'Rendering ESRI Dark Gray Canvas tiles. 100% free, English-standardized, and completely watermark-free.'}
+                {baseMapStyle === 'street' && mapLanguage === 'en' && 'Rendering ESRI World Street Map. 100% English across all countries and cities without multilingual foreign scripts.'}
+                {baseMapStyle === 'street' && mapLanguage === 'local' && 'Rendering OpenStreetMap standard tiles with native local scripts.'}
+                {baseMapStyle === 'topo' && 'Rendering ESRI World Topo Map. Contours, elevation, and river basins in pure English.'}
+                {baseMapStyle === 'satellite' && 'Rendering ESRI World Imagery high-resolution satellite tiles with English place names overlay.'}
                 {cartoKey && 'Authenticated with custom CARTO API Key.'}
               </p>
+            </div>
+
+            {/* Global English Language Standardization */}
+            <div className={`p-3.5 rounded-xl border space-y-2 text-xs ${
+              isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-mono text-[10px] uppercase">Map Cartography Language</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border ${
+                  mapLanguage === 'en'
+                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 border-blue-500/30'
+                    : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border-amber-500/30'
+                }`}>
+                  <Languages className="w-3 h-3" /> {mapLanguage === 'en' ? '100% English Active' : 'Native Local Scripts'}
+                </span>
+              </div>
+              <p className="text-slate-500 text-[11px] leading-relaxed">
+                OpenStreetMap raw tiles natively display region-specific scripts (Urdu in Pakistan, Chinese in China, Devanagari in North India, Bengali in Bangladesh). When <strong>English (EN)</strong> is active, ResQGrid routes all raster tiles to standardized international cartography, rendering all nations, territories, highways, and disaster zones strictly in English.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleSetLanguage('en')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                    mapLanguage === 'en'
+                      ? 'bg-sky-500 text-white shadow'
+                      : 'border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Force 100% English Map
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetLanguage('local')}
+                  className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                    mapLanguage === 'local'
+                      ? 'bg-amber-500 text-white shadow'
+                      : 'border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Native Local Scripts
+                </button>
+              </div>
             </div>
 
             {/* Custom API Key Form */}
