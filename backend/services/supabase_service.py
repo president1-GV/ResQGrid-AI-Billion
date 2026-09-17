@@ -5,6 +5,7 @@ and tamper-evident audit logging with PostgreSQL / Supabase backend.
 """
 
 import os
+import asyncio
 import time
 import hashlib
 import json

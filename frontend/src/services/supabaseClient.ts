@@ -5,6 +5,18 @@
  */
 
 import { createClient } from '@insforge/sdk';
+import { io, Socket } from 'socket.io-client';
+
+export interface RealtimeStatus {
+  connected: boolean;
+  socketId?: string;
+  channels: string[];
+  lastEvent?: {
+    channel: string;
+    event: string;
+    timestamp: string;
+  };
+}
 
 export interface DatabaseStatus {
   status: 'CONNECTED' | 'DEGRADED' | 'OFFLINE';
@@ -13,6 +25,7 @@ export interface DatabaseStatus {
   endpoint: string;
   latency_ms: number;
   tables_status?: Record<string, number>;
+  realtime_status?: RealtimeStatus;
   postgis_enabled?: boolean;
   truth_class: string;
   disclaimer: string;
@@ -196,6 +209,7 @@ export async function getDatabaseHealth(): Promise<DatabaseStatus> {
       endpoint: SUPABASE_URL,
       latency_ms,
       tables_status,
+      realtime_status: getRealtimeStatus(),
       postgis_enabled: true,
       truth_class: 'GROUND_TRUTH',
       disclaimer:
@@ -207,6 +221,7 @@ export async function getDatabaseHealth(): Promise<DatabaseStatus> {
       status: 'DEGRADED',
       endpoint: SUPABASE_URL,
       latency_ms: Math.round(performance.now() - start),
+      realtime_status: getRealtimeStatus(),
       truth_class: 'NO_VERIFIED_DATA',
       disclaimer:
         'Operational resource inventory is simulated because no authorized live resource system is connected.',
@@ -650,3 +665,155 @@ export async function queryNearbyZones(
     results: [],
   };
 }
+
+// ============================================================
+// REAL-TIME WEBSOCKET SUBSCRIPTION MANAGER
+// ============================================================
+
+let activeSocket: Socket | null = null;
+let realtimeStatus: RealtimeStatus = {
+  connected: false,
+  channels: [],
+};
+const tableListeners: Map<string, Set<(event: string, payload: any) => void>> = new Map();
+const statusListeners: Set<(status: RealtimeStatus) => void> = new Set();
+
+export function getRealtimeStatus(): RealtimeStatus {
+  return realtimeStatus;
+}
+
+export function onRealtimeStatusChange(callback: (status: RealtimeStatus) => void): () => void {
+  statusListeners.add(callback);
+  callback(realtimeStatus);
+  return () => {
+    statusListeners.delete(callback);
+  };
+}
+
+function updateRealtimeStatus(updates: Partial<RealtimeStatus>) {
+  realtimeStatus = { ...realtimeStatus, ...updates };
+  for (const listener of statusListeners) {
+    try {
+      listener(realtimeStatus);
+    } catch {}
+  }
+}
+
+export function initRealtimeClient(): Socket {
+  if (activeSocket && activeSocket.connected) {
+    return activeSocket;
+  }
+
+  if (activeSocket) {
+    activeSocket.disconnect();
+    activeSocket = null;
+  }
+
+  const socket = io(SUPABASE_URL, {
+    auth: {
+      token: SUPABASE_ANON_KEY,
+    },
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 10000,
+  });
+
+  const channelsToSubscribe = [
+    'allocations',
+    'field_reports',
+    'roads',
+    'incidents',
+    'resq_audit_logs',
+  ];
+
+  socket.on('connect', () => {
+    updateRealtimeStatus({
+      connected: true,
+      socketId: socket.id,
+      channels: channelsToSubscribe,
+    });
+
+    for (const ch of channelsToSubscribe) {
+      socket.emit('realtime:subscribe', { channel: ch }, () => {
+        // subscription confirmed
+      });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    updateRealtimeStatus({
+      connected: false,
+      socketId: undefined,
+    });
+  });
+
+  socket.on('connect_error', () => {
+    updateRealtimeStatus({
+      connected: false,
+    });
+  });
+
+  socket.onAny((event: string, ...args: any[]) => {
+    const payload = args[0] || {};
+    const meta = payload?.meta || {};
+    const channelName = (meta.channel || '').replace(/^realtime:/, '');
+
+    updateRealtimeStatus({
+      lastEvent: {
+        channel: channelName || event,
+        event,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    // Notify listeners registered for this channel / table
+    if (channelName && tableListeners.has(channelName)) {
+      const callbacks = tableListeners.get(channelName)!;
+      for (const cb of callbacks) {
+        try {
+          cb(event, payload);
+        } catch (e) {
+          console.error(`Error in realtime callback for ${channelName}:`, e);
+        }
+      }
+    }
+
+    // Also notify wildcard listeners
+    if (tableListeners.has('*')) {
+      for (const cb of tableListeners.get('*')!) {
+        try {
+          cb(event, payload);
+        } catch {}
+      }
+    }
+  });
+
+  activeSocket = socket;
+  return socket;
+}
+
+export function subscribeToRealtime(
+  table: string,
+  callback: (event: string, payload: any) => void
+): () => void {
+  initRealtimeClient();
+
+  if (!tableListeners.has(table)) {
+    tableListeners.set(table, new Set());
+  }
+  tableListeners.get(table)!.add(callback);
+
+  return () => {
+    const set = tableListeners.get(table);
+    if (set) {
+      set.delete(callback);
+      if (set.size === 0) {
+        tableListeners.delete(table);
+      }
+    }
+  };
+}
+

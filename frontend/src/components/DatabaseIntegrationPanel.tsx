@@ -22,8 +22,12 @@ import {
   approveAllDbAllocations,
   submitDbFieldReport,
   fetchDbAuditLogs,
+  subscribeToRealtime,
+  getRealtimeStatus,
+  onRealtimeStatusChange,
   DatabaseStatus,
-  DbAuditLog
+  DbAuditLog,
+  RealtimeStatus
 } from '../services/supabaseClient';
 
 interface DatabaseIntegrationPanelProps {
@@ -36,6 +40,13 @@ export const DatabaseIntegrationPanel: React.FC<DatabaseIntegrationPanelProps> =
   onRefreshState,
 }) => {
   const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
+  const [realtime, setRealtime] = useState<RealtimeStatus>(getRealtimeStatus());
+  const [lastRealtimeEvent, setLastRealtimeEvent] = useState<{
+    table: string;
+    event: string;
+    payload: any;
+    time: string;
+  } | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<any | null>(null);
@@ -59,7 +70,43 @@ export const DatabaseIntegrationPanel: React.FC<DatabaseIntegrationPanelProps> =
   useEffect(() => {
     loadStatus();
     const interval = setInterval(loadStatus, 20000);
-    return () => clearInterval(interval);
+
+    const unsubStatus = onRealtimeStatusChange((status) => {
+      setRealtime(status);
+    });
+
+    const unsubAudit = subscribeToRealtime('resq_audit_logs', (event, payload) => {
+      setLastRealtimeEvent({ table: 'resq_audit_logs', event, payload, time: new Date().toLocaleTimeString() });
+      loadStatus();
+      if (onRefreshState) onRefreshState();
+    });
+
+    const unsubAlloc = subscribeToRealtime('allocations', (event, payload) => {
+      setLastRealtimeEvent({ table: 'allocations', event, payload, time: new Date().toLocaleTimeString() });
+      loadStatus();
+      if (onRefreshState) onRefreshState();
+    });
+
+    const unsubRoads = subscribeToRealtime('roads', (event, payload) => {
+      setLastRealtimeEvent({ table: 'roads', event, payload, time: new Date().toLocaleTimeString() });
+      loadStatus();
+      if (onRefreshState) onRefreshState();
+    });
+
+    const unsubReports = subscribeToRealtime('field_reports', (event, payload) => {
+      setLastRealtimeEvent({ table: 'field_reports', event, payload, time: new Date().toLocaleTimeString() });
+      loadStatus();
+      if (onRefreshState) onRefreshState();
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsubStatus();
+      unsubAudit();
+      unsubAlloc();
+      unsubRoads();
+      unsubReports();
+    };
   }, []);
 
   const handleSpatialSearch = async () => {
@@ -215,7 +262,7 @@ export const DatabaseIntegrationPanel: React.FC<DatabaseIntegrationPanelProps> =
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className={`text-base font-extrabold tracking-tight ${
                 isDarkMode ? 'text-white' : 'text-slate-900'
               }`}>
@@ -224,12 +271,23 @@ export const DatabaseIntegrationPanel: React.FC<DatabaseIntegrationPanelProps> =
               {dbStatus?.status === 'CONNECTED' ? (
                 <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  CONNECTED ({dbStatus.latency_ms}ms)
+                  DB CONNECTED ({dbStatus.latency_ms}ms)
                 </span>
               ) : (
                 <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                   DATABASE OFFLINE
+                </span>
+              )}
+              {realtime.connected ? (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+                  WEBSOCKET REAL-TIME ACTIVE
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                  CONNECTING WEBSOCKET...
                 </span>
               )}
             </div>
@@ -264,6 +322,23 @@ export const DatabaseIntegrationPanel: React.FC<DatabaseIntegrationPanelProps> =
           </button>
         </div>
       </div>
+
+      {/* Live Real-Time Push Notification Banner */}
+      {lastRealtimeEvent && (
+        <div className={`px-4 py-2 text-xs font-mono border-b flex items-center justify-between ${
+          isDarkMode ? 'bg-sky-950/60 border-sky-800 text-sky-200' : 'bg-sky-50 border-sky-200 text-sky-900'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-400 animate-bounce shrink-0" />
+            <span>
+              <strong>LIVE POSTGRESQL PUSH:</strong> Table <span className="font-bold underline">{lastRealtimeEvent.table}</span> &bull; Action: <span className="font-bold uppercase">{lastRealtimeEvent.event}</span> &bull; Received at {lastRealtimeEvent.time}
+            </span>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 shrink-0">
+            Realtime Synced
+          </span>
+        </div>
+      )}
 
       {isExpanded && (
         <div className="p-5 space-y-5">
