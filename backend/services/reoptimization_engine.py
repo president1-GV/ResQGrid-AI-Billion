@@ -16,9 +16,17 @@ class ReOptimizationEngine:
         Closes a road, updates road status, triggers automated re-optimization,
         and computes delta difference with previous allocation.
         """
-        if road_id not in state.roads:
+        resolved_road_id = road_id
+        if resolved_road_id not in state.roads:
+            for k in state.roads:
+                if k.lower() == road_id.lower() or k.replace("ROAD-", "").lower() == road_id.lower() or f"ROAD-{road_id}".lower() == k.lower():
+                    resolved_road_id = k
+                    break
+
+        if resolved_road_id not in state.roads:
             raise ValueError(f"Road {road_id} not found")
 
+        road_id = resolved_road_id
         target_road = state.roads[road_id]
         old_status = target_road.status
         target_road.status = RoadStatus.BLOCKED

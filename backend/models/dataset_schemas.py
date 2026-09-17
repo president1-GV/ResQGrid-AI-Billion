@@ -81,8 +81,10 @@ class IngestionRun(BaseModel):
 
 
 class LLMExtractionInput(BaseModel):
-    text: str
+    text: Optional[str] = None
+    raw_text: Optional[str] = None
     source_reference: Optional[str] = "FIELD-DISPATCH"
+    source: Optional[str] = None
     timestamp: Optional[str] = None
     provider: Optional[str] = "local"  # "local", "gemini", "huggingface", "mock"
 

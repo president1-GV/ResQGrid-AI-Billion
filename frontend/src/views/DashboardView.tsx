@@ -23,13 +23,16 @@ import { MasterOperationalWorkflow } from '../components/MasterOperationalWorkfl
 import { EvaluatorLiveTestbench } from '../components/EvaluatorLiveTestbench';
 import { RoleCommandCenter } from '../components/RoleCommandCenter';
 import { DatabaseIntegrationPanel } from '../components/DatabaseIntegrationPanel';
+import { RequestAppReviewQueue } from '../components/RequestAppReviewQueue';
 import { OptimizationObjectiveWeights } from '../types';
 
 interface DashboardViewProps {
   state: SystemState;
   onSelectTab: (tab: NavTab) => void;
   onApproveAllocation: (id: string) => void;
-  onRejectAllocation: (id: string) => void;
+  onRejectAllocation: (id: string, reason?: string) => void;
+  onModifyAllocation?: (id: string, reason: string, qty: number) => void;
+  onRequestEmergencyDemand?: (zoneId: string, commodity: string, qty: number, reason: string) => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
   onOpenCreateIncident?: () => void;
@@ -43,6 +46,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectTab,
   onApproveAllocation,
   onRejectAllocation,
+  onModifyAllocation,
+  onRequestEmergencyDemand,
   isDarkMode,
   onToggleTheme,
   onOpenCreateIncident,
@@ -51,8 +56,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSwitchScenario,
 }) => {
   const latestRun = state.latest_run;
-  const criticalZones = state.zones.filter((z) => z.priority_score >= 80);
-  const pendingAllocations = state.active_allocations.filter((a) => a.status === 'pending_approval');
+  const criticalZones = (state.zones || []).filter((z) => z.priority_score >= 80);
+  const pendingAllocations = (state.active_allocations || []).filter((a) => {
+    const s = (a.status || '').toLowerCase();
+    return s === 'pending_approval' || s === 'pending';
+  });
 
   return (
     <div className="space-y-6">
@@ -166,47 +174,47 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Authoritative PostgreSQL 15 & PostGIS Spatial Integration Panel */}
-      <DatabaseIntegrationPanel
-        isDarkMode={isDarkMode}
-        onRefreshState={() => {
-          if (onSwitchScenario && state) {
-            onSwitchScenario(state.event.type.toLowerCase().includes('tsunami') ? 'tsunami' : 'flood');
-          }
-        }}
-      />
+      {/* 1. REQUEST APP OPTION: LIVE OPERATIONAL ALLOCATION REQUESTS QUEUE (ACCEPT OR REJECT CONTROLS) - COMES FIRST */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center space-x-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+            <h2 className={`text-sm font-bold tracking-wider uppercase ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Primary Command Action &bull; Allocation Requests (Accept / Reject Controls)
+            </h2>
+            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+              pendingAllocations.length > 0
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+            }`}>
+              {pendingAllocations.length > 0 ? `${pendingAllocations.length} PENDING DECISION` : 'ALL AUTHORIZED'}
+            </span>
+          </div>
+          <button
+            onClick={() => onSelectTab('requests')}
+            className="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center space-x-1 cursor-pointer"
+          >
+            <span>Full Tactical Queue App</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
 
-      {/* Master Operational Workflow Pipeline */}
-      <MasterOperationalWorkflow
-        currentScenario={state.event.type}
-        onSelectTab={onSelectTab}
-        isDarkMode={isDarkMode}
-      />
-
-      {/* Role-Specific Operational Command Center (16:9 Landscape & Multi-Hazard Cascade) */}
-      <RoleCommandCenter
-        state={state}
-        isDarkMode={isDarkMode}
-        onSelectTab={onSelectTab}
-        onApproveAllocation={onApproveAllocation}
-        onRejectAllocation={onRejectAllocation}
-        onOptimize={onOptimize}
-        onCloseRoad={onCloseRoad}
-        onSwitchScenario={onSwitchScenario}
-      />
-
-      {/* Evaluator Master Demonstration & Policy Control Bench */}
-      {onOptimize && onCloseRoad && onSwitchScenario && (
-        <EvaluatorLiveTestbench
+        <RequestAppReviewQueue
           state={state}
-          onOptimize={onOptimize}
-          onCloseRoad={onCloseRoad}
-          onSwitchScenario={onSwitchScenario}
+          onApproveAllocation={onApproveAllocation}
+          onRejectAllocation={onRejectAllocation}
+          onModifyAllocation={onModifyAllocation}
+          onRequestEmergencyDemand={onRequestEmergencyDemand}
           isDarkMode={isDarkMode}
+          onRefresh={() => {
+            if (onSwitchScenario && state) {
+              onSwitchScenario(state.event.type.toLowerCase().includes('tsunami') ? 'tsunami' : 'flood');
+            }
+          }}
         />
-      )}
+      </div>
 
-      {/* KPI Stats Grid */}
+      {/* 2. KPI Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className={`p-4 rounded-xl border transition-all ${isDarkMode ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"}`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
@@ -260,6 +268,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 3. Authoritative PostgreSQL 15 & PostGIS Spatial Integration Panel */}
+      <DatabaseIntegrationPanel
+        isDarkMode={isDarkMode}
+        onRefreshState={() => {
+          if (onSwitchScenario && state) {
+            onSwitchScenario(state.event.type.toLowerCase().includes('tsunami') ? 'tsunami' : 'flood');
+          }
+        }}
+      />
+
+      {/* 4. Master Operational Workflow Pipeline */}
+      <MasterOperationalWorkflow
+        currentScenario={state.event.type}
+        onSelectTab={onSelectTab}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 5. Role-Specific Operational Command Center (16:9 Landscape & Multi-Hazard Cascade) */}
+      <RoleCommandCenter
+        state={state}
+        isDarkMode={isDarkMode}
+        onSelectTab={onSelectTab}
+        onApproveAllocation={onApproveAllocation}
+        onRejectAllocation={onRejectAllocation}
+        onOptimize={onOptimize}
+        onCloseRoad={onCloseRoad}
+        onSwitchScenario={onSwitchScenario}
+      />
+
+      {/* 6. Evaluator Master Demonstration & Policy Control Bench */}
+      {onOptimize && onCloseRoad && onSwitchScenario && (
+        <EvaluatorLiveTestbench
+          state={state}
+          onOptimize={onOptimize}
+          onCloseRoad={onCloseRoad}
+          onSwitchScenario={onSwitchScenario}
+          isDarkMode={isDarkMode}
+        />
+      )}
 
       {/* Main Grid: Critical Zones & Pending Approvals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -457,7 +505,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Quick Simulation CTA */}
+          {/* Live Operational Stress-Testing & Dynamic Recalibration */}
           <div className={`p-5 rounded-xl border space-y-3 ${
             isDarkMode
               ? 'bg-gradient-to-br from-purple-950/40 to-slate-900 border-purple-500/30'
@@ -465,16 +513,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           }`}>
             <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>
               <AlertTriangle className={`w-4 h-4 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-              <h4 className="text-sm font-bold">Evaluator Demonstration</h4>
+              <h4 className="text-sm font-bold">Dynamic Constraint Adaptation</h4>
             </div>
             <p className={`text-xs ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-              Test dynamic constraint adaptation in real time: close roads, simulate medical shortages, and watch the optimizer recalculate in milliseconds.
+              Operational constraint recalibration: report road breaches, adjust warehouse quotas, and inspect closed-loop optimizer recalculations across PostgreSQL.
             </p>
             <button
               onClick={() => onSelectTab('simulation')}
-              className="w-full py-2 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-sm"
+              className="w-full py-2 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-sm cursor-pointer"
             >
-              Open What-If Simulation Sandbox &rarr;
+              Open Dynamic Constraint Workbench &rarr;
             </button>
           </div>
         </div>

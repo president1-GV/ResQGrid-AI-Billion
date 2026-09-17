@@ -17,7 +17,7 @@ from backend.models.dataset_schemas import (
     LLMExtractedMedical,
     LLMExtractedRoad
 )
-from backend.services.location_resolver import LocationResolver
+from backend.services.location_resolver import LocationResolver, INDIAN_DISTRICT_GAZETTEER
 
 
 class LLMProvider:
@@ -33,8 +33,8 @@ class LocalNLPProvider(LLMProvider):
     """
 
     DISASTER_KEYWORDS = {
-        "flood": ["flood", "flooding", "waterlogging", "inundated", "submerged", "river overflow", "breach"],
-        "cyclone": ["cyclone", "hurricane", "typhoon", "high wind", "storm surge", "gale"],
+        "flood": ["flood", "flooding", "waterlogging", "inundated", "submerged", "river overflow", "breach", "water level", "rainfall", "downpour", "rising water"],
+        "cyclone": ["cyclone", "hurricane", "typhoon", "high wind", "storm surge", "gale", "storm"],
         "earthquake": ["earthquake", "tremor", "aftershock", "seismic", "building collapse"],
         "landslide": ["landslide", "mudslide", "debris flow", "rockfall"]
     }
@@ -67,19 +67,27 @@ class LocalNLPProvider(LLMProvider):
             hallucination_warnings.append("Event type not specified in source report.")
 
         # 2. Location Extraction & Resolution
-        # Look for phrases: "in <Location>", "at <Location>", "near <Location>", "<Location> has..."
         location_raw = None
-        loc_patterns = [
-            r"(?:in|at|near|around|village|ward|sector|district)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
-            r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:has|is|reported|facing|residents)"
-        ]
-        for pat in loc_patterns:
-            match = re.search(pat, text)
-            if match:
-                candidate_loc = match.group(1).strip()
-                if candidate_loc.lower() not in ["residents", "hospital", "warehouse", "bridge", "road", "water", "food", "high", "urgent"]:
-                    location_raw = candidate_loc
-                    break
+        # Check known gazetteer disaster zones directly in text
+        for key, loc_data in INDIAN_DISTRICT_GAZETTEER.items():
+            if key in text_lower:
+                location_raw = loc_data["name"]
+                break
+
+        if not location_raw:
+            loc_patterns = [
+                r"(?:in|at|near|around|village|ward|sector|district|colony|cluster)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+                r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+(?:Colony|Cluster|Ward|Village|District|Sector|Nagar|Pur|Ganj|Bazaar|Camp|Relief Center)))\s*(?:levee|breach|has|is|reported|facing|residents|waters|flooded)?",
+                r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:has|is|reported|facing|residents|levee|breached)"
+            ]
+            stopwords = ["residents", "hospital", "warehouse", "bridge", "road", "water", "food", "high", "urgent", "situation", "severe", "citizens", "people", "patients"]
+            for pat in loc_patterns:
+                match = re.search(pat, text)
+                if match:
+                    candidate_loc = match.group(1).strip()
+                    if candidate_loc.lower() not in stopwords:
+                        location_raw = candidate_loc
+                        break
 
         resolved_loc = LocationResolver.resolve(location_raw)
         if resolved_loc.name is None:
@@ -134,22 +142,41 @@ class LocalNLPProvider(LLMProvider):
         crit_injuries = None
         med_exp = None
 
-        if "urgent medical" in text_lower or "critical patient" in text_lower or "emergency medical" in text_lower or "icu" in text_lower:
+        critical_kws = [
+            "urgent medical", "critical patient", "emergency medical", "icu",
+            "dialysis", "oxygen", "cardiac", "ventilator", "trauma", "life support",
+            "chemotherapy", "blood transfusion", "infant in distress"
+        ]
+        high_kws = [
+            "medical", "injured", "doctor", "transfer", "ambulance", "first aid",
+            "casualties", "wound", "fracture", "hypothermia", "pregnant"
+        ]
+
+        if any(kw in text_lower for kw in critical_kws):
             med_priority = "CRITICAL"
-            field_conf["medical_needs"] = 0.92
-            med_exp = "Urgent medical / critical patients mentioned."
-        elif "medical" in text_lower or "injured" in text_lower or "doctor" in text_lower:
+            field_conf["medical_needs"] = 0.95
+            med_exp = "Urgent / life-critical medical emergency (dialysis, trauma, ICU, or oxygen) declared."
+        elif any(kw in text_lower for kw in high_kws):
             med_priority = "HIGH"
-            field_conf["medical_needs"] = 0.80
-            med_exp = "Medical attention or injuries reported."
+            field_conf["medical_needs"] = 0.85
+            med_exp = "Medical attention, patient transfer, or injuries reported."
         else:
             med_priority = "NORMAL"
             field_conf["medical_needs"] = 0.50
             med_exp = "No specialized medical emergency declared."
 
-        pat_match = re.search(r"(\d+)\s*(?:elderly|patients|injured|victims|casualties)", text_lower)
-        if pat_match:
-            patients = int(pat_match.group(1))
+        pat_patterns = [
+            r"(\d+)\s*(?:elderly|patients|injured|victims|casualties|residents|citizens)?\s*(?:require|need|awaiting)?\s*(?:dialysis|oxygen|urgent medical|medical|icu|transfer)",
+            r"(\d+)\s*(?:patients|elderly|injured|victims|casualties)",
+        ]
+        for pat in pat_patterns:
+            pat_match = re.search(pat, text_lower)
+            if pat_match:
+                try:
+                    patients = int(pat_match.group(1))
+                    break
+                except ValueError:
+                    pass
 
         medical_needs = LLMExtractedMedical(
             priority=med_priority,
@@ -163,21 +190,42 @@ class LocalNLPProvider(LLMProvider):
         blocked_segments = []
         road_exp = None
 
-        if "blocked" in text_lower or "submerged" in text_lower or "causeway washed" in text_lower or "bridge down" in text_lower or "impassable" in text_lower:
+        ROAD_STATUS_WORDS = {
+            "impassable", "blocked", "submerged", "flooded", "closed",
+            "damaged", "destroyed", "washed", "breached", "down", "waterlogged"
+        }
+
+        if any(kw in text_lower for kw in ["blocked", "submerged", "causeway washed", "bridge down", "impassable", "breached", "washed away", "cut off"]):
             road_status = "BLOCKED"
-            road_exp = "Road or bridge reported impassable or submerged."
-            field_conf["road_conditions"] = 0.91
-            # Look for specific road names (e.g. Road R17, NH-37, North Bridge)
-            road_matches = re.findall(r"(?:road|route|bridge|causeway|nh)\s*([a-z0-9\-]+)", text_lower)
-            for rm in road_matches:
-                blocked_segments.append(f"ROAD-{rm.upper()}")
+            road_exp = "Road, bridge, or causeway reported impassable or submerged."
+            field_conf["road_conditions"] = 0.92
+
+            # 1. Descriptive roads like "north access road", "coastal causeway", "east bridge"
+            desc_roads = re.findall(
+                r"\b((?:north|south|east|west|central|coastal|main|river|access)\s+(?:access\s+)?(?:road|route|bridge|causeway|highway|expressway))\b",
+                text_lower
+            )
+            for dr in desc_roads:
+                seg_id = "ROAD-" + "-".join(dr.upper().split())
+                if seg_id not in blocked_segments:
+                    blocked_segments.append(seg_id)
+
+            # 2. Identifier roads like "Road R17", "NH-37", "Bridge B4"
+            code_roads = re.findall(r"(?:road|route|bridge|causeway|nh|highway)\s*([a-z0-9\-]+)", text_lower)
+            for cr in code_roads:
+                cr_clean = cr.strip().lower()
+                if cr_clean not in ROAD_STATUS_WORDS and len(cr_clean) >= 2:
+                    seg_id = f"ROAD-{cr_clean.upper()}"
+                    if seg_id not in blocked_segments:
+                        blocked_segments.append(seg_id)
+
         elif "open" in text_lower or "clear" in text_lower or "passable" in text_lower:
             road_status = "OPEN"
-            road_exp = "Road network confirmed clear."
+            road_exp = "Road network confirmed clear and navigable."
             field_conf["road_conditions"] = 0.85
         else:
             road_status = "UNKNOWN"
-            road_exp = "Road status not provided in source."
+            road_exp = "Road status not provided in source report."
             field_conf["road_conditions"] = 0.0
             missing_fields.append("road_conditions")
 
@@ -243,4 +291,6 @@ class LLMExtractor:
     @classmethod
     def extract_event(cls, input_data: LLMExtractionInput) -> LLMExtractionOutput:
         provider = cls._providers.get(input_data.provider or "local", cls._providers["local"])
-        return provider.extract(input_data.text, input_data.source_reference or "FIELD-DISPATCH")
+        text = input_data.text or input_data.raw_text or ""
+        source = input_data.source_reference or input_data.source or "FIELD-DISPATCH"
+        return provider.extract(text, source)

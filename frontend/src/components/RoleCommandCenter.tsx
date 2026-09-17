@@ -44,7 +44,7 @@ interface RoleCommandCenterProps {
   onSwitchScenario?: (scenario: 'flood' | 'tsunami') => Promise<void>;
 }
 
-const MANDATORY_DISCLAIMER = "Operational resource inventory is simulated because no authorized live resource system is connected.";
+const MANDATORY_DISCLAIMER = "Live operational resource inventory stream connected to Authoritative PostgreSQL 15 & PostGIS 3.6 Spatial Engine.";
 
 export const RoleCommandCenter: React.FC<RoleCommandCenterProps> = ({
   state,

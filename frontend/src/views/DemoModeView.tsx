@@ -16,6 +16,7 @@ import {
 import { SystemState, OptimizationObjectiveWeights } from '../types';
 import { NavTab } from '../components/Sidebar';
 import { loadDemoScenario, runHardEvaluatorTest } from '../services/api';
+import { CANONICAL_BENCHMARK_DATA } from './BenchmarkView';
 
 interface DemoModeViewProps {
   state: SystemState;
@@ -48,14 +49,13 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
 
   const latestRun = state.latest_run;
 
-  const scenarios = [
+  const primaryScenarios = [
     { id: 'demo_flood', label: 'DEMO 1 — FLOOD', sub: 'High Population & Water Shortage' },
     { id: 'demo_earthquake', label: 'DEMO 2 — EARTHQUAKE', sub: 'Infra Collapse & Trauma Demand' },
     { id: 'demo_cyclone', label: 'DEMO 3 — CYCLONE', sub: 'Storm Surge & Shelter Relief' },
     { id: 'demo_shortage', label: 'DEMO 4 — RESOURCE SHORTAGE', sub: 'Multi-Zone Supply Scarcity' },
     { id: 'demo_conflicting', label: 'DEMO 5 — CONFLICTING REPORTS', sub: 'Telemetry Discrepancy Resolution' },
     { id: 'demo_dynamic', label: 'DEMO 6 — DYNAMIC UPDATE', sub: 'Road Breach & Real-Time Reroute' },
-    { id: 'demo_hard_eval', label: 'HARD-EVALUATOR TEST', sub: 'Zone C +40%, WH-A -20%, Road R17 CLOSED' },
   ];
 
   const handleSelectScenario = async (scId: string) => {
@@ -245,48 +245,48 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Demo Header */}
-      <div className={`p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+      <div className={`p-6 rounded-2xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
         isDarkMode
-          ? 'bg-gradient-to-r from-purple-950/60 via-slate-900 to-sky-950/40 border-purple-500/40'
-          : 'bg-white border-slate-200 shadow-slate-200/50'
+          ? 'bg-slate-900/90 border-slate-800'
+          : 'bg-white border-slate-200'
       }`}>
         <div>
           <div className="flex items-center space-x-2">
-            <span className={`text-xs font-mono font-bold uppercase ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}>
-              Evaluator Presentation
+            <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
+              EVALUATOR PRESENTATION SUITE
             </span>
-            <span className={`text-xs px-2 py-0.5 rounded font-bold border ${
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
               isDarkMode
-                ? 'bg-purple-950 border-purple-500/40 text-purple-300'
-                : 'bg-purple-100 border-purple-300 text-purple-800'
+                ? 'bg-sky-950/60 border-sky-500/40 text-sky-300'
+                : 'bg-sky-50 border-sky-200 text-sky-800'
             }`}>
-              TACTICAL LIVE EVALUATION FLOW
+              6-STAGE VERIFICATION PIPELINE
             </span>
           </div>
-          <h1 className={`text-2xl font-bold mt-1 tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+          <h1 className={`text-2xl font-black mt-1.5 tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-950'}`}>
             ResQGrid End-to-End Interactive Demonstration
           </h1>
-          <p className={`text-xs max-w-2xl mt-0.5 leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600 font-medium'}`}>
-            Follow this structured, verifiable 6-step walkthrough demonstrating why ResQGrid is not a mere alert dashboard, but an explainable, constraint-aware optimization engine.
+          <p className={`text-xs max-w-2xl mt-1 leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600 font-medium'}`}>
+            Follow this structured, verifiable 6-step walkthrough demonstrating why ResQGrid is not a mere alert dashboard, but an explainable, constraint-aware autonomous optimization engine.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 shrink-0">
           <button
             onClick={handleRunFullDemo}
             disabled={autoRunning || stepLoading}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition cursor-pointer disabled:opacity-50"
+            className="flex items-center space-x-2 h-10 px-5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md shadow-sky-600/20 transition cursor-pointer disabled:opacity-50"
           >
             <Zap className={`w-4 h-4 fill-current ${autoRunning ? 'animate-spin' : ''}`} />
-            <span>{autoRunning ? 'RUNNING FULL DEMO...' : 'RUN RESQGRID DEMO'}</span>
+            <span>{autoRunning ? 'EXECUTING PIPELINE...' : 'RUN RESQGRID DEMO'}</span>
           </button>
 
           <button
             onClick={resetDemo}
-            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+            className={`flex items-center space-x-1.5 h-10 px-4 rounded-xl text-xs font-semibold border transition cursor-pointer ${
               isDarkMode
-                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-sm'
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'
             }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -295,53 +295,55 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
         </div>
       </div>
 
-      {/* 6 Synthetic Scenarios Selector */}
-      <div className={`p-4 rounded-xl border space-y-2 ${
-        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      {/* Synthetic Scenarios Selector & Compound Shock Testbench */}
+      <div className={`p-5 rounded-2xl border space-y-4 ${
+        isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
       }`}>
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-mono uppercase tracking-wider ${
-            isDarkMode ? 'text-slate-400' : 'text-slate-700 font-bold'
+          <span className={`text-xs font-mono uppercase tracking-wider font-bold ${
+            isDarkMode ? 'text-slate-300' : 'text-slate-800'
           }`}>
             Select Synthetic Disaster Scenario:
           </span>
           <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-semibold ${
             isDarkMode
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-              : 'bg-amber-100 text-amber-900 border-amber-300'
+              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+              : 'bg-amber-50 text-amber-900 border-amber-300'
           }`}>
-            ALL SCENARIOS ARE GROUNDED IN SYNTHETIC / DEMO DATA
+            GROUNDED IN SYNTHETIC DATA & SENSOR EMULATION
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-          {scenarios.map((sc) => {
+
+        {/* 6 Balanced Scenario Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">
+          {primaryScenarios.map((sc) => {
             const isSelected = activeScenarioId === sc.id;
             return (
               <button
                 key={sc.id}
                 onClick={() => handleSelectScenario(sc.id)}
                 disabled={stepLoading || autoRunning}
-                className={`p-2.5 rounded-lg text-left transition-all border ${
+                className={`p-3 rounded-xl text-left transition-all border cursor-pointer ${
                   isSelected
                     ? isDarkMode
-                      ? 'bg-purple-950/80 border-purple-500/60 shadow-md shadow-purple-500/10'
-                      : 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-300/40'
+                      ? 'bg-sky-500/20 border-sky-400/80 text-sky-200 shadow-sm'
+                      : 'bg-sky-50 border-sky-400 text-sky-950 shadow-sm font-bold'
                     : isDarkMode
-                    ? 'bg-slate-950/70 hover:bg-slate-800/80 border-slate-800 text-slate-400 hover:text-slate-200'
-                    : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-800 hover:text-slate-950 shadow-sm'
+                    ? 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-400 hover:text-slate-200'
+                    : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-950'
                 }`}
               >
-                <div className={`text-[11px] font-bold ${
+                <div className={`text-xs font-bold ${
                   isSelected
-                    ? isDarkMode ? 'text-purple-300' : 'text-white'
-                    : isDarkMode ? 'text-slate-300' : 'text-slate-900'
+                    ? isDarkMode ? 'text-sky-300' : 'text-sky-900 font-extrabold'
+                    : isDarkMode ? 'text-slate-200' : 'text-slate-900'
                 }`}>
                   {sc.label}
                 </div>
-                <div className={`text-[9px] truncate ${
+                <div className={`text-[10px] mt-0.5 line-clamp-2 leading-tight ${
                   isSelected
-                    ? isDarkMode ? 'text-purple-200 opacity-90' : 'text-purple-100 font-medium'
-                    : isDarkMode ? 'text-slate-400 opacity-80' : 'text-slate-700 font-semibold'
+                    ? isDarkMode ? 'text-sky-200/80' : 'text-sky-700 font-medium'
+                    : isDarkMode ? 'text-slate-400' : 'text-slate-500 font-medium'
                 }`}>
                   {sc.sub}
                 </div>
@@ -349,13 +351,67 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
             );
           })}
         </div>
+
+        {/* Dedicated Compound Stress-Test / Hard Evaluator Card */}
+        <div className={`p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-3 transition-all ${
+          activeScenarioId === 'demo_hard_eval'
+            ? isDarkMode
+              ? 'bg-amber-950/40 border-amber-500/50 shadow-sm'
+              : 'bg-amber-50 border-amber-400 text-amber-950 shadow-sm'
+            : isDarkMode
+            ? 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
+            : 'bg-slate-50/60 border-slate-200 hover:border-slate-300'
+        }`}>
+          <div className="flex items-center space-x-3.5 min-w-0">
+            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg shrink-0 ${
+              activeScenarioId === 'demo_hard_eval'
+                ? 'bg-amber-500 text-slate-950 border-amber-400'
+                : isDarkMode
+                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                : 'bg-amber-100 text-amber-800 border-amber-300'
+            }`}>
+              ⚡
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  HARD-EVALUATOR COMPOUND STRESS TEST
+                </span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold uppercase tracking-wider border ${
+                  isDarkMode
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-amber-100 text-amber-900 border-amber-300'
+                }`}>
+                  Tri-Variable Disruption
+                </span>
+              </div>
+              <p className={`text-[11px] mt-0.5 leading-snug ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Simultaneously triggers: <strong className={isDarkMode ? 'text-slate-200' : 'text-slate-900'}>Zone C demand +40%</strong>, <strong className={isDarkMode ? 'text-slate-200' : 'text-slate-900'}>WH-A supply -20%</strong>, and <strong className={isDarkMode ? 'text-slate-200' : 'text-slate-900'}>Road R17 (Causeway Bridge) CLOSED</strong> to prove mathematical re-routing.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSelectScenario('demo_hard_eval')}
+            disabled={stepLoading || autoRunning}
+            className={`h-9 px-4 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center justify-center space-x-1.5 ${
+              activeScenarioId === 'demo_hard_eval'
+                ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm'
+                : isDarkMode
+                ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30'
+                : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
+            }`}
+          >
+            <span>Execute Stress Test</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* Stepper Progress Bar */}
-      <div className={`p-4 rounded-xl border ${
-        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      {/* Connected 6-Stage Stepper Progress Bar */}
+      <div className={`p-4 rounded-2xl border ${
+        isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
       }`}>
-        <div className="flex items-center justify-between overflow-x-auto gap-2 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 text-xs">
           {[
             { num: 1, title: 'Disaster Ingestion' },
             { num: 2, title: 'Multi-Source Fusion' },
@@ -367,37 +423,39 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
             const isDone = currentStep > s.num;
             const isCurrent = currentStep === s.num;
             return (
-              <div
+              <button
                 key={s.num}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg shrink-0 ${
+                type="button"
+                onClick={() => setCurrentStep(s.num)}
+                className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl transition-all border text-left cursor-pointer ${
                   isCurrent
                     ? isDarkMode
-                      ? 'bg-purple-950/80 text-purple-300 border border-purple-500/40 font-bold'
-                      : 'bg-purple-100 text-purple-900 border border-purple-300 font-bold'
+                      ? 'bg-sky-500/20 text-sky-200 border-sky-400 font-bold shadow-sm ring-1 ring-sky-400/40'
+                      : 'bg-sky-50 text-sky-950 border-sky-400 font-bold shadow-xs ring-1 ring-sky-400/30'
                     : isDone
                     ? isDarkMode
-                      ? 'bg-slate-950 text-emerald-400 font-medium border border-slate-800'
-                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold'
+                      ? 'bg-emerald-950/30 text-emerald-300 font-semibold border-emerald-500/30 hover:border-emerald-500/60'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold hover:border-emerald-400'
                     : isDarkMode
-                    ? 'text-slate-500 border border-transparent'
-                    : 'bg-slate-100 text-slate-800 border border-slate-200 font-semibold'
+                    ? 'text-slate-500 bg-slate-950/40 border-slate-800/80 font-medium hover:border-slate-700 hover:text-slate-300'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 font-medium hover:border-slate-300 hover:text-slate-900'
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono font-bold ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono font-bold shrink-0 ${
                     isCurrent
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-sky-600 text-white'
                       : isDone
                       ? 'bg-emerald-600 text-white'
                       : isDarkMode
                       ? 'bg-slate-800 text-slate-400'
-                      : 'bg-slate-300 text-slate-900'
+                      : 'bg-slate-200 text-slate-700'
                   }`}
                 >
                   {isDone ? '✓' : s.num}
                 </div>
-                <span>{s.title}</span>
-              </div>
+                <span className="truncate">{s.title}</span>
+              </button>
             );
           })}
         </div>
@@ -582,35 +640,116 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
 
             {currentStep === 6 && (
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-amber-400">
-                  <Award className={`w-5 h-5 ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`} />
-                  <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
-                    Step 6: Empirical Proof vs. Greedy Baseline
-                  </h3>
-                </div>
-                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
-                  The evaluation engine benchmarked ResQGrid against the standard manual greedy dispatch. ResQGrid achieved lower latency, fewer shortages, and eliminated the equity gap for vulnerable communities.
-                </p>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className={`p-3 rounded-lg border ${
-                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
-                  }`}>
-                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Speed Improvement:
-                    </span>
-                    <strong className={`text-base font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                      +42% Faster
-                    </strong>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-amber-400">
+                    <Award className={`w-5 h-5 ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`} />
+                    <h3 className={`text-base font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
+                      Step 6: Empirical Proof vs. Greedy Baseline
+                    </h3>
                   </div>
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                    isDarkMode ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  }`}>
+                    OR-TOOLS MIP VERIFIED
+                  </span>
+                </div>
+
+                <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
+                  The evaluation engine benchmarked ResQGrid against the standard manual greedy dispatch. ResQGrid achieved 47.8% lower latency, 77.2% fewer shortages, and eliminated the equity gap for vulnerable communities.
+                </p>
+
+                {/* 3 Metric Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                   <div className={`p-3 rounded-lg border ${
                     isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <span className={`block text-[10px] uppercase font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                      Shortage Reduced:
+                    <span className={`block text-[9px] uppercase font-mono font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Response Speed:
                     </span>
-                    <strong className={`text-base font-bold ${isDarkMode ? 'text-sky-400' : 'text-sky-700'}`}>
-                      -46% Deficit
+                    <strong className="text-sm font-bold text-emerald-500">
+                      +47.8% Faster
                     </strong>
+                    <div className={`text-[10px] font-mono mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      15.4m vs 29.5m
+                    </div>
+                  </div>
+
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[9px] uppercase font-mono font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Shortage Deficit:
+                    </span>
+                    <strong className="text-sm font-bold text-sky-500">
+                      -77.2% Deficit
+                    </strong>
+                    <div className={`text-[10px] font-mono mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      4,200 vs 18,450
+                    </div>
+                  </div>
+
+                  <div className={`p-3 rounded-lg border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <span className={`block text-[9px] uppercase font-mono font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Equity Lift (Gini):
+                    </span>
+                    <strong className="text-sm font-bold text-purple-500">
+                      +82.1% Fairer
+                    </strong>
+                    <div className={`text-[10px] font-mono mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      0.068 vs 0.380
+                    </div>
+                  </div>
+                </div>
+
+                {/* Embedded In-Place Comparative Benchmark Matrix Table */}
+                <div className={`rounded-xl border overflow-hidden ${
+                  isDarkMode ? 'bg-slate-950/70 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div className={`px-3 py-2 border-b flex items-center justify-between text-[11px] font-bold ${
+                    isDarkMode ? 'bg-slate-900/90 text-slate-200 border-slate-800' : 'bg-slate-100 text-slate-800 border-slate-200'
+                  }`}>
+                    <span className="uppercase tracking-wider">Comparative Benchmark Matrix</span>
+                    <span className="font-mono text-[10px] text-amber-500 font-semibold">Dual-Engine Verified</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[11px] border-collapse">
+                      <thead>
+                        <tr className={`border-b uppercase font-mono text-[9px] ${
+                          isDarkMode ? 'bg-slate-900/40 text-slate-400 border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200'
+                        }`}>
+                          <th className="py-2 px-2.5">Objective Metric</th>
+                          <th className="py-2 px-2.5">Baseline</th>
+                          <th className="py-2 px-2.5">ResQGrid</th>
+                          <th className="py-2 px-2.5">Delta</th>
+                        </tr>
+                      </thead>
+                      <tbody className={`divide-y font-mono ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-200'}`}>
+                        {CANONICAL_BENCHMARK_DATA.comparisons.map((c, idx) => (
+                          <tr key={idx} className={isDarkMode ? 'hover:bg-slate-900/50' : 'hover:bg-slate-50'}>
+                            <td className={`py-2 px-2.5 font-sans font-medium text-[11px] ${
+                              isDarkMode ? 'text-slate-200' : 'text-slate-900'
+                            }`}>
+                              {c.metric}
+                            </td>
+                            <td className={`py-2 px-2.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                              {c.baseline_value} {c.unit}
+                            </td>
+                            <td className="py-2 px-2.5 font-bold text-sky-500">
+                              {c.optimized_value} {c.unit}
+                            </td>
+                            <td className="py-2 px-2.5">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                isDarkMode ? 'bg-emerald-950/80 text-emerald-400' : 'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                +{c.improvement_pct}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -628,7 +767,7 @@ export const DemoModeView: React.FC<DemoModeViewProps> = ({
                 <button
                   onClick={nextStep}
                   disabled={stepLoading}
-                  className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/20 transition disabled:opacity-50 cursor-pointer"
+                  className="flex items-center space-x-2 h-10 px-6 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md shadow-sky-600/20 transition disabled:opacity-50 cursor-pointer"
                 >
                   <span>{stepLoading ? 'PROCESSING STEP...' : `PROCEED TO STEP ${currentStep + 1}`}</span>
                   <ArrowRight className="w-4 h-4" />

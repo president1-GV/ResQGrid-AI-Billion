@@ -29,12 +29,13 @@ class MLDemandEngine:
     @classmethod
     def predict_demand(
         cls,
-        population: int,
-        vulnerability: float,
-        rainfall_mm: float,
-        flooded_area_sqkm: float,
+        population: int = 10000,
+        vulnerability: float = 0.5,
+        rainfall_mm: float = 150.0,
+        flooded_area_sqkm: float = 5.0,
         duration_days: float = 2.0,
-        accessible_roads_ratio: float = 1.0
+        accessible_roads_ratio: float = 1.0,
+        **kwargs
     ) -> Dict[str, Any]:
         """
         Outputs predicted demands and 90% confidence intervals.

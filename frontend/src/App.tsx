@@ -29,14 +29,22 @@ import { DemoModeView } from './views/DemoModeView';
 import { DatasetsView } from './views/DatasetsView';
 import { FieldReportAnalyzerView } from './views/FieldReportAnalyzerView';
 import { CreateIncidentModal } from './components/CreateIncidentModal';
+import { RequestAppReviewQueue } from './components/RequestAppReviewQueue';
+import { RequestsView } from './views/RequestsView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { getInitialSystemState, getInitialFieldReports } from './data/initialState';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 export function App() {
-  const [state, setState] = useState<SystemState>(() => getInitialSystemState('flood'));
+  const [state, setState] = useState<SystemState>(() => {
+    const saved = typeof window !== 'undefined'
+      ? ((localStorage.getItem('resqgrid_scenario') as 'flood' | 'tsunami') || 'flood')
+      : 'flood';
+    return getInitialSystemState(saved);
+  });
   const validTabs: NavTab[] = [
     'dashboard',
+    'requests',
     'datasets',
     'map',
     'optimization',
@@ -116,9 +124,16 @@ export function App() {
   }, []);
 
   const handleSwitchScenario = async (scen: 'flood' | 'tsunami') => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('resqgrid_scenario', scen);
+    }
+    // Optimistically switch state immediately so the entire UI responds with zero lag
+    const initialForScen = getInitialSystemState(scen);
+    setState(initialForScen);
     setLoading(true);
     try {
-      await switchScenario(scen);
+      const newState = await switchScenario(scen);
+      setState(newState);
       await loadAll();
     } catch (err) {
       console.error('Failed to switch scenario:', err);
@@ -219,7 +234,10 @@ export function App() {
   }
 
   const unapprovedCount = state
-    ? state.active_allocations.filter((a) => a.status === 'pending_approval').length
+    ? (state.active_allocations || []).filter((a) => {
+        const s = (a.status || '').toLowerCase();
+        return s === 'pending_approval' || s === 'pending';
+      }).length
     : 0;
 
   return (
@@ -234,6 +252,7 @@ export function App() {
         onToggleTheme={toggleTheme}
         onOpenCreateIncident={() => setIsCreateModalOpen(true)}
         onSwitchScenario={handleSwitchScenario}
+        onSelectTab={handleSelectTab}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -255,7 +274,9 @@ export function App() {
                     state={state}
                     onSelectTab={handleSelectTab}
                     onApproveAllocation={handleApprove}
-                    onRejectAllocation={(id) => handleReject(id, 'Command Center Rejected')}
+                    onRejectAllocation={(id, reason) => handleReject(id, reason || 'Command Center Rejected')}
+                    onModifyAllocation={handleModify}
+                    onRequestEmergencyDemand={(zoneId, commodity, qty, reason) => handleDemandSpike(zoneId, 1.25, reason)}
                     isDarkMode={theme === 'dark'}
                     onToggleTheme={toggleTheme}
                     onOpenCreateIncident={() => setIsCreateModalOpen(true)}
@@ -265,12 +286,42 @@ export function App() {
                   />
                 )}
 
+                {currentTab === 'requests' && (
+                  <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="Requests & Approvals View">
+                    <RequestsView
+                      state={state}
+                      onApprove={handleApprove}
+                      onReject={(id, reason) => handleReject(id, reason || 'Rejected during tactical review')}
+                      onModify={handleModify}
+                      onBatchApproveAll={async () => {
+                        const pending = (state.active_allocations || []).filter((a) => {
+                          const s = (a.status || '').toLowerCase();
+                          return s === 'pending_approval' || s === 'pending';
+                        });
+                        for (const a of pending) {
+                          await handleApprove(a.id);
+                        }
+                        await loadAll();
+                      }}
+                      isDarkMode={theme === 'dark'}
+                    />
+                  </ErrorBoundary>
+                )}
+
                 {currentTab === 'datasets' && (
                   <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="Datasets & Quality Intelligence View">
                     <DatasetsView isDarkMode={theme === 'dark'} />
                   </ErrorBoundary>
                 )}
-                {currentTab === 'analyzer' && <FieldReportAnalyzerView />}
+                {currentTab === 'analyzer' && (
+                  <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="LLM & Field Reports Studio">
+                    <FieldReportAnalyzerView
+                      isDarkMode={theme === 'dark'}
+                      onSubmitReport={handleSubmitReport}
+                      onRefreshState={loadAll}
+                    />
+                  </ErrorBoundary>
+                )}
 
                 {currentTab === 'map' && (
                   <MapView
@@ -303,10 +354,12 @@ export function App() {
                 )}
 
                 {currentTab === 'benchmark' && (
-                  <BenchmarkView
-                    onRunBenchmark={handleRunBenchmark}
-                    isDarkMode={theme === 'dark'}
-                  />
+                  <ErrorBoundary isDarkMode={theme === 'dark'} fallbackTitle="Benchmark & Mathematical Evaluation View">
+                    <BenchmarkView
+                      onRunBenchmark={handleRunBenchmark}
+                      isDarkMode={theme === 'dark'}
+                    />
+                  </ErrorBoundary>
                 )}
 
                 {currentTab === 'gaps' && <ResourceGapView state={state} />}

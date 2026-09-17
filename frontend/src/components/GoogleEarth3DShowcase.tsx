@@ -85,6 +85,17 @@ const BRAHMAPUTRA_FLOOD_POLYGON: [number, number][] = [
   [26.220, 91.710],
 ];
 
+// Bay of Bengal Coastal Tsunami Surge Inundation Polygon (11.75, 79.77 vicinity)
+const COASTAL_TSUNAMI_POLYGON: [number, number][] = [
+  [11.820, 79.750],
+  [11.810, 79.805],
+  [11.750, 79.815],
+  [11.680, 79.820],
+  [11.660, 79.760],
+  [11.720, 79.740],
+  [11.820, 79.750],
+];
+
 export const GoogleEarth3DShowcase: React.FC<GoogleEarth3DShowcaseProps> = ({
   state,
   onToggleRoad,
@@ -215,17 +226,22 @@ export const GoogleEarth3DShowcase: React.FC<GoogleEarth3DShowcaseProps> = ({
     // Remove existing layer groups if any
     const layerGroup = L.layerGroup().addTo(map);
 
-    // 1. Live Flood Inundation Polygon
-    const floodPoly = L.polygon(BRAHMAPUTRA_FLOOD_POLYGON, {
-      color: '#ef4444',
+    // 1. Live Flood / Tsunami Inundation Polygon
+    const isTsunami = state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0);
+    const activePoly = isTsunami ? COASTAL_TSUNAMI_POLYGON : BRAHMAPUTRA_FLOOD_POLYGON;
+    const floodPoly = L.polygon(activePoly, {
+      color: isTsunami ? '#0284c7' : '#ef4444',
       weight: 2,
       dashArray: '5, 5',
-      fillColor: '#dc2626',
+      fillColor: isTsunami ? '#38bdf8' : '#dc2626',
       fillOpacity: 0.32,
     });
-    floodPoly.bindTooltip('<strong>Brahmaputra Flood Surge (2.8m Level)</strong><br/>Live Database Extent', {
-      direction: 'center'
-    });
+    floodPoly.bindTooltip(
+      isTsunami
+        ? '<strong>Bay of Bengal Tsunami Surge (4.2m Level)</strong><br/>Live Database Extent'
+        : '<strong>Brahmaputra Flood Surge (2.8m Level)</strong><br/>Live Database Extent',
+      { direction: 'center' }
+    );
     floodPoly.addTo(layerGroup);
 
     // 2. Live Road Corridors
@@ -373,15 +389,24 @@ export const GoogleEarth3DShowcase: React.FC<GoogleEarth3DShowcaseProps> = ({
         {
           type: 'Feature',
           properties: {
-            name: 'Brahmaputra Flood Surge Extent (2.8m Level)',
-            type: 'flood_inundation_volume',
-            flood_depth_m: 2.8,
-            inundated_area_sq_km: 42.5,
+            name: (state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0))
+              ? 'Bay of Bengal Coastal Tsunami Surge Extent (4.2m Wavefront)'
+              : 'Brahmaputra Flood Surge Extent (2.8m Level)',
+            type: (state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0))
+              ? 'tsunami_inundation_volume'
+              : 'flood_inundation_volume',
+            flood_depth_m: (state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0)) ? 4.2 : 2.8,
+            inundated_area_sq_km: (state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0)) ? 38.6 : 42.5,
             hazard_level: 'CRITICAL',
           },
           geometry: {
             type: 'Polygon',
-            coordinates: [BRAHMAPUTRA_FLOOD_POLYGON.map(([lat, lon]) => [lon, lat])],
+            coordinates: [
+              ((state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0))
+                ? COASTAL_TSUNAMI_POLYGON
+                : BRAHMAPUTRA_FLOOD_POLYGON
+              ).map(([lat, lon]) => [lon, lat])
+            ],
           },
         },
         ...state.zones.map((z) => ({

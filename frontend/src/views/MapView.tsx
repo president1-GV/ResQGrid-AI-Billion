@@ -19,7 +19,7 @@ interface BaseMapOption {
   badge: string;
   getUrl: (cartoKey?: string, lang?: MapLanguage) => string;
   getOptions: (lang?: MapLanguage) => L.TileLayerOptions;
-  getReferenceUrl?: (lang?: MapLanguage) => string | null;
+  getReferenceUrl?: (cartoKey?: string, lang?: MapLanguage) => string | null;
 }
 
 const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
@@ -27,8 +27,9 @@ const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
     id: 'google_hybrid',
     name: 'Google Earth Hybrid',
     badge: 'Satellite + English Roads',
-    getUrl: () => 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    getUrl: () => 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
     getOptions: () => ({
+      subdomains: ['0', '1', '2', '3'],
       attribution: '&copy; Google Earth &mdash; HD Satellite + Roads',
       maxNativeZoom: 20,
       maxZoom: 20,
@@ -38,8 +39,9 @@ const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
     id: 'street',
     name: 'Street Map',
     badge: 'Google Maps 100% English',
-    getUrl: () => 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    getUrl: () => 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
     getOptions: () => ({
+      subdomains: ['0', '1', '2', '3'],
       attribution: '&copy; Google Maps &mdash; 100% English Standard',
       maxNativeZoom: 20,
       maxZoom: 20,
@@ -48,27 +50,40 @@ const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
   tactical_dark: {
     id: 'tactical_dark',
     name: 'Tactical Dark',
-    badge: 'Carto Charcoal English',
-    getUrl: () => 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    badge: 'Esri Charcoal Dark (Keyless)',
+    getUrl: (cartoKey?: string) => {
+      if (cartoKey && cartoKey.trim().length > 5) {
+        return `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${cartoKey.trim()}`;
+      }
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+    },
     getOptions: () => ({
-      attribution: '&copy; CARTO &mdash; Dark Matter Canvas',
+      subdomains: ['a', 'b', 'c', 'd'],
+      attribution: '&copy; Esri &mdash; World Dark Gray Canvas (Watermark-Free, 100% English)',
       maxNativeZoom: 19,
       maxZoom: 20,
     }),
+    getReferenceUrl: (cartoKey?: string) => {
+      if (cartoKey && cartoKey.trim().length > 5) {
+        return null;
+      }
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
+    },
   },
   satellite: {
     id: 'satellite',
     name: 'Google Earth Sat',
     badge: 'Photorealistic HD Imagery',
-    getUrl: () => 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+    getUrl: () => 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
     getOptions: () => ({
+      subdomains: ['0', '1', '2', '3'],
       attribution: '&copy; Google Earth &mdash; Photorealistic Satellite Imagery',
       maxNativeZoom: 20,
       maxZoom: 20,
     }),
-    getReferenceUrl: (lang = 'en') => {
+    getReferenceUrl: (_cartoKey?: string, lang = 'en') => {
       if (lang === 'en') {
-        return 'https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}';
+        return 'https://mt{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}';
       }
       return null;
     }
@@ -77,8 +92,9 @@ const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
     id: 'topo',
     name: 'Topographic',
     badge: 'Google Terrain & Relief',
-    getUrl: () => 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+    getUrl: () => 'https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
     getOptions: () => ({
+      subdomains: ['0', '1', '2', '3'],
       attribution: '&copy; Google Maps &mdash; Topographic Elevation Data',
       maxNativeZoom: 20,
       maxZoom: 20,
@@ -142,6 +158,41 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   // View Mode: 2D Leaflet Tactical GIS vs Google Earth 3D Showcase
   const [viewMode, setViewMode] = useState<'2d' | '3d_showcase'>('2d');
 
+  const handleSwitchTo2D = () => {
+    setViewMode('2d');
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 50);
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 200);
+  };
+
+  const handleSelectBaseMap = (style: BaseMapStyle) => {
+    setBaseMapStyle(style);
+    if (viewMode !== '2d') {
+      setViewMode('2d');
+    }
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 50);
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 200);
+  };
+
+  // Automatically refresh map size when 2d view becomes active
+  useEffect(() => {
+    if (viewMode === '2d' && mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 50);
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 200);
+    }
+  }, [viewMode]);
+
   // Layer Visibility Toggles
   const [showFlood, setShowFlood] = useState(true);
   const [showRoads, setShowRoads] = useState(true);
@@ -162,6 +213,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const [gisStatus, setGisStatus] = useState<any>(null);
   const [isConnectionError, setIsConnectionError] = useState(false);
   const [datasetFeatures, setDatasetFeatures] = useState<any[]>([]);
+
+  // Active scenario detection
+  const isTsunami = state.event.type.toLowerCase().includes('tsunami') || ((state.zones[0]?.lat ?? 99) < 15.0);
 
   // Layer groups
   const floodLayerRef = useRef<L.LayerGroup>(L.layerGroup());
@@ -256,9 +310,10 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
       tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(map);
 
       if (config.getReferenceUrl) {
-        const refUrl = config.getReferenceUrl(mapLanguage);
+        const refUrl = config.getReferenceUrl(cartoKey, mapLanguage);
         if (refUrl) {
           referenceLayerRef.current = L.tileLayer(refUrl, {
+            subdomains: ['0', '1', '2', '3'],
             maxNativeZoom: 18,
             maxZoom: 19,
             zIndex: 10,
@@ -290,8 +345,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
     if (!mapInstanceRef.current || !state.zones.length) return;
     const avgLat = state.zones.reduce((sum, z) => sum + z.lat, 0) / state.zones.length;
     const avgLon = state.zones.reduce((sum, z) => sum + z.lon, 0) / state.zones.length;
-    mapInstanceRef.current.setView([avgLat, avgLon], 12);
-  }, [state.event.id]);
+    mapInstanceRef.current.flyTo([avgLat, avgLon], 12, { duration: 1.0 });
+    setSelectedZone(state.zones[0] || null);
+  }, [state.event.id, state.event.type, state.zones[0]?.id, state.zones.length]);
 
   // Update tile layer whenever baseMapStyle, cartoKey, or mapLanguage changes
   useEffect(() => {
@@ -312,15 +368,20 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
     tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(mapInstanceRef.current);
 
     if (config.getReferenceUrl) {
-      const refUrl = config.getReferenceUrl(mapLanguage);
+      const refUrl = config.getReferenceUrl(cartoKey, mapLanguage);
       if (refUrl) {
         referenceLayerRef.current = L.tileLayer(refUrl, {
+          subdomains: ['0', '1', '2', '3'],
           maxNativeZoom: 18,
           maxZoom: 19,
           zIndex: 10,
         }).addTo(mapInstanceRef.current);
       }
     }
+
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 50);
   }, [baseMapStyle, cartoKey, mapLanguage]);
 
   // Render Operational Layers
@@ -812,7 +873,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               </span>
             </div>
             <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Multi-Layer Spatial Intelligence &bull; Brahmaputra 2.8m Flood Inundation &bull; Dijkstra Dynamic Re-routing &bull; Google OR-Tools MIP Solver
+              Multi-Layer Spatial Intelligence &bull; {isTsunami ? 'Bay of Bengal 4.2m Tsunami Surge Inundation' : 'Brahmaputra 2.8m Flood Inundation'} &bull; Dijkstra Dynamic Re-routing &bull; Google OR-Tools MIP Solver
             </p>
           </div>
         </div>
@@ -861,7 +922,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
             <button
-              onClick={() => setViewMode('2d')}
+              onClick={handleSwitchTo2D}
               className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 ${
                 viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow'
@@ -901,9 +962,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
             <button
-              onClick={() => setBaseMapStyle('google_hybrid')}
+              onClick={() => handleSelectBaseMap('google_hybrid')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'google_hybrid'
+                baseMapStyle === 'google_hybrid' && viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -913,9 +974,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span>Google Earth Hybrid</span>
             </button>
             <button
-              onClick={() => setBaseMapStyle('tactical_dark')}
+              onClick={() => handleSelectBaseMap('tactical_dark')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'tactical_dark'
+                baseMapStyle === 'tactical_dark' && viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -925,9 +986,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span>Tactical Dark</span>
             </button>
             <button
-              onClick={() => setBaseMapStyle('street')}
+              onClick={() => handleSelectBaseMap('street')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'street'
+                baseMapStyle === 'street' && viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -937,9 +998,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span>{mapLanguage === 'en' ? 'Street Map (EN)' : 'Street Map (Local)'}</span>
             </button>
             <button
-              onClick={() => setBaseMapStyle('topo')}
+              onClick={() => handleSelectBaseMap('topo')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'topo'
+                baseMapStyle === 'topo' && viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -949,9 +1010,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span>Topographic</span>
             </button>
             <button
-              onClick={() => setBaseMapStyle('satellite')}
+              onClick={() => handleSelectBaseMap('satellite')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
-                baseMapStyle === 'satellite'
+                baseMapStyle === 'satellite' && viewMode === '2d'
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
@@ -994,13 +1055,15 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             onClick={() => setShowFlood(!showFlood)}
             className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showFlood
-                ? 'bg-red-600 text-white font-bold border-red-700 shadow-red-500/20'
+                ? isTsunami
+                  ? 'bg-sky-600 text-white font-bold border-sky-700 shadow-sky-500/20'
+                  : 'bg-red-600 text-white font-bold border-red-700 shadow-red-500/20'
                 : isDarkMode
                 ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
                 : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
-            Flood Inundation (2.8m)
+            {isTsunami ? 'Tsunami Surge (4.2m)' : 'Flood Inundation (2.8m)'}
           </button>
           <button
             onClick={() => setShowRoads(!showRoads)}
@@ -1090,17 +1153,21 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
         </div>
       </div>
 
-      {viewMode === '3d_showcase' ? (
+      {/* 3D Showcase View */}
+      {viewMode === '3d_showcase' && (
         <div className="h-[760px] w-full">
           <GoogleEarth3DShowcase
             state={state}
             onToggleRoad={onToggleRoad}
             isDarkMode={isDarkMode}
-            onClose={() => setViewMode('2d')}
+            onClose={handleSwitchTo2D}
           />
         </div>
-      ) : (
-        /* Main Map + Right Inspector Grid */
+      )}
+
+      {/* 2D Tactical GIS: Persistently mounted in DOM to retain Leaflet instance & tile cache */}
+      <div className={viewMode === '2d' ? 'block' : 'hidden'}>
+        {/* Main Map + Right Inspector Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Leaflet Map Canvas */}
         <div className={`lg:col-span-3 h-[620px] rounded-2xl overflow-hidden border relative shadow-xl ${
@@ -1121,8 +1188,14 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <div className="flex items-center space-x-2 font-medium">
-              <span className="w-4 h-2.5 rounded bg-red-600/40 border-2 border-red-600 flex-shrink-0" />
-              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Flood Inundation (2.8m Extent)</span>
+              <span className={`w-4 h-2.5 rounded border-2 flex-shrink-0 ${
+                isTsunami
+                  ? 'bg-sky-600/40 border-sky-500'
+                  : 'bg-red-600/40 border-red-600'
+              }`} />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>
+                {isTsunami ? 'Tsunami Surge (4.2m Extent)' : 'Flood Inundation (2.8m Extent)'}
+              </span>
             </div>
             <div className="flex items-center space-x-2 font-medium">
               <span className="w-4 h-1.5 bg-emerald-500 rounded flex-shrink-0" />
@@ -1165,7 +1238,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               <div className="flex items-center space-x-2 text-sky-500">
                 <Zap className="w-4 h-4" />
                 <h4 className="text-xs font-bold uppercase tracking-wider">
-                  Evaluator Test: Dynamic Routing
+                  Tactical GIS: PostGIS Dynamic Re-Routing
                 </h4>
               </div>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
@@ -1178,7 +1251,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             </div>
 
             <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Road R17 (North Bridge Causeway) connects WH-NORTH to North Bridge Enclave (Zone 3). Severing it triggers automated Dijkstra route re-calculation and depot switching.
+              Road R17 (North Bridge Causeway) connects WH-NORTH to North Bridge Enclave (Zone 3). Updating road breach status executes live Dijkstra graph recalculation, updates PostgreSQL road state, and reroutes fleet dispatches.
             </p>
 
             {/* Current Zone 3 Logistics Status Box */}
@@ -1219,12 +1292,12 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               ) : isR17Blocked ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  <span>Reopen Road R17 (Direct Route)</span>
+                  <span>Clear & Reopen Road R17 (Live Database Sync)</span>
                 </>
               ) : (
                 <>
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Sever Road R17 (Simulate 18cm Breach)</span>
+                  <span>Report Road R17 Breach (PostGIS Reroute)</span>
                 </>
               )}
             </button>
@@ -1478,7 +1551,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
           </div>
         </div>
       </div>
-      )}
+      </div>
 
       {/* API Key & Basemap Manager Modal */}
       {isKeyModalOpen && (

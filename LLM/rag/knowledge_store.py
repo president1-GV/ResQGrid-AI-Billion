@@ -122,6 +122,7 @@ class DisasterKnowledgeStore:
             "query": query,
             "top_match": top_doc["title"],
             "guideline": top_doc["content"],
+            "answer": top_doc["content"],
             "thresholds": top_doc.get("thresholds", {}),
             "citations": citations,
             "provenance": "Official Sphere / NDRF Standard Operating Procedures"
