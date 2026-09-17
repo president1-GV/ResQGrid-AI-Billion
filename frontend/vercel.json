@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/database/(.*)",
+      "destination": "https://heicn84u.us-east.insforge.app/api/database/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

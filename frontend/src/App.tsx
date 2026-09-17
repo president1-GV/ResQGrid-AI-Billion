@@ -29,13 +29,14 @@ import { DemoModeView } from './views/DemoModeView';
 import { DatasetsView } from './views/DatasetsView';
 import { FieldReportAnalyzerView } from './views/FieldReportAnalyzerView';
 import { CreateIncidentModal } from './components/CreateIncidentModal';
+import { getInitialSystemState, getInitialFieldReports } from './data/initialState';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 export function App() {
-  const [state, setState] = useState<SystemState | null>(null);
+  const [state, setState] = useState<SystemState>(() => getInitialSystemState('flood'));
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [fieldReports, setFieldReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fieldReports, setFieldReports] = useState<any[]>(() => getInitialFieldReports());
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('resqgrid_theme') as 'dark' | 'light') || 'dark';
   });
