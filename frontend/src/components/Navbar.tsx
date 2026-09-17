@@ -107,7 +107,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-6 py-3 flex items-center justify-between">
+      <header className={`backdrop-blur sticky top-0 z-50 px-6 py-3 flex items-center justify-between transition-colors duration-200 ${
+        theme === 'dark'
+          ? 'bg-slate-900/90 border-b border-slate-800'
+          : 'bg-white border-b border-slate-200 shadow-sm'
+      }`}>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-white p-0.5 border border-sky-500/40 shadow-lg shadow-sky-500/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -119,12 +123,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-xl font-bold tracking-wider text-white">RESQ<span className="text-sky-400">GRID</span></span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30 text-sky-300 font-semibold tracking-wider">
+                <span className={`text-xl font-bold tracking-wider ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                  RESQ<span className="text-sky-500">GRID</span>
+                </span>
+                <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded font-bold tracking-wider border ${
+                  theme === 'dark'
+                    ? 'bg-sky-950 border-sky-500/30 text-sky-300'
+                    : 'bg-sky-100 border-sky-300 text-sky-800'
+                }`}>
                   TACTICAL AI OPTIMIZER
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block font-medium">
+              <p className={`text-[11px] hidden sm:block font-medium ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+              }`}>
                 INTELLIGENCE FOR EVERY RESPONSE.
               </p>
             </div>
@@ -133,19 +145,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {state && (
           <div className="hidden md:flex items-center space-x-6 text-xs">
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-red-950/40 border border-red-500/30 text-red-300">
+            <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border font-bold ${
+              theme === 'dark'
+                ? 'bg-red-950/40 border-red-500/30 text-red-300'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
               <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-              <span className="font-semibold">{state.event.type.toUpperCase()}: {state.event.location}</span>
+              <span>{state.event.type.toUpperCase()}: {state.event.location}</span>
             </div>
 
-            <div className="flex items-center space-x-1 text-slate-300">
-              <Radio className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
-              <span>Precipitation: <strong className="text-white">{state.event.rainfall_mm}mm</strong></span>
+            <div className={`flex items-center space-x-1.5 font-medium ${
+              theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+            }`}>
+              <Radio className={`w-3.5 h-3.5 animate-pulse ${theme === 'dark' ? 'text-sky-400' : 'text-sky-600'}`} />
+              <span>Precipitation: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>{state.event.rainfall_mm}mm</strong></span>
             </div>
 
-            <div className="flex items-center space-x-1 text-slate-300">
-              <Activity className="w-3.5 h-3.5 text-amber-400" />
-              <span>River Level: <strong className="text-amber-300">{state.event.river_level_meters}m</strong> (+2.8m)</span>
+            <div className={`flex items-center space-x-1.5 font-medium ${
+              theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+            }`}>
+              <Activity className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`} />
+              <span>River Level: <strong className={theme === 'dark' ? 'text-amber-300 font-bold' : 'text-amber-800 font-bold'}>{state.event.river_level_meters}m</strong> <span className={theme === 'dark' ? 'text-red-400 font-semibold' : 'text-red-600 font-bold'}>(+2.8m)</span></span>
             </div>
           </div>
         )}
@@ -154,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {onOpenCreateIncident && (
             <button
               onClick={onOpenCreateIncident}
-              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-sky-400 hover:bg-sky-300 rounded-lg shadow-sm shadow-sky-400/20 transition cursor-pointer"
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold text-slate-950 bg-sky-400 hover:bg-sky-300 rounded-lg shadow-sm shadow-sky-400/20 transition cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Create Incident</span>
@@ -165,7 +185,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onToggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Night Mode'}
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition cursor-pointer bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer ${
+              theme === 'dark'
+                ? 'bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-200'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-amber-700 shadow-sm'
+            }`}
           >
             {theme === 'dark' ? (
               <>
@@ -174,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             ) : (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <Sun className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
                 <span className="hidden sm:inline">Light Mode</span>
               </>
             )}
@@ -184,7 +208,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onReset}
             disabled={loading}
             title="Reset back to initial flood scenario"
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition cursor-pointer"
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer ${
+              theme === 'dark'
+                ? 'text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border-slate-700'
+                : 'text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border-slate-300 shadow-sm'
+            }`}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Reset</span>
@@ -193,17 +221,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Officer Profile & RBAC Switch Button */}
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="flex items-center space-x-2 pl-3 py-1 pr-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 transition cursor-pointer"
+            className={`flex items-center space-x-2 pl-3 py-1 pr-2 rounded-xl border transition cursor-pointer ${
+              theme === 'dark'
+                ? 'bg-slate-800/80 hover:bg-slate-800 border-slate-700'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-300 shadow-sm'
+            }`}
           >
-            <div className="w-7 h-7 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-xs font-bold text-sky-300">
+            <div className={`w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-bold ${
+              theme === 'dark'
+                ? 'bg-sky-500/20 border-sky-400/30 text-sky-300'
+                : 'bg-sky-200 border-sky-400 text-sky-900'
+            }`}>
               {currentOfficer.badge_number}
             </div>
             <div className="hidden lg:block text-left">
-              <div className="text-xs font-medium text-white flex items-center gap-1">
+              <div className={`text-xs font-bold flex items-center gap-1 ${
+                theme === 'dark' ? 'text-white' : 'text-slate-900'
+              }`}>
                 {currentOfficer.full_name}
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </div>
-              <div className="text-[9px] font-mono font-bold text-sky-400">
+              <div className={`text-[9px] font-mono font-bold ${
+                theme === 'dark' ? 'text-sky-400' : 'text-sky-700'
+              }`}>
                 {currentOfficer.role.replace(/_/g, ' ')}
               </div>
             </div>

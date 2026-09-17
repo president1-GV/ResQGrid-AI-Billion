@@ -36,10 +36,15 @@ class IndiaFloodInventoryAdapter:
             file_url = f"{cls.BASE_URL}/{filename}"
             local_path = os.path.join(cls.TARGET_DIR, filename)
 
+            # Prefer cached verified local extract if available and valid
+            if os.path.exists(local_path) and os.path.getsize(local_path) > 1000:
+                downloaded_paths[key] = local_path
+                continue
+
             try:
                 # Use standard request with user agent
                 req = urllib.request.Request(file_url, headers={"User-Agent": "ResQGrid-Intelligence/1.0"})
-                with urllib.request.urlopen(req, timeout=12) as resp:
+                with urllib.request.urlopen(req, timeout=5) as resp:
                     data = resp.read()
                     with open(local_path, "wb") as f:
                         f.write(data)

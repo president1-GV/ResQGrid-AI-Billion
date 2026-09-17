@@ -166,7 +166,9 @@ export function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col font-sans">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      theme === 'dark' ? 'bg-[#020617] text-slate-200' : 'bg-slate-50 text-slate-900'
+    }`}>
       <Navbar
         state={state}
         onReset={handleReset}
@@ -181,9 +183,12 @@ export function App() {
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
           unapprovedCount={unapprovedCount}
+          isDarkMode={theme === 'dark'}
         />
 
-        <main className="flex-1 overflow-y-auto p-6 bg-[#020617]">
+        <main className={`flex-1 overflow-y-auto p-6 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-[#020617]' : 'bg-slate-50'
+        }`}>
           <div className="max-w-7xl mx-auto pb-12">
             {state && (
               <>
@@ -217,6 +222,7 @@ export function App() {
                     onApprove={handleApprove}
                     onModify={handleModify}
                     onReject={handleReject}
+                    isDarkMode={theme === 'dark'}
                   />
                 )}
 
@@ -227,6 +233,7 @@ export function App() {
                     onDemandSpike={handleDemandSpike}
                     onWarehouseReduction={handleWarehouseReduction}
                     onReset={handleReset}
+                    isDarkMode={theme === 'dark'}
                   />
                 )}
 
@@ -257,6 +264,7 @@ export function App() {
                     onRunBenchmark={handleRunBenchmark}
                     onSelectTab={setCurrentTab}
                     onReset={handleReset}
+                    isDarkMode={theme === 'dark'}
                   />
                 )}
               </>

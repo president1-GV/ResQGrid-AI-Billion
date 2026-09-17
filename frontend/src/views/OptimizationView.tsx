@@ -25,6 +25,7 @@ interface OptimizationViewProps {
   onApprove: (id: string) => void;
   onModify: (id: string, reason: string, qty: number) => void;
   onReject: (id: string, reason: string) => void;
+  isDarkMode?: boolean;
 }
 
 export const OptimizationView: React.FC<OptimizationViewProps> = ({
@@ -33,6 +34,7 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
   onApprove,
   onModify,
   onReject,
+  isDarkMode = true,
 }) => {
   const latestRun = state.latest_run;
 
@@ -353,14 +355,22 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
 
                     <td className="py-3 px-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                        className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
                           isApproved
-                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30'
+                            ? isDarkMode
+                              ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
+                              : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                             : isRejected
-                            ? 'bg-red-950 text-red-400 border border-red-500/30'
+                            ? isDarkMode
+                              ? 'bg-red-950 text-red-400 border-red-500/30'
+                              : 'bg-red-100 text-red-800 border-red-300'
                             : isModified
-                            ? 'bg-purple-950 text-purple-300 border border-purple-500/30'
-                            : 'bg-amber-950 text-amber-300 border border-amber-500/30'
+                            ? isDarkMode
+                              ? 'bg-purple-950 text-purple-300 border-purple-500/30'
+                              : 'bg-purple-100 text-purple-800 border-purple-300'
+                            : isDarkMode
+                            ? 'bg-amber-950 text-amber-300 border-amber-500/30'
+                            : 'bg-amber-100 text-amber-900 border-amber-300 font-bold'
                         }`}
                       >
                         {a.status.replace('_', ' ')}
@@ -370,7 +380,11 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
                     <td className="py-3 px-3 text-center">
                       <button
                         onClick={() => setInspectingAllocation(a)}
-                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 font-medium text-[11px] inline-flex items-center space-x-1 border border-slate-700"
+                        className={`px-2 py-1 rounded font-bold text-[11px] inline-flex items-center space-x-1 border transition cursor-pointer ${
+                          isDarkMode
+                            ? 'bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 border-slate-700'
+                            : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-300 shadow-sm'
+                        }`}
                         title="View mathematical justification"
                       >
                         <HelpCircle className="w-3.5 h-3.5" />
@@ -384,7 +398,7 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
                           <>
                             <button
                               onClick={() => onApprove(a.id)}
-                              className="p-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[11px] flex items-center space-x-1"
+                              className="p-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center space-x-1 shadow-sm cursor-pointer"
                               title="Approve allocation"
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -396,7 +410,11 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
                                 setModifyQty(a.quantity);
                                 setModifyReason('');
                               }}
-                              className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 font-medium text-[11px] flex items-center space-x-1 border border-slate-700"
+                              className={`p-1.5 rounded font-bold text-[11px] flex items-center space-x-1 border transition cursor-pointer ${
+                                isDarkMode
+                                  ? 'bg-slate-800 hover:bg-slate-700 text-purple-300 border-slate-700'
+                                  : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-300 shadow-sm'
+                              }`}
                               title="Modify quantity with reason"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -407,7 +425,11 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
                                 setRejectingAllocation(a);
                                 setRejectReason('');
                               }}
-                              className="p-1.5 rounded bg-red-950 hover:bg-red-900 text-red-300 font-medium text-[11px] flex items-center space-x-1 border border-red-800"
+                              className={`p-1.5 rounded font-bold text-[11px] flex items-center space-x-1 border transition cursor-pointer ${
+                                isDarkMode
+                                  ? 'bg-red-950 hover:bg-red-900 text-red-300 border-red-800'
+                                  : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-300 shadow-sm'
+                              }`}
                               title="Reject allocation"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -416,7 +438,9 @@ export const OptimizationView: React.FC<OptimizationViewProps> = ({
                           </>
                         )}
                         {!isPending && (
-                          <span className="text-[11px] text-slate-500 italic">Action recorded</span>
+                          <span className={`text-[11px] italic ${isDarkMode ? 'text-slate-500' : 'text-slate-400 font-medium'}`}>
+                            Action recorded
+                          </span>
                         )}
                       </div>
                     </td>

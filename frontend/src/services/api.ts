@@ -334,8 +334,19 @@ export async function fetchDataset(id: string): Promise<any> {
 export async function ingestDataset(id: string): Promise<any> {
   const res = await fetch(`${API_BASE}/datasets/${id}/ingest`, { method: 'POST' });
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || `Failed to ingest dataset ${id}`);
+    let detail = `Failed to ingest dataset ${id}`;
+    try {
+      const err = await res.json();
+      detail = err.detail || detail;
+    } catch {
+      try {
+        const text = await res.text();
+        detail = text || detail;
+      } catch {
+        // fallback
+      }
+    }
+    throw new Error(detail);
   }
   return res.json();
 }

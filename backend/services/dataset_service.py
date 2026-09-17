@@ -239,6 +239,19 @@ class DatasetService:
             cls.init_registry()
         return cls._registry.get(dataset_id)
 
+    @staticmethod
+    def _sanitize_records(records: Any) -> Any:
+        import math
+        if isinstance(records, float):
+            if math.isnan(records) or math.isinf(records):
+                return None
+            return records
+        elif isinstance(records, dict):
+            return {k: DatasetService._sanitize_records(v) for k, v in records.items()}
+        elif isinstance(records, list):
+            return [DatasetService._sanitize_records(v) for v in records]
+        return records
+
     @classmethod
     def ingest_dataset(cls, dataset_id: str) -> Dict[str, Any]:
         """Triggers live ingestion and downloads for the requested dataset."""
@@ -260,14 +273,16 @@ class DatasetService:
                 meta.local_path = res["files"]["inventory"]
                 # Read sample
                 df = pd.read_csv(meta.local_path, nrows=50)
-                sample_records = df.to_dict(orient="records")
+                df = df.where(pd.notnull(df), None)
+                sample_records = cls._sanitize_records(df.to_dict(orient="records"))
 
             elif dataset_id == "emdat_india":
                 res = EMDATIndiaAdapter.download_and_ingest()
                 meta.record_count = res["total_records"]
                 meta.local_path = res["files"][0]
                 df = pd.read_parquet(meta.local_path)
-                sample_records = df.head(50).to_dict(orient="records")
+                df = df.where(pd.notnull(df), None)
+                sample_records = cls._sanitize_records(df.head(50).to_dict(orient="records"))
 
             elif dataset_id == "open_meteo_live":
                 # Sample weather for Guwahati
@@ -310,7 +325,7 @@ class DatasetService:
                 "record_count": meta.record_count,
                 "quality_score": meta.quality_score,
                 "quality_report": quality_report.dict(),
-                "sample_records": sample_records[:5]
+                "sample_records": cls._sanitize_records(sample_records[:5])
             }
 
         except Exception as e:
