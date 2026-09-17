@@ -2,7 +2,59 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { SystemState, AffectedZone, Warehouse, Hospital, Shelter, Road } from '../types';
-import { Layers, MapPin, AlertTriangle, Check, Shield, Navigation } from 'lucide-react';
+import { Layers, MapPin, AlertTriangle, Check, Shield, Navigation, Globe, Key, X, CheckCircle, Info, RefreshCw } from 'lucide-react';
+
+export type BaseMapStyle = 'tactical_dark' | 'osm' | 'satellite';
+
+interface BaseMapOption {
+  id: BaseMapStyle;
+  name: string;
+  badge: string;
+  getUrl: (cartoKey?: string) => string;
+  getOptions: () => L.TileLayerOptions;
+}
+
+const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
+  tactical_dark: {
+    id: 'tactical_dark',
+    name: 'Tactical Dark',
+    badge: 'Keyless Charcoal',
+    getUrl: (cartoKey) => {
+      if (cartoKey && cartoKey.trim().length > 0) {
+        return `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cartoKey.trim())}`;
+      }
+      // 100% Free, reliable ESRI Dark Gray Canvas without watermarks or API key requirements
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+    },
+    getOptions: () => ({
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+      maxNativeZoom: 16,
+      maxZoom: 19,
+    }),
+  },
+  osm: {
+    id: 'osm',
+    name: 'OpenStreetMap',
+    badge: 'Keyless Street',
+    getUrl: () => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    getOptions: () => ({
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      subdomains: 'abc',
+      maxZoom: 19,
+    }),
+  },
+  satellite: {
+    id: 'satellite',
+    name: 'Satellite Aerial',
+    badge: 'Keyless HD Imagery',
+    getUrl: () => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    getOptions: () => ({
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and GIS User Community',
+      maxNativeZoom: 18,
+      maxZoom: 19,
+    }),
+  },
+};
 
 interface MapViewProps {
   state: SystemState;
@@ -14,6 +66,16 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  const [cartoKey, setCartoKey] = useState<string>(() => {
+    return localStorage.getItem('resqgrid_carto_key') || '';
+  });
+  const [baseMapStyle, setBaseMapStyle] = useState<BaseMapStyle>(() => {
+    return isDarkMode ? 'tactical_dark' : 'osm';
+  });
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [tempKeyInput, setTempKeyInput] = useState('');
+  const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
 
   const [selectedZone, setSelectedZone] = useState<AffectedZone | null>(state.zones[0] || null);
   const [showZones, setShowZones] = useState(true);
@@ -29,6 +91,15 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const shelterLayerRef = useRef<L.LayerGroup>(L.layerGroup());
   const routesLayerRef = useRef<L.LayerGroup>(L.layerGroup());
 
+  // Automatically adapt basemap when global theme toggles
+  useEffect(() => {
+    if (isDarkMode && baseMapStyle === 'osm') {
+      setBaseMapStyle('tactical_dark');
+    } else if (!isDarkMode && baseMapStyle === 'tactical_dark') {
+      setBaseMapStyle('osm');
+    }
+  }, [isDarkMode]);
+
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -40,15 +111,11 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
         zoomControl: true,
       });
 
-      const tileUrl = isDarkMode
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      const config = BASEMAP_CONFIGS[baseMapStyle];
+      const tileUrl = config.getUrl(cartoKey);
+      const tileOpts = config.getOptions();
 
-      tileLayerRef.current = L.tileLayer(tileUrl, {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 19,
-      }).addTo(map);
+      tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(map);
 
       zonesLayerRef.current.addTo(map);
       whLayerRef.current.addTo(map);
@@ -57,25 +124,58 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
       routesLayerRef.current.addTo(map);
 
       mapInstanceRef.current = map;
+
+      // Ensure proper map sizing on initial render
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
     }
   }, []);
 
-  // Update tile layer whenever theme toggles
+  // Update tile layer whenever baseMapStyle or cartoKey changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
     if (tileLayerRef.current) {
       mapInstanceRef.current.removeLayer(tileLayerRef.current);
+      tileLayerRef.current = null;
     }
-    const tileUrl = isDarkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-    tileLayerRef.current = L.tileLayer(tileUrl, {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19,
-    }).addTo(mapInstanceRef.current);
-  }, [isDarkMode]);
+    const config = BASEMAP_CONFIGS[baseMapStyle];
+    const tileUrl = config.getUrl(cartoKey);
+    const tileOpts = config.getOptions();
+
+    tileLayerRef.current = L.tileLayer(tileUrl, tileOpts).addTo(mapInstanceRef.current);
+  }, [baseMapStyle, cartoKey]);
+
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = tempKeyInput.trim();
+    if (clean) {
+      localStorage.setItem('resqgrid_carto_key', clean);
+      setCartoKey(clean);
+      setKeySaveMessage('Custom Carto API Key activated successfully.');
+    } else {
+      localStorage.removeItem('resqgrid_carto_key');
+      setCartoKey('');
+      setKeySaveMessage('Reverted to 100% Keyless Basemap (Zero API Key Required).');
+    }
+    setTimeout(() => {
+      setKeySaveMessage(null);
+      setIsKeyModalOpen(false);
+    }, 1200);
+  };
+
+  const handleClearKey = () => {
+    localStorage.removeItem('resqgrid_carto_key');
+    setCartoKey('');
+    setTempKeyInput('');
+    setKeySaveMessage('Reverted to 100% Keyless Basemap (Zero API Key Required).');
+    setTimeout(() => {
+      setKeySaveMessage(null);
+      setIsKeyModalOpen(false);
+    }, 1200);
+  };
+
 
   // Update layers whenever state changes
   useEffect(() => {
@@ -227,69 +327,132 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             <MapPin className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-              Operational GIS Disaster Resource Map
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <span>Operational GIS Disaster Resource Map</span>
+              <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                100% Keyless Active
+              </span>
             </h2>
             <p className="text-xs text-slate-400">
-              OpenStreetMap + GeoJSON Spatial Routing & Dynamic Road Constraint Visualization
+              Tactical Charcoal & OpenStreetMap Basemaps &bull; Zero API Key Required &bull; No Watermarks
             </p>
           </div>
         </div>
 
-        {/* Layer Filters */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Basemap Switcher */}
+          <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+            <button
+              onClick={() => setBaseMapStyle('tactical_dark')}
+              className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
+                baseMapStyle === 'tactical_dark'
+                  ? 'bg-sky-500 text-white shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="High-Contrast Tactical Charcoal Canvas (Keyless & Watermark-Free)"
+            >
+              <Shield className="w-3 h-3" />
+              <span>Tactical Dark</span>
+            </button>
+            <button
+              onClick={() => setBaseMapStyle('osm')}
+              className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
+                baseMapStyle === 'osm'
+                  ? 'bg-sky-500 text-white shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="OpenStreetMap Standard (Zero Key Required)"
+            >
+              <Globe className="w-3 h-3" />
+              <span>Street Map</span>
+            </button>
+            <button
+              onClick={() => setBaseMapStyle('satellite')}
+              className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
+                baseMapStyle === 'satellite'
+                  ? 'bg-sky-500 text-white shadow'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="ESRI High-Definition Aerial Satellite (Zero Key Required)"
+            >
+              <Layers className="w-3 h-3" />
+              <span>Satellite</span>
+            </button>
+          </div>
+
+          {/* API Key / Provider Status Badge */}
           <button
-            onClick={() => setShowZones(!showZones)}
-            className={`px-3 py-1.5 rounded-lg border font-medium transition ${
-              showZones
-                ? 'bg-red-500/20 text-red-300 border-red-500/40'
-                : 'bg-slate-800 text-slate-500 border-slate-700'
+            onClick={() => {
+              setTempKeyInput(cartoKey);
+              setIsKeyModalOpen(true);
+            }}
+            className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono flex items-center space-x-1.5 transition ${
+              cartoKey
+                ? 'bg-amber-950/40 text-amber-300 border-amber-500/40 hover:bg-amber-900/40'
+                : 'bg-emerald-950/40 text-emerald-400 border-emerald-500/30 hover:bg-emerald-900/40'
             }`}
+            title="Configure Map API Key or Provider"
           >
-            Zones ({state.zones.length})
+            <Key className="w-3.5 h-3.5" />
+            <span>{cartoKey ? 'Carto Key: Active' : 'Keyless GIS: Ready'}</span>
           </button>
-          <button
-            onClick={() => setShowWarehouses(!showWarehouses)}
-            className={`px-3 py-1.5 rounded-lg border font-medium transition ${
-              showWarehouses
-                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                : 'bg-slate-800 text-slate-500 border-slate-700'
-            }`}
-          >
-            Warehouses ({state.warehouses.length})
-          </button>
-          <button
-            onClick={() => setShowHospitals(!showHospitals)}
-            className={`px-3 py-1.5 rounded-lg border font-medium transition ${
-              showHospitals
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                : 'bg-slate-800 text-slate-500 border-slate-700'
-            }`}
-          >
-            Hospitals ({state.hospitals.length})
-          </button>
-          <button
-            onClick={() => setShowShelters(!showShelters)}
-            className={`px-3 py-1.5 rounded-lg border font-medium transition ${
-              showShelters
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : 'bg-slate-800 text-slate-500 border-slate-700'
-            }`}
-          >
-            Shelters ({state.shelters.length})
-          </button>
-          <button
-            onClick={() => setShowRoutes(!showRoutes)}
-            className={`px-3 py-1.5 rounded-lg border font-medium transition ${
-              showRoutes
-                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                : 'bg-slate-800 text-slate-500 border-slate-700'
-            }`}
-          >
-            Routes & Roads
-          </button>
+
+          {/* Layer Filters */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <button
+              onClick={() => setShowZones(!showZones)}
+              className={`px-2.5 py-1.5 rounded-lg border font-medium transition ${
+                showZones
+                  ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                  : 'bg-slate-800 text-slate-500 border-slate-700'
+              }`}
+            >
+              Zones ({state.zones.length})
+            </button>
+            <button
+              onClick={() => setShowWarehouses(!showWarehouses)}
+              className={`px-2.5 py-1.5 rounded-lg border font-medium transition ${
+                showWarehouses
+                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                  : 'bg-slate-800 text-slate-500 border-slate-700'
+              }`}
+            >
+              Warehouses ({state.warehouses.length})
+            </button>
+            <button
+              onClick={() => setShowHospitals(!showHospitals)}
+              className={`px-2.5 py-1.5 rounded-lg border font-medium transition ${
+                showHospitals
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'bg-slate-800 text-slate-500 border-slate-700'
+              }`}
+            >
+              Hospitals ({state.hospitals.length})
+            </button>
+            <button
+              onClick={() => setShowShelters(!showShelters)}
+              className={`px-2.5 py-1.5 rounded-lg border font-medium transition ${
+                showShelters
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : 'bg-slate-800 text-slate-500 border-slate-700'
+              }`}
+            >
+              Shelters ({state.shelters.length})
+            </button>
+            <button
+              onClick={() => setShowRoutes(!showRoutes)}
+              className={`px-2.5 py-1.5 rounded-lg border font-medium transition ${
+                showRoutes
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                  : 'bg-slate-800 text-slate-500 border-slate-700'
+              }`}
+            >
+              Routes & Roads
+            </button>
+          </div>
         </div>
       </div>
+
 
       {/* Main Map + Zone Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -444,6 +607,107 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
           </div>
         </div>
       </div>
+
+      {/* API Key & Basemap Manager Modal */}
+      {isKeyModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                    GIS Basemap & API Key Manager
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Built-in Keyless GIS &bull; Zero Watermarks &bull; Optional Custom Provider Key
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsKeyModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Current Active Provider Card */}
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-mono text-[10px] uppercase">Active Basemap</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> Keyless Online
+                </span>
+              </div>
+              <div className="font-bold text-white text-sm">
+                {BASEMAP_CONFIGS[baseMapStyle].name}
+              </div>
+              <p className="text-slate-400 text-[11px]">
+                {baseMapStyle === 'tactical_dark' && !cartoKey && 'Rendering ESRI Dark Gray Canvas tiles. 100% free, high-performance, and completely watermark-free.'}
+                {baseMapStyle === 'osm' && 'Rendering official OpenStreetMap standard tiles. 100% open-source, fully labeled, and keyless.'}
+                {baseMapStyle === 'satellite' && 'Rendering ESRI World Imagery high-resolution satellite tiles. Unmetered and keyless.'}
+                {cartoKey && 'Authenticated with custom CARTO API Key.'}
+              </p>
+            </div>
+
+            {/* Custom API Key Form */}
+            <form onSubmit={handleSaveKey} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Custom Carto / Provider API Key (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={tempKeyInput}
+                  onChange={(e) => setTempKeyInput(e.target.value)}
+                  placeholder="Enter custom API key if your agency has a Carto subscription..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 font-mono"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Leave blank to use ResQGrid's built-in keyless basemap (recommended, prevents all "API KEY REQUIRED" watermarks).
+                </p>
+              </div>
+
+              {keySaveMessage && (
+                <div className="p-2.5 rounded-lg bg-sky-950/40 border border-sky-500/30 text-sky-300 text-xs flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{keySaveMessage}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={handleClearKey}
+                  className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 text-xs font-medium transition flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Revert to 100% Keyless Mode</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsKeyModalOpen(false)}
+                    className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white text-xs font-medium transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition shadow-md shadow-sky-500/20"
+                  >
+                    Save & Apply
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
