@@ -11,7 +11,7 @@ import asyncio
 import time
 
 from .models.schemas import (
-    OptimizationObjectiveWeights, OptimizationRun, AllocationStatus,
+    OptimizationObjectiveWeights, OptimizationRun, AllocationStatus, AllocationItem,
     RoadStatus, IncidentCreateRequest, IncidentPipelineResult,
     WorkforceTeam, DispatchItem, DispatchStatus, VerificationStatus,
     DemandForecast, ExplainableRecommendation, ExtractedAttribute,
@@ -1388,6 +1388,7 @@ def load_scenario(scenario_id: str):
     }
 
 @app.post("/api/incidents", response_model=IncidentPipelineResult)
+@app.post("/api/incident/create-and-run", response_model=IncidentPipelineResult)
 def create_and_run_incident(req: IncidentCreateRequest):
     now_str = get_utc_now_iso()
     incident_number = f"INC-{len(state.incidents) + 101}"
@@ -1495,7 +1496,11 @@ def create_and_run_incident(req: IncidentCreateRequest):
         trigger_reason=f"New Incident Ingested: {req.location} ({incident_number})"
     )
     state.optimization_runs.insert(0, opt_run)
-    state.allocations = opt_run.allocations
+    # Prepend new allocations to state.allocations so they appear immediately in pending queues
+    existing_ids = {a.id for a in state.allocations}
+    for alloc in reversed(opt_run.allocations):
+        if alloc.id not in existing_ids:
+            state.allocations.insert(0, alloc)
 
     # Find allocations for this specific zone
     zone_allocations = [a for a in opt_run.allocations if a.destination_zone_id == zone_id]
@@ -1579,6 +1584,100 @@ def create_and_run_incident(req: IncidentCreateRequest):
         audit_event_id=audit_log.id,
         timestamp=now_str
     )
+
+
+class EmergencyDemandRequest(BaseModel):
+    location_name: str
+    commodity: str
+    quantity: int
+    urgency: str = "Critical"
+    zone_id: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@app.post("/api/requests/emergency")
+def submit_emergency_demand_request(req: EmergencyDemandRequest):
+    now_str = get_utc_now_iso()
+    alloc_id = f"ALC-REQ-{len(state.allocations) + 1:04d}"
+
+    warehouses = list(state.warehouses.values())
+    wh = warehouses[0] if warehouses else None
+    wh_id = wh.id if wh else "WH-NORTH"
+    wh_name = wh.name if wh else "North Apex Logistics Hub"
+
+    matched_zone = None
+    for z in state.zones.values():
+        if z.name.lower() in req.location_name.lower() or req.location_name.lower() in z.name.lower():
+            matched_zone = z
+            break
+
+    zone_id = matched_zone.id if matched_zone else (req.zone_id or f"zone_custom_{len(state.zones) + 1}")
+    if not matched_zone:
+        matched_zone = AffectedZone(
+            id=zone_id,
+            event_id=state.event.id,
+            name=req.location_name,
+            population=12500,
+            affected_population=10000,
+            severity=0.95 if req.urgency == "Critical" else 0.85,
+            vulnerability=0.88,
+            medical_need=req.quantity if "med" in req.commodity.lower() else 200,
+            food_need=req.quantity if "food" in req.commodity.lower() else 5000,
+            water_need=req.quantity if "water" in req.commodity.lower() else 12000,
+            shelter_need=500,
+            ambulances_need=req.quantity if "amb" in req.commodity.lower() else 4,
+            medical_teams_need=2,
+            lat=26.18 + (len(state.zones) * 0.01),
+            lon=91.75 + (len(state.zones) * 0.01),
+            road_accessibility=0.75,
+            hospital_capacity=15,
+            priority_score=94.5 if req.urgency == "Critical" else 82.0,
+            is_critical=True,
+            notes=f"Emergency field requisition: {req.notes or 'Urgent supply deployment'}"
+        )
+        state.zones[zone_id] = matched_zone
+    else:
+        attr = f"{req.commodity.lower().replace(' ', '_')}_need"
+        if hasattr(matched_zone, attr):
+            current_val = getattr(matched_zone, attr)
+            setattr(matched_zone, attr, max(current_val, req.quantity))
+        priority_engine.calculate_zone_priority(matched_zone)
+
+    v_type = "All-Terrain Emergency Ambulance" if "amb" in req.commodity.lower() else (
+        "Rapid Response Medical Van" if "med" in req.commodity.lower() else (
+            "10-Ton Heavy Logistics Truck" if req.quantity > 5000 else "4-Ton All-Weather Cargo Truck"
+        )
+    )
+
+    new_alloc = AllocationItem(
+        id=alloc_id,
+        optimization_run_id=f"RUN-REQ-{int(time.time())}",
+        resource_type=req.commodity.lower().replace(" ", "_"),
+        source_warehouse_id=wh_id,
+        source_warehouse_name=wh_name,
+        destination_zone_id=zone_id,
+        destination_zone_name=req.location_name,
+        quantity=req.quantity,
+        vehicle_type=v_type,
+        route_nodes=[wh_id, zone_id],
+        distance_km=5.4,
+        estimated_time_min=14.0,
+        cost_index=16.8,
+        priority_score=95.0 if req.urgency == "Critical" else 82.0,
+        reason=f"Emergency Field Requisition: {req.notes or 'Urgent demand requested by Command Staff'}",
+        status=AllocationStatus.PENDING_APPROVAL,
+        timestamp=now_str
+    )
+
+    state.allocations.insert(0, new_alloc)
+
+    state.add_audit_log(
+        action="EMERGENCY_REQUEST_SUBMITTED",
+        entity_type="ALLOCATION",
+        entity_id=alloc_id,
+        details=f"Emergency demand created for {req.location_name}: {req.quantity:,} {req.commodity} (Urgency: {req.urgency})"
+    )
+    return new_alloc
 
 @app.get("/api/reports/generate")
 def generate_reports():

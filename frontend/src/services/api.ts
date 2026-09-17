@@ -235,6 +235,106 @@ export async function logoutOfficer(): Promise<void> {
   setStoredToken(null);
 }
 
+export function getCustomAllocations(): AllocationItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('resqgrid_custom_allocations');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomAllocations(allocs: AllocationItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('resqgrid_custom_allocations', JSON.stringify(allocs));
+  } catch {}
+}
+
+export function getCustomZones(): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('resqgrid_custom_zones');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomZones(zones: any[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('resqgrid_custom_zones', JSON.stringify(zones));
+  } catch {}
+}
+
+export function getAllocationOverrides(): Record<string, { status: any; approved_by?: string; modification_reason?: string; quantity?: number }> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem('resqgrid_allocation_overrides');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveAllocationOverride(
+  id: string,
+  override: { status: any; approved_by?: string; modification_reason?: string; quantity?: number }
+): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getAllocationOverrides();
+    current[id] = override;
+    localStorage.setItem('resqgrid_allocation_overrides', JSON.stringify(current));
+  } catch {}
+}
+
+export function applyCustomEntitiesAndOverrides(base: SystemState): SystemState {
+  if (!base) return base;
+
+  // 1. Merge custom zones
+  const customZones = getCustomZones();
+  if (customZones.length > 0) {
+    const existingZoneIds = new Set(base.zones.map((z) => z.id));
+    for (const cz of customZones) {
+      if (!existingZoneIds.has(cz.id)) {
+        base.zones.unshift(cz);
+        existingZoneIds.add(cz.id);
+      }
+    }
+  }
+
+  // 2. Prepend custom allocations
+  const customAllocs = getCustomAllocations();
+  if (customAllocs.length > 0) {
+    const currentAllocIds = new Set(base.active_allocations.map((a) => a.id));
+    for (const ca of customAllocs) {
+      if (!currentAllocIds.has(ca.id)) {
+        base.active_allocations.unshift(ca);
+        currentAllocIds.add(ca.id);
+      }
+    }
+  }
+
+  // 3. Apply allocation overrides
+  const overrides = getAllocationOverrides();
+  if (Object.keys(overrides).length > 0) {
+    for (const alloc of base.active_allocations) {
+      const ovr = overrides[alloc.id];
+      if (ovr) {
+        if (ovr.status) alloc.status = ovr.status;
+        if (ovr.approved_by) alloc.approved_by = ovr.approved_by;
+        if (ovr.modification_reason) alloc.modification_reason = ovr.modification_reason;
+        if (ovr.quantity !== undefined) alloc.quantity = ovr.quantity;
+      }
+    }
+  }
+
+  return base;
+}
+
 /**
  * Loads system state with multi-tier fallback:
  * 1. Local backend /api/state
@@ -254,8 +354,8 @@ export async function fetchState(): Promise<SystemState> {
       : data.event?.type?.toLowerCase().includes('flood') || ((data.zones[0]?.lat ?? 0) > 20.0);
 
     if (isMatchingScenario) {
-      cachedState = data;
-      return data;
+      cachedState = applyCustomEntitiesAndOverrides(data);
+      return cachedState;
     }
   }
 
@@ -375,13 +475,13 @@ export async function fetchState(): Promise<SystemState> {
       }
     }
 
-    cachedState = base;
-    return base;
+    cachedState = applyCustomEntitiesAndOverrides(base);
+    return cachedState;
   } catch (err) {
     console.warn('PostgreSQL scenario hydration fallback:', err);
   }
 
-  cachedState = getInitialSystemState(activeScenario);
+  cachedState = applyCustomEntitiesAndOverrides(getInitialSystemState(activeScenario));
   return cachedState;
 }
 

@@ -241,7 +241,7 @@ export function App() {
     : 0;
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 overflow-x-hidden ${
       theme === 'dark' ? 'bg-[#020617] text-slate-200' : 'bg-slate-50 text-slate-900'
     }`}>
       <Navbar

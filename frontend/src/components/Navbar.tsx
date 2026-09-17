@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   LogOut,
   ShieldAlert,
-  Database
+  Database,
+  User
 } from 'lucide-react';
 import { SystemState, AuthOfficer } from '../types';
 import {
@@ -63,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Initial fetch of current officer & officer list
+    // Initial fetch of current officer and officer list
     fetchAvailableOfficers()
       .then((officers) => setAvailableOfficers(officers))
       .catch((err) => console.warn('Could not fetch officers', err));
@@ -104,26 +105,26 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (theme === 'dark') {
       switch (role) {
         case 'INCIDENT_COMMANDER':
-          return 'bg-red-500/20 text-red-300 border-red-500/40 font-bold';
+          return 'bg-red-950/70 text-red-300 border-red-500/40 font-bold';
         case 'LOGISTICS_CHIEF':
-          return 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold';
+          return 'bg-amber-950/70 text-amber-300 border-amber-500/40 font-bold';
         case 'FIELD_RESPONDER':
-          return 'bg-blue-500/20 text-blue-300 border-blue-500/40 font-bold';
+          return 'bg-blue-950/70 text-blue-300 border-blue-500/40 font-bold';
         case 'GOVERNANCE_AUDITOR':
-          return 'bg-purple-500/20 text-purple-300 border-purple-500/40 font-bold';
+          return 'bg-purple-950/70 text-purple-300 border-purple-500/40 font-bold';
         default:
-          return 'bg-slate-700 text-slate-300 border-slate-600 font-bold';
+          return 'bg-slate-800 text-slate-300 border-slate-700 font-bold';
       }
     } else {
       switch (role) {
         case 'INCIDENT_COMMANDER':
-          return 'bg-red-100 text-red-800 border-red-400 font-bold';
+          return 'bg-red-100 text-red-800 border-red-300 font-bold';
         case 'LOGISTICS_CHIEF':
-          return 'bg-amber-100 text-amber-900 border-amber-400 font-bold';
+          return 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
         case 'FIELD_RESPONDER':
-          return 'bg-blue-100 text-blue-900 border-blue-400 font-bold';
+          return 'bg-blue-100 text-blue-900 border-blue-300 font-bold';
         case 'GOVERNANCE_AUDITOR':
-          return 'bg-purple-100 text-purple-900 border-purple-400 font-bold';
+          return 'bg-purple-100 text-purple-900 border-purple-300 font-bold';
         default:
           return 'bg-slate-100 text-slate-800 border-slate-300 font-bold';
       }
@@ -141,14 +142,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className={`sticky top-0 z-50 px-3 sm:px-4 lg:px-6 h-16 flex flex-nowrap items-center justify-between border-b backdrop-blur-md transition-colors duration-200 shrink-0 select-none ${
+      <header className={`sticky top-0 z-50 px-3 sm:px-4 lg:px-6 h-16 w-full max-w-full flex items-center justify-between border-b backdrop-blur-md transition-colors duration-200 shrink-0 select-none overflow-x-clip ${
         theme === 'dark'
           ? 'bg-slate-950/90 border-slate-800 text-slate-100'
           : 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
       }`}>
         {/* Left Zone: Brand & Active Incident Lockup */}
-        <div className="flex items-center space-x-2.5 sm:space-x-4 shrink-0 min-w-0">
-          <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 min-w-0">
+          <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-white p-0.5 border border-sky-500/40 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
               <img
                 src="/resqgrid-logo.png"
@@ -157,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </div>
             <div className="shrink-0">
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <span className={`text-lg font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-950'}`}>
                   RESQ<span className="text-sky-500">GRID</span>
                 </span>
@@ -179,8 +180,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Active Disaster Event Status Badge */}
           {state && (
-            <div className="hidden lg:flex items-center pl-2.5 sm:pl-3 border-l border-slate-200 dark:border-slate-800 shrink-0">
-              <div className={`flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-2.5 py-1 rounded-md text-xs font-semibold border transition-all ${
+            <div className="hidden md:flex items-center pl-2 sm:pl-3 border-l border-slate-200 dark:border-slate-800 shrink-0">
+              <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-md text-xs font-semibold border transition-all ${
                 isTsunamiScenario
                   ? theme === 'dark'
                     ? 'bg-teal-950/50 border-teal-500/40 text-teal-300'
@@ -193,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-bold tracking-tight shrink-0">
                   {state.event.type.toUpperCase()}:
                 </span>
-                <span className="truncate max-w-[90px] xl:max-w-[140px] 2xl:max-w-[200px] text-[11px] opacity-90 font-medium">
+                <span className="truncate max-w-[80px] sm:max-w-[120px] xl:max-w-[180px] text-[11px] opacity-90 font-medium">
                   {state.event.location}
                 </span>
               </div>
@@ -201,30 +202,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Center Zone: Unified Telemetry & Scenario Segment */}
+        {/* Center Zone: Unified Scenario Switcher & Environmental Telemetry */}
         {state && (
-          <div className="hidden xl:flex items-center space-x-2 2xl:space-x-3 text-xs shrink-0">
-            {/* Telemetry Pod - Visible on 2xl to preserve space on standard 1366-1440px laptop displays */}
-            <div className={`hidden 2xl:flex items-center space-x-3 px-3 py-1 rounded-lg border text-[11px] shrink-0 ${
-              theme === 'dark'
-                ? 'bg-slate-900/70 border-slate-800 text-slate-300'
-                : 'bg-slate-50 border-slate-200 text-slate-700'
-            }`}>
-              <div className="flex items-center space-x-1.5 font-medium">
-                <Radio className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-sky-400' : 'text-sky-600'}`} />
-                <span>Precip: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>{state.event.rainfall_mm}mm</strong></span>
-              </div>
-              <span className="text-slate-300 dark:text-slate-700">|</span>
-              <div className="flex items-center space-x-1.5 font-medium">
-                <Activity className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`} />
-                {isTsunamiScenario ? (
-                  <span>Surge: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>4.2m</strong> <span className={theme === 'dark' ? 'text-teal-400' : 'text-teal-700 font-semibold'}>(Wavefront)</span></span>
-                ) : (
-                  <span>River: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>{state.event.river_level_meters}m</strong> <span className={theme === 'dark' ? 'text-rose-400' : 'text-rose-700 font-semibold'}>(+2.8m)</span></span>
-                )}
-              </div>
-            </div>
-
+          <div className="hidden lg:flex items-center space-x-2 xl:space-x-3 text-xs shrink-0">
             {/* Segmented Scenario Switcher */}
             {onSwitchScenario && (
               <div className={`flex items-center p-0.5 rounded-lg border text-xs font-semibold shrink-0 ${
@@ -259,10 +239,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
+            {/* Telemetry Pod - Visible on ultra-wide viewports */}
+            <div className={`hidden min-[1720px]:flex items-center space-x-3 px-3 py-1 rounded-lg border text-[11px] shrink-0 ${
+              theme === 'dark'
+                ? 'bg-slate-900/70 border-slate-800 text-slate-300'
+                : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}>
+              <div className="flex items-center space-x-1.5 font-medium">
+                <Radio className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-sky-400' : 'text-sky-600'}`} />
+                <span>Precip: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>{state.event.rainfall_mm}mm</strong></span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <div className="flex items-center space-x-1.5 font-medium">
+                <Activity className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`} />
+                {isTsunamiScenario ? (
+                  <span>Surge: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>4.2m</strong> <span className={theme === 'dark' ? 'text-teal-400' : 'text-teal-700 font-semibold'}>(Wavefront)</span></span>
+                ) : (
+                  <span>River: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900 font-bold'}>{state.event.river_level_meters}m</strong> <span className={theme === 'dark' ? 'text-rose-400' : 'text-rose-700 font-semibold'}>(+2.8m)</span></span>
+                )}
+              </div>
+            </div>
+
             {/* PostGIS Database Status Chip */}
             <div
               title="Connected to Authoritative Cloud PostgreSQL 15 & PostGIS 3.6 Spatial Engine"
-              className={`hidden 2xl:flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium shrink-0 ${
+              className={`hidden min-[1660px]:flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-medium shrink-0 ${
                 theme === 'dark'
                   ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-400'
                   : 'bg-emerald-50 border-emerald-200 text-emerald-800'
@@ -275,14 +276,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Right Zone: Command Action Controls (Unified h-9 heights, zero-wrap guarantee) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
+        {/* Right Zone: Command Action Controls (Guaranteed In-Bounds & Zero-Overflow) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap pr-0.5 sm:pr-1">
           {/* Requests Queue Quick-Action Button */}
           {state && onSelectTab && (
             <button
               onClick={() => onSelectTab('requests')}
-              title="Open Tactical Requests & Approvals Queue"
-              className={`h-9 px-2 sm:px-3 rounded-lg border text-xs font-semibold transition-all flex items-center space-x-1.5 sm:space-x-2 cursor-pointer shrink-0 ${
+              title="Open Tactical Requests and Approvals Queue"
+              className={`h-9 px-2 sm:px-3 rounded-lg border text-xs font-semibold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
                 pendingCount > 0
                   ? theme === 'dark'
                     ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 shadow-sm'
@@ -293,10 +294,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span className="hidden xl:inline">Requests</span>
+              <span className="hidden sm:inline font-bold">Requests</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold shrink-0 ${
                 pendingCount > 0
-                  ? 'bg-amber-500 text-slate-950'
+                  ? 'bg-amber-500 text-slate-950 font-black'
                   : theme === 'dark' ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-700'
               }`}>
                 {pendingCount}
@@ -308,80 +309,86 @@ export const Navbar: React.FC<NavbarProps> = ({
           {onOpenCreateIncident && (
             <button
               onClick={onOpenCreateIncident}
-              title="Create Incident & Run ResQGrid Dispatch"
-              className="h-9 px-2.5 sm:px-3 rounded-lg text-xs font-semibold text-white bg-sky-600 hover:bg-sky-500 shadow-sm shadow-sky-600/20 transition-all flex items-center space-x-1.5 cursor-pointer shrink-0"
+              title="Create Incident and Run ResQGrid Dispatch"
+              className="h-9 px-2.5 sm:px-3 rounded-lg text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 shadow-sm shadow-sky-600/20 transition-all flex items-center space-x-1.5 cursor-pointer shrink-0"
             >
               <PlusCircle className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden 2xl:inline">Create Incident</span>
+              <span className="hidden md:inline">Incident</span>
             </button>
           )}
 
-          {/* Theme Switcher Button */}
+          {/* Theme Switcher Button (Clean Icon) */}
           <button
             onClick={onToggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Night Mode'}
-            className={`h-9 px-2.5 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
+            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
               theme === 'dark'
-                ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-200'
-                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800 shadow-sm'
+                ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-200 hover:text-white'
+                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-800 shadow-sm'
             }`}
           >
             {theme === 'dark' ? (
-              <>
-                <Moon className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                <span className="hidden 2xl:inline text-[11px] font-semibold">Night</span>
-              </>
+              <Moon className="w-4 h-4 text-sky-400 shrink-0" />
             ) : (
-              <>
-                <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
-                <span className="hidden 2xl:inline text-[11px] font-semibold">Light</span>
-              </>
+              <Sun className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
             )}
           </button>
 
-          {/* Scenario Reset Button */}
+          {/* Scenario Reset Button (Clean Icon) */}
           <button
             onClick={onReset}
             disabled={loading}
             title="Reset system state to baseline"
-            className={`h-9 px-2.5 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
+            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
               theme === 'dark'
                 ? 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
-                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-950 shadow-sm'
+                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-950 shadow-sm'
             }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden 2xl:inline text-[11px] font-semibold">Reset</span>
+            <RefreshCw className={`w-4 h-4 shrink-0 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* Officer Profile Pill - Guaranteed In-Bounds Anchor */}
+          {/* Active Officer Command Pill (Prominent, High-Contrast & Always In-Bounds) */}
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            title={`Active Officer: ${currentOfficer.full_name} (${currentOfficer.role})`}
-            className={`h-9 px-2 sm:px-2.5 rounded-lg border transition-all flex items-center space-x-2 cursor-pointer shrink-0 max-w-[190px] ${
+            title={`Active Officer: ${currentOfficer.full_name} (${currentOfficer.role}) — Click to switch officer role or inspect RBAC clearance`}
+            className={`h-9 pl-2 pr-2.5 sm:pr-3 rounded-lg border transition-all flex items-center space-x-2 cursor-pointer shrink-0 shadow-sm ${
               theme === 'dark'
-                ? 'bg-slate-900 hover:bg-slate-800 border-slate-800'
-                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 shadow-sm'
+                ? 'bg-slate-900/95 hover:bg-slate-800 border-sky-500/50 hover:border-sky-400 text-white shadow-sky-950/40 ring-1 ring-sky-500/20'
+                : 'bg-white hover:bg-slate-50 border-sky-500/60 hover:border-sky-600 text-slate-900 shadow-md shadow-slate-200/60 ring-1 ring-sky-500/30'
             }`}
           >
-            <div className={`w-6 h-6 rounded-md border flex items-center justify-center text-[10px] font-mono font-bold shrink-0 ${
-              theme === 'dark'
-                ? 'bg-sky-500/20 border-sky-400/30 text-sky-300'
-                : 'bg-sky-100 border-sky-300 text-sky-800 font-extrabold'
-            }`}>
-              {currentOfficer.badge_number}
-            </div>
-            <div className="hidden 2xl:block text-left pr-1 min-w-0">
-              <div className={`text-xs font-bold leading-tight flex items-center gap-1 ${
-                theme === 'dark' ? 'text-white' : 'text-slate-900'
+            {/* Officer Avatar / Badge Pod */}
+            <div className="relative shrink-0">
+              <div className={`w-6 h-6 rounded-md border flex items-center justify-center text-[10px] font-mono font-black shadow-xs ${
+                theme === 'dark'
+                  ? 'bg-sky-500/20 border-sky-400/40 text-sky-300'
+                  : 'bg-sky-600 border-sky-700 text-white font-bold'
               }`}>
-                <span className="truncate max-w-[100px]">{currentOfficer.full_name}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+                {currentOfficer.badge_number}
               </div>
-              <div className={`text-[9px] font-mono font-bold truncate max-w-[110px] ${
-                theme === 'dark' ? 'text-sky-400' : 'text-sky-700'
-              }`}>
-                {currentOfficer.role.replace(/_/g, ' ')}
+              {/* Online Clearance Beacon */}
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-950" />
+            </div>
+
+            {/* Officer Identity & Clearance */}
+            <div className="text-left leading-tight min-w-0">
+              <div className="flex items-center gap-1">
+                <span className={`text-xs font-black truncate max-w-[100px] sm:max-w-[130px] ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-950 font-black'
+                }`}>
+                  {currentOfficer.full_name}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${
+                  theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                }`} />
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded border uppercase tracking-wide truncate max-w-[95px] sm:max-w-[125px] ${
+                  getRoleBadgeColor(currentOfficer.role)
+                }`}>
+                  {currentOfficer.role.replace(/_/g, ' ')}
+                </span>
               </div>
             </div>
           </button>
