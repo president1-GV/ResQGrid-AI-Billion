@@ -5,6 +5,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import json
 import asyncio
+import time
 
 from .models.schemas import (
     OptimizationObjectiveWeights, OptimizationRun, AllocationStatus,
@@ -1690,3 +1691,349 @@ def query_rag_sop(body: Dict[str, Any]):
     return rag_store.query_with_citation(query)
 
 
+
+
+# ============================================================
+# AUTHORITATIVE SUPABASE / POSTGRESQL & POSTGIS APIS
+# ============================================================
+
+from .services.supabase_service import supabase_service
+
+@app.get("/api/database/status")
+async def get_database_status():
+    """Returns live PostgreSQL 15 and PostGIS 3.6 status, connection latency, and table counts."""
+    return await supabase_service.check_health()
+
+
+@app.post("/api/database/sync-seed")
+async def sync_database_seed(force: bool = False):
+    """Synchronizes authoritative baseline datasets into PostgreSQL tables."""
+    return await supabase_service.seed_initial_data(
+        zones=list(state.zones.values()),
+        warehouses=list(state.warehouses.values()),
+        roads=list(state.roads.values()),
+        event=state.event,
+        field_reports=state.field_reports,
+        force=force
+    )
+
+
+@app.get("/api/database/spatial/nearby")
+async def get_spatial_nearby_zones(lat: float = 26.18, lon: float = 91.75, radius_km: float = 25.0):
+    """Executes PostGIS geodesic spatial query for zones within specified kilometer radius."""
+    results = await supabase_service.spatial_nearby_zones(lat=lat, lon=lon, radius_km=radius_km)
+    return {
+        "center": {"lat": lat, "lon": lon},
+        "radius_km": radius_km,
+        "features_found": len(results),
+        "postgis_srid": 4326,
+        "results": results
+    }
+
+
+@app.get("/api/database/incidents")
+async def list_database_incidents():
+    """Fetches active emergency incidents from PostgreSQL authoritative storage."""
+    records = await supabase_service.query_records("incidents", {"order": "created_at.desc", "limit": "50"})
+    return records
+
+
+@app.post("/api/database/incidents")
+async def create_database_incident(body: Dict[str, Any]):
+    """Registers a new incident into PostgreSQL, computes GIS impact, and logs tamper-evident audit record."""
+    inc_id = body.get("id") or f"EVT-MANUAL-{int(time.time()*1000)}"
+    lat = float(body.get("latitude", 26.18))
+    lon = float(body.get("longitude", 91.75))
+    record = {
+        "id": inc_id,
+        "title": body.get("title", "Unclassified Incident"),
+        "type": body.get("type", "Flood"),
+        "severity": body.get("severity", "HIGH"),
+        "status": "ACTIVE",
+        "location_name": body.get("location_name", "Target Sector"),
+        "latitude": lat,
+        "longitude": lon,
+        "affected_population": int(body.get("affected_population", 1000)),
+        "description": body.get("description", "Operator reported incident"),
+        "truth_class": "GROUND_TRUTH",
+        "created_at": get_utc_now_iso(),
+        "updated_at": get_utc_now_iso()
+    }
+    inserted = await supabase_service.insert_records("incidents", [record])
+    await supabase_service.log_audit_event(
+        actor=body.get("reported_by", "COMMAND_OPERATOR"),
+        role="INCIDENT_COMMANDER",
+        action="INCIDENT_ACTIVATED",
+        entity="INCIDENT",
+        entity_id=inc_id,
+        details=record
+    )
+    return {"status": "SUCCESS", "incident": inserted[0] if inserted else record}
+
+
+@app.get("/api/database/roads")
+async def list_database_roads():
+    """Fetches transport road network graph with hydrological flood depth delays from PostgreSQL."""
+    roads = await supabase_service.query_records("roads", {"order": "name.asc", "limit": "100"})
+    return roads
+
+
+class RoadStatusUpdate(BaseModel):
+    status: str
+    flood_depth_cm: float = 0.0
+    speed_multiplier: float = 1.0
+    updated_by: str = "GIS_OFFICER"
+
+
+@app.put("/api/database/roads/{road_id}/status")
+async def update_database_road_status(road_id: str, body: RoadStatusUpdate):
+    """
+    Updates road operational status in PostgreSQL and immediately executes
+    dynamic re-optimization across the supply chain, persisting new allocations.
+    """
+    # 1. Update in PostgreSQL
+    update_data = {
+        "status": body.status,
+        "flood_depth_cm": body.flood_depth_cm,
+        "speed_multiplier": body.speed_multiplier,
+        "updated_at": get_utc_now_iso()
+    }
+    await supabase_service.update_record("roads", "id", road_id, update_data)
+
+    # 2. Update local state store for solver consistency
+    if road_id in state.roads:
+        r = state.roads[road_id]
+        r.flood_depth_cm = body.flood_depth_cm
+        r.speed_multiplier = body.speed_multiplier
+        if body.status.upper() in ["BLOCKED", "IMPASSABLE"]:
+            r.status = RoadStatus.BLOCKED
+        elif body.status.upper() in ["FLOODED", "WATERLOGGED"]:
+            r.status = RoadStatus.FLOODED
+        elif body.status.upper() in ["RESTRICTED", "CAUTION"]:
+            r.status = RoadStatus.RESTRICTED
+        else:
+            r.status = RoadStatus.OPEN
+
+    # 3. Trigger dynamic re-optimization
+    reopt_run = optimization_engine.solve(
+        zones=list(state.zones.values()),
+        warehouses=list(state.warehouses.values()),
+        roads=list(state.roads.values()),
+        is_reoptimization=True,
+        trigger_reason=f"Road {road_id} condition updated to {body.status} (Flood Depth: {body.flood_depth_cm}cm)"
+    )
+    state.optimization_runs.append(reopt_run)
+    state.allocations = reopt_run.allocations
+
+    # 4. Persist newly calculated allocations to PostgreSQL
+    await supabase_service.persist_allocations(
+        run_id=reopt_run.id,
+        incident_id=state.event.id,
+        allocations=reopt_run.allocations,
+        summary={
+            "total_zones": len(state.zones),
+            "solve_time_ms": getattr(reopt_run, "runtime_ms", 0.0)
+        }
+    )
+
+    # 5. Log audit trail
+    audit_entry = await supabase_service.log_audit_event(
+        actor=body.updated_by,
+        role="GIS_OFFICER",
+        action="ROAD_DISRUPTION_REOPTIMIZED",
+        entity="ROAD_NETWORK",
+        entity_id=road_id,
+        details={
+            "road_id": road_id,
+            "new_status": body.status,
+            "reopt_run_id": reopt_run.id,
+            "allocations_generated": len(reopt_run.allocations)
+        }
+    )
+
+    return {
+        "success": True,
+        "road_id": road_id,
+        "status": body.status,
+        "reoptimized": True,
+        "reopt_run_id": reopt_run.id,
+        "allocations_count": len(reopt_run.allocations),
+        "audit_hash": audit_entry["sha256_hash"]
+    }
+
+
+@app.get("/api/database/allocations")
+async def list_database_allocations():
+    """Fetches active allocations from PostgreSQL."""
+    allocations = await supabase_service.query_records("allocations", {"order": "created_at.desc", "limit": "100"})
+    return allocations
+
+
+class OfficerApproval(BaseModel):
+    officer_name: str = "Col. Arvind Sharma"
+    notes: Optional[str] = "Approved after operational verification"
+
+
+@app.post("/api/database/allocations/{allocation_id}/approve")
+async def approve_database_allocation(allocation_id: str, body: OfficerApproval):
+    """
+    Commander approval of an individual allocation.
+    Updates status in PostgreSQL to APPROVED and logs tamper-evident cryptographic signature.
+    """
+    approved_at = get_utc_now_iso()
+    await supabase_service.update_record("allocations", "id", allocation_id, {
+        "status": "APPROVED",
+        "approved_by": body.officer_name,
+        "approved_at": approved_at,
+        "dispatch_notes": body.notes
+    })
+
+    # Update in memory store
+    for a in state.allocations:
+        if getattr(a, "id", None) == allocation_id:
+            a.status = AllocationStatus.APPROVED
+            break
+
+    audit_entry = await supabase_service.log_audit_event(
+        actor=body.officer_name,
+        role="INCIDENT_COMMANDER",
+        action="HUMAN_COMMANDER_APPROVAL",
+        entity="ALLOCATION",
+        entity_id=allocation_id,
+        details={"approved_at": approved_at, "notes": body.notes}
+    )
+
+    return {
+        "success": True,
+        "allocation_id": allocation_id,
+        "status": "APPROVED",
+        "approved_by": body.officer_name,
+        "audit_hash": audit_entry["sha256_hash"]
+    }
+
+
+@app.post("/api/database/allocations/approve-all")
+async def approve_all_database_allocations(body: OfficerApproval):
+    """
+    Commander batch approval of all pending allocations.
+    Updates PostgreSQL rows and writes tamper-evident audit record.
+    """
+    approved_at = get_utc_now_iso()
+    await supabase_service.update_record("allocations", "status", "PENDING_APPROVAL", {
+        "status": "APPROVED",
+        "approved_by": body.officer_name,
+        "approved_at": approved_at,
+        "dispatch_notes": body.notes
+    })
+    approved_count = len([a for a in state.allocations if a.status != AllocationStatus.APPROVED]) or len(state.allocations)
+
+    for a in state.allocations:
+        a.status = AllocationStatus.APPROVED
+
+    audit_entry = await supabase_service.log_audit_event(
+        actor=body.officer_name,
+        role="INCIDENT_COMMANDER",
+        action="BATCH_COMMANDER_APPROVAL",
+        entity="ALLOCATIONS",
+        details={"approved_count": approved_count, "notes": body.notes}
+    )
+
+    return {
+        "success": True,
+        "approved_count": approved_count,
+        "approved_by": body.officer_name,
+        "audit_hash": audit_entry["sha256_hash"]
+    }
+
+
+@app.get("/api/database/field-reports")
+async def list_database_field_reports():
+    """Fetches field reports from PostgreSQL."""
+    reports = await supabase_service.query_records("field_reports", {"order": "created_at.desc", "limit": "50"})
+    return reports
+
+
+class FieldReportCreate(BaseModel):
+    reporter_name: str
+    reporter_role: str
+    location_name: str
+    latitude: float
+    longitude: float
+    raw_text: str
+    urgency: str = "High"
+
+
+@app.post("/api/database/field-reports")
+async def create_database_field_report(body: FieldReportCreate):
+    """
+    Submits ground field report into PostgreSQL with Point geometry,
+    extracts entities via NLP, updates local demands, and creates audit log.
+    """
+    # NLP extraction
+    extracted = nlp_extractor.extract(body.raw_text)
+    rep_id = f"REP-DB-{int(time.time()*1000)}"
+    
+    record = {
+        "id": rep_id,
+        "reporter_name": body.reporter_name,
+        "reporter_role": body.reporter_role,
+        "location_name": body.location_name,
+        "latitude": body.latitude,
+        "longitude": body.longitude,
+        "raw_text": body.raw_text,
+        "extracted_needs": extracted.get("needs", {}),
+        "urgency": body.urgency,
+        "status": "Verified",
+        "truth_class": "CROWD_OR_FIELD",
+        "created_at": get_utc_now_iso()
+    }
+    inserted = await supabase_service.insert_records("field_reports", [record])
+
+    # Also add to in-memory store
+    new_rep = FieldReport(
+        id=rep_id,
+        reporter_name=body.reporter_name,
+        reporter_role=body.reporter_role,
+        location_name=body.location_name,
+        lat=body.latitude,
+        lon=body.longitude,
+        raw_text=body.raw_text,
+        extracted_population=extracted.get("population", 100),
+        extracted_needs=extracted.get("needs", {}),
+        urgency=body.urgency,
+        confidence=extracted.get("confidence", 0.85),
+        data_confidence_tier="HIGH CONFIDENCE",
+        status="Verified",
+        timestamp=get_utc_now_iso()
+    )
+    state.field_reports.insert(0, new_rep)
+
+    audit_entry = await supabase_service.log_audit_event(
+        actor=body.reporter_name,
+        role=body.reporter_role,
+        action="FIELD_REPORT_SUBMITTED",
+        entity="FIELD_REPORT",
+        entity_id=rep_id,
+        details={"location": body.location_name, "needs": extracted.get("needs", {})}
+    )
+
+    return {
+        "success": True,
+        "field_report": inserted[0] if inserted else record,
+        "nlp_extracted": extracted,
+        "audit_hash": audit_entry["sha256_hash"]
+    }
+
+
+@app.get("/api/database/audit-logs")
+async def list_database_audit_logs():
+    """Fetches tamper-evident SHA-256 chained audit logs from PostgreSQL."""
+    logs = await supabase_service.query_records("resq_audit_logs", {"order": "timestamp.desc", "limit": "50"})
+    return logs
+
+
+@app.get("/api/database/sources")
+async def list_database_sources():
+    """Fetches authoritative dataset sources and their live synchronization status from PostgreSQL."""
+    sources = await supabase_service.query_records("dataset_sources", {"order": "name.asc", "limit": "50"})
+    return sources

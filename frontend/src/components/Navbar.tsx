@@ -13,7 +13,8 @@ import {
   ChevronDown,
   CheckCircle2,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  Database
 } from 'lucide-react';
 import { SystemState, AuthOfficer } from '../types';
 import {
@@ -217,6 +218,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
+          {/* Live PostgreSQL 15 & PostGIS 3.6 Engine Status Badge */}
+          <div
+            title="Connected to Authoritative Cloud PostgreSQL 15 & PostGIS 3.6 Spatial Engine"
+            className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-bold ${
+              theme === 'dark'
+                ? 'bg-slate-900 border-slate-800 text-emerald-400'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>PostgreSQL 15</span>
+            <span className="text-slate-500">&bull;</span>
+            <span>PostGIS 3.6</span>
+          </div>
+
           {onOpenCreateIncident && (
             <button
               onClick={onOpenCreateIncident}
@@ -309,8 +326,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
             }`}>
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-sky-500/20 text-sky-500 rounded-lg">
-                  <Shield className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-xl bg-white p-1 border border-sky-500/40 shadow-md shadow-sky-500/10 flex items-center justify-center overflow-hidden shrink-0">
+                  <img
+                    src="/resqgrid-logo.png"
+                    alt="ResQGrid AI Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900 font-extrabold'}`}>

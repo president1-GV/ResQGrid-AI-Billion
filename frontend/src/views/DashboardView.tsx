@@ -22,6 +22,7 @@ import { NavTab } from '../components/Sidebar';
 import { MasterOperationalWorkflow } from '../components/MasterOperationalWorkflow';
 import { EvaluatorLiveTestbench } from '../components/EvaluatorLiveTestbench';
 import { RoleCommandCenter } from '../components/RoleCommandCenter';
+import { DatabaseIntegrationPanel } from '../components/DatabaseIntegrationPanel';
 import { OptimizationObjectiveWeights } from '../types';
 
 interface DashboardViewProps {
@@ -164,6 +165,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Authoritative PostgreSQL 15 & PostGIS Spatial Integration Panel */}
+      <DatabaseIntegrationPanel
+        isDarkMode={isDarkMode}
+        onRefreshState={() => {
+          if (onSwitchScenario && state) {
+            onSwitchScenario(state.event.type.toLowerCase().includes('tsunami') ? 'tsunami' : 'flood');
+          }
+        }}
+      />
 
       {/* Master Operational Workflow Pipeline */}
       <MasterOperationalWorkflow
