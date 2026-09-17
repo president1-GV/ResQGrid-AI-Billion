@@ -460,6 +460,28 @@ def get_initial_roads() -> List[Road]:
             status=RoadStatus.OPEN,
             flood_depth_cm=0.0,
             speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R11",
+            name="North-East Strategic Arterial",
+            from_node="WH-NORTH",
+            to_node="WH-EAST",
+            distance_km=8.5,
+            standard_travel_min=16.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R12",
+            name="East-South Ring Expressway",
+            from_node="WH-EAST",
+            to_node="WH-SOUTH",
+            distance_km=7.8,
+            standard_travel_min=14.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
         )
     ]
 

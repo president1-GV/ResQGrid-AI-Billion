@@ -312,6 +312,82 @@ class RoadClosureRequest(BaseModel):
 def road_closure(req: RoadClosureRequest):
     return reoptimization_engine.trigger_road_closure(req.road_id, req.reason)
 
+class RoadToggleRequest(BaseModel):
+    reason: Optional[str] = None
+
+@app.post("/api/roads/{road_id}/toggle")
+def toggle_road(road_id: str, req: Optional[RoadToggleRequest] = None):
+    reason = req.reason if req else None
+    return reoptimization_engine.toggle_road_status(road_id, reason)
+
+@app.get("/api/gis/layers")
+def get_gis_layers():
+    """
+    Returns unified authoritative GeoJSON FeatureCollection:
+    - Flood inundation extent polygon
+    - Road network corridor polylines with status
+    - Active allocation route polylines
+    - Affected zones, warehouses, hospitals, shelters, field reports
+    """
+    return gis_service.get_geojson_layers(
+        zones=list(state.zones.values()),
+        warehouses=list(state.warehouses.values()),
+        hospitals=list(state.hospitals.values()),
+        shelters=list(state.shelters.values()),
+        roads=list(state.roads.values()),
+        allocations=state.allocations,
+        field_reports=state.field_reports
+    )
+
+@app.get("/api/gis/travel-matrix")
+def get_travel_matrix():
+    """
+    Returns origin-destination travel time matrix calculated by Dijkstra routing engine
+    respecting current road closures.
+    """
+    return gis_service.generate_travel_time_matrix(
+        warehouses=list(state.warehouses.values()),
+        zones=list(state.zones.values()),
+        roads=list(state.roads.values())
+    )
+
+class RouteCalculationRequest(BaseModel):
+    start_id: str
+    end_id: str
+    start_lat: Optional[float] = None
+    start_lon: Optional[float] = None
+    end_lat: Optional[float] = None
+    end_lon: Optional[float] = None
+
+@app.post("/api/routing/route")
+def calculate_route_endpoint(req: RouteCalculationRequest):
+    roads = list(state.roads.values())
+    start_lat = req.start_lat or 26.18
+    start_lon = req.start_lon or 91.75
+    end_lat = req.end_lat or 26.18
+    end_lon = req.end_lon or 91.75
+
+    for w in state.warehouses.values():
+        if w.id == req.start_id:
+            start_lat, start_lon = w.lat, w.lon
+        if w.id == req.end_id:
+            end_lat, end_lon = w.lat, w.lon
+    for z in state.zones.values():
+        if z.id == req.start_id:
+            start_lat, start_lon = z.lat, z.lon
+        if z.id == req.end_id:
+            end_lat, end_lon = z.lat, z.lon
+
+    return routing_service.calculate_route(
+        start_id=req.start_id,
+        start_lat=start_lat,
+        start_lon=start_lon,
+        end_id=req.end_id,
+        end_lat=end_lat,
+        end_lon=end_lon,
+        roads=roads
+    )
+
 class DemandSpikeRequest(BaseModel):
     zone_id: str
     multiplier: float = 1.4

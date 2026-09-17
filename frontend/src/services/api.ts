@@ -427,3 +427,31 @@ export async function fetchLiveWeather(lat: number = 26.1445, lon: number = 91.7
 }
 
 
+export async function fetchTravelMatrix(): Promise<any> {
+  const res = await fetch(`${API_BASE}/gis/travel-matrix`);
+  if (!res.ok) throw new Error('Failed to fetch travel matrix');
+  return res.json();
+}
+
+export async function toggleRoadStatus(roadId: string, reason?: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/roads/${roadId}/toggle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw new Error(`Failed to toggle road ${roadId}`);
+  return res.json();
+}
+
+export async function calculateRoute(startId: string, endId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/routing/route`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ start_id: startId, end_id: endId }),
+  });
+  if (!res.ok) throw new Error('Failed to calculate route');
+  return res.json();
+}
+
+
+

@@ -30,7 +30,7 @@ class ReOptimizationEngine:
             resource_type="Road",
             resource_id=road_id,
             details=f"Road {target_road.name} ({road_id}) closed: {reason}",
-            metadata={"previous_status": old_status, "road_name": target_road.name}
+            metadata={"previous_status": old_status.value if hasattr(old_status, 'value') else str(old_status), "road_name": target_road.name}
         )
 
         # Grab latest active run to compare
@@ -65,6 +65,70 @@ class ReOptimizationEngine:
             "reoptimization_run": new_run,
             "delta": delta,
             "road_closed": target_road
+        }
+
+    def toggle_road_status(self, road_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Toggles a road between OPEN and BLOCKED, triggers automated re-optimization,
+        and records an authoritative audit event.
+        """
+        if road_id not in state.roads:
+            raise ValueError(f"Road {road_id} not found")
+
+        target_road = state.roads[road_id]
+        old_status = target_road.status
+        is_closing = (old_status != RoadStatus.BLOCKED)
+        new_status = RoadStatus.BLOCKED if is_closing else RoadStatus.OPEN
+        target_road.status = new_status
+
+        action_name = "ROAD_BLOCKED" if is_closing else "ROAD_REOPENED"
+        default_reason = "Inundated by flood surge" if is_closing else "Cleared by military engineering corps"
+        effective_reason = reason or default_reason
+
+        state.log_audit(
+            user="Command Center / GIS Sensor",
+            role="DISPATCHER",
+            action=action_name,
+            resource_type="Road",
+            resource_id=road_id,
+            details=f"Road {target_road.name} ({road_id}) set to {new_status.value}: {effective_reason}",
+            metadata={
+                "previous_status": old_status.value if hasattr(old_status, 'value') else str(old_status),
+                "new_status": new_status.value,
+                "road_name": target_road.name
+            }
+        )
+
+        previous_run = state.optimization_runs[0] if state.optimization_runs else None
+
+        new_run = optimization_engine.solve(
+            zones=list(state.zones.values()),
+            warehouses=list(state.warehouses.values()),
+            roads=list(state.roads.values()),
+            is_reoptimization=True,
+            trigger_reason=f"Road Status Change: {target_road.name} ({new_status.value.upper()})"
+        )
+
+        state.optimization_runs.insert(0, new_run)
+        state.allocations = new_run.allocations
+
+        delta = self._compute_run_delta(previous_run, new_run, trigger=f"Road {action_name}: {target_road.name}")
+
+        from ..utils.time_utils import get_utc_now_iso, get_utc_timestamp
+        state.notifications.insert(0, {
+            "id": f"NOTIF-{int(get_utc_timestamp())}",
+            "type": "REOPTIMIZATION_COMPLETE",
+            "title": f"Dynamic Re-Optimization ({action_name})",
+            "message": f"{target_road.name} is now {new_status.value.upper()}. Re-routed allocations from alternative depots. Response time: {new_run.avg_response_time_min}m.",
+            "timestamp": get_utc_now_iso(),
+            "read": False
+        })
+
+        return {
+            "reoptimization_run": new_run,
+            "delta": delta,
+            "road": target_road,
+            "action": action_name
         }
 
     def trigger_demand_spike(self, zone_id: str, multiplier: float = 1.5, reason: str = "Secondary flood breach") -> Dict[str, Any]:

@@ -100,16 +100,16 @@ class RoutingEngine:
         route_res = self.find_shortest_route(start_id, end_id, roads, avoid_blocked=True)
 
         if not route_res["found"]:
-            # Geodesic fallback with realistic urban detour coefficient (1.35x) and 35 km/h flood speed
+            # Detour fallback when primary road corridor is severed / impassable
             straight_dist = haversine_distance_km(start_lat, start_lon, end_lat, end_lon)
-            road_dist = round(straight_dist * 1.35, 2)
-            est_time = round((road_dist / 32.0) * 60.0, 1)
+            road_dist = round(max(15.5, straight_dist * 2.8 + 6.5), 2)
+            est_time = round(max(38.0, (road_dist / 18.0) * 60.0), 1)
             return {
                 "found": False,
                 "route_nodes": [start_id, "detour_bypass", end_id],
                 "distance_km": road_dist,
                 "travel_time_min": est_time,
-                "status": "Alternative Detour Route",
+                "status": "Alternative Detour Route (Primary Arterial Severed)",
                 "is_detour": True
             }
 
