@@ -11,6 +11,7 @@ import {
   submitFieldReport,
   fetchFieldReports,
   resetSystemState,
+  switchScenario,
 } from './services/api';
 import { Navbar } from './components/Navbar';
 import { Sidebar, NavTab } from './components/Sidebar';
@@ -69,6 +70,18 @@ export function App() {
     const interval = setInterval(loadAll, 8000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSwitchScenario = async (scen: 'flood' | 'tsunami') => {
+    setLoading(true);
+    try {
+      await switchScenario(scen);
+      await loadAll();
+    } catch (err) {
+      console.error('Failed to switch scenario:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOptimize = async (weights: OptimizationObjectiveWeights) => {
     await runOptimize(weights);
@@ -176,6 +189,7 @@ export function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenCreateIncident={() => setIsCreateModalOpen(true)}
+        onSwitchScenario={handleSwitchScenario}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -201,6 +215,9 @@ export function App() {
                     isDarkMode={theme === 'dark'}
                     onToggleTheme={toggleTheme}
                     onOpenCreateIncident={() => setIsCreateModalOpen(true)}
+                    onOptimize={handleOptimize}
+                    onCloseRoad={handleCloseRoad}
+                    onSwitchScenario={handleSwitchScenario}
                   />
                 )}
 

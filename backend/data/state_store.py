@@ -4,7 +4,10 @@ import json
 from .seed_data import (
     get_initial_disaster_event, get_initial_zones, get_initial_warehouses,
     get_initial_hospitals, get_initial_shelters, get_initial_roads,
-    get_initial_workforce, get_initial_dispatches, get_synthetic_scenarios
+    get_initial_workforce, get_initial_dispatches, get_synthetic_scenarios,
+    get_tsunami_disaster_event, get_tsunami_zones, get_tsunami_warehouses,
+    get_tsunami_hospitals, get_tsunami_shelters, get_tsunami_roads,
+    get_tsunami_workforce, get_tsunami_dispatches
 )
 from ..models.schemas import (
     DisasterEvent, AffectedZone, Warehouse, Hospital, Shelter, Road,
@@ -14,9 +17,11 @@ from ..models.schemas import (
 
 class StateStore:
     def __init__(self):
+        self.active_scenario_name: str = "flood"
         self.reset_to_initial()
 
     def reset_to_initial(self):
+        self.active_scenario_name = "flood"
         self.event: DisasterEvent = get_initial_disaster_event()
         self.zones: Dict[str, AffectedZone] = {z.id: z for z in get_initial_zones()}
         self.warehouses: Dict[str, Warehouse] = {w.id: w for w in get_initial_warehouses()}
@@ -141,5 +146,48 @@ class StateStore:
             details=f"Loaded synthetic scenario '{scenario['title']}' ({scenario['tag']})."
         )
         return scenario
+
+    def switch_scenario(self, scenario_name: str):
+        s_lower = scenario_name.lower().strip()
+        if "tsunami" in s_lower or "coastal" in s_lower:
+            self.active_scenario_name = "tsunami"
+            self.event = get_tsunami_disaster_event()
+            self.zones = {z.id: z for z in get_tsunami_zones()}
+            self.warehouses = {w.id: w for w in get_tsunami_warehouses()}
+            self.hospitals = {h.id: h for h in get_tsunami_hospitals()}
+            self.shelters = {s.id: s for s in get_tsunami_shelters()}
+            self.roads = {r.id: r for r in get_tsunami_roads()}
+            self.workforce = {t.id: t for t in get_tsunami_workforce()}
+            self.dispatches = get_tsunami_dispatches()
+            self.allocations = []
+            self.log_audit(
+                user="Incident Commander",
+                role="COMMANDER",
+                action="SCENARIO_ACTIVATED",
+                resource_type="DisasterEvent",
+                resource_id="EVT-TSUNAMI-2026-01",
+                details="Activated Coastal Tsunami Operations Scenario for Bay of Bengal Corridor."
+            )
+            return {"scenario": "tsunami", "event": self.event}
+        else:
+            self.active_scenario_name = "flood"
+            self.event = get_initial_disaster_event()
+            self.zones = {z.id: z for z in get_initial_zones()}
+            self.warehouses = {w.id: w for w in get_initial_warehouses()}
+            self.hospitals = {h.id: h for h in get_initial_hospitals()}
+            self.shelters = {s.id: s for s in get_initial_shelters()}
+            self.roads = {r.id: r for r in get_initial_roads()}
+            self.workforce = {t.id: t for t in get_initial_workforce()}
+            self.dispatches = get_initial_dispatches()
+            self.allocations = []
+            self.log_audit(
+                user="Incident Commander",
+                role="COMMANDER",
+                action="SCENARIO_ACTIVATED",
+                resource_type="DisasterEvent",
+                resource_id="EVT-FLOOD-2026-01",
+                details="Activated Brahmaputra-Kamrup Basin Flood Operations Scenario."
+            )
+            return {"scenario": "flood", "event": self.event}
 
 state = StateStore()

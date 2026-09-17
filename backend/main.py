@@ -235,6 +235,63 @@ def get_full_state():
         "audit_logs_count": len(state.audit_logs)
     }
 
+class ScenarioSwitchRequest(BaseModel):
+    scenario: str = "tsunami"  # "flood" | "tsunami"
+
+@app.get("/api/scenario/active")
+def get_active_scenario():
+    centroid_lat = sum(z.lat for z in state.zones.values()) / max(1, len(state.zones))
+    centroid_lon = sum(z.lon for z in state.zones.values()) / max(1, len(state.zones))
+    return {
+        "scenario": state.active_scenario_name,
+        "event": state.event,
+        "centroid": {"lat": centroid_lat, "lon": centroid_lon},
+        "available_scenarios": [
+            {
+                "id": "flood",
+                "name": "Brahmaputra Basin Flood (Guwahati)",
+                "type": "Flood",
+                "location": "Brahmaputra-Kamrup Basin Sector",
+                "centroid": {"lat": 26.185, "lon": 91.750},
+                "zones_count": 7,
+                "tag": "Inundation & Causeway Breach"
+            },
+            {
+                "id": "tsunami",
+                "name": "Bay of Bengal Coastal Tsunami (Cuddalore - Nagapattinam)",
+                "type": "Tsunami",
+                "location": "Bay of Bengal Coastal Sector",
+                "centroid": {"lat": 11.750, "lon": 79.770},
+                "zones_count": 6,
+                "tag": "Surge Wavefront & Harbor Damage"
+            }
+        ]
+    }
+
+@app.post("/api/scenario/switch")
+def switch_scenario_endpoint(req: ScenarioSwitchRequest):
+    res = state.switch_scenario(req.scenario)
+    demand_estimator.update_zone_demands(list(state.zones.values()), state.event.rainfall_mm)
+    priority_engine.compute_all_priorities(list(state.zones.values()))
+    run = optimization_engine.solve(
+        zones=list(state.zones.values()),
+        warehouses=list(state.warehouses.values()),
+        roads=list(state.roads.values()),
+        is_reoptimization=False,
+        trigger_reason=f"Scenario Switched to {req.scenario.upper()}"
+    )
+    state.optimization_runs.insert(0, run)
+    state.allocations = run.allocations
+    return {
+        "status": "SUCCESS",
+        "scenario": state.active_scenario_name,
+        "event": state.event,
+        "total_zones": len(state.zones),
+        "total_warehouses": len(state.warehouses),
+        "total_allocations": len(run.allocations),
+        "run": run
+    }
+
 @app.get("/api/disaster")
 def get_disaster_event():
     return state.event
@@ -328,6 +385,7 @@ def get_gis_layers():
     - Road network corridor polylines with status
     - Active allocation route polylines
     - Affected zones, warehouses, hospitals, shelters, field reports
+    - National disaster datasets (IFI v3.0, IMD NWIC Telemetry, ISRO Bhuvan)
     """
     return gis_service.get_geojson_layers(
         zones=list(state.zones.values()),
@@ -338,6 +396,16 @@ def get_gis_layers():
         allocations=state.allocations,
         field_reports=state.field_reports
     )
+
+@app.get("/api/gis/dataset-layers")
+def get_gis_dataset_layers():
+    """
+    Returns dedicated GeoJSON FeatureCollection of official national disaster intelligence datasets:
+    - India Flood Inventory (IFI v3.0, HydroSense Lab, IIT Delhi)
+    - IMD Daily Rainfall Gridded Telemetry & River Gauges (IMD / NWIC)
+    - ISRO NRSC Bhuvan Disaster Support SAR flood extents
+    """
+    return gis_service.get_dataset_layers()
 
 @app.get("/api/gis/status")
 def get_gis_status():

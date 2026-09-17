@@ -19,6 +19,9 @@ import {
 } from 'lucide-react';
 import { SystemState } from '../types';
 import { NavTab } from '../components/Sidebar';
+import { MasterOperationalWorkflow } from '../components/MasterOperationalWorkflow';
+import { EvaluatorLiveTestbench } from '../components/EvaluatorLiveTestbench';
+import { OptimizationObjectiveWeights } from '../types';
 
 interface DashboardViewProps {
   state: SystemState;
@@ -28,6 +31,9 @@ interface DashboardViewProps {
   isDarkMode: boolean;
   onToggleTheme: () => void;
   onOpenCreateIncident?: () => void;
+  onOptimize?: (weights: OptimizationObjectiveWeights) => Promise<void>;
+  onCloseRoad?: (roadId: string, reason?: string) => Promise<any>;
+  onSwitchScenario?: (scenario: 'flood' | 'tsunami') => Promise<void>;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -38,6 +44,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   isDarkMode,
   onToggleTheme,
   onOpenCreateIncident,
+  onOptimize,
+  onCloseRoad,
+  onSwitchScenario,
 }) => {
   const latestRun = state.latest_run;
   const criticalZones = state.zones.filter((z) => z.priority_score >= 80);
@@ -155,22 +164,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* Master Operational Workflow Pipeline */}
+      <MasterOperationalWorkflow
+        currentScenario={state.event.type}
+        onSelectTab={onSelectTab}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Evaluator Master Demonstration & Policy Control Bench */}
+      {onOptimize && onCloseRoad && onSwitchScenario && (
+        <EvaluatorLiveTestbench
+          state={state}
+          onOptimize={onOptimize}
+          onCloseRoad={onCloseRoad}
+          onSwitchScenario={onSwitchScenario}
+          isDarkMode={isDarkMode}
+        />
+      )}
+
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className={`p-4 rounded-xl border transition-all ${isDarkMode ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"}`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-mono">AFFECTED CITIZENS</span>
             <Users className="w-4 h-4 text-sky-400" />
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             {state.event.affected_population.toLocaleString()}
           </div>
           <div className="text-xs text-amber-400 mt-1 flex items-center space-x-1">
-            <span>Across 7 flood sectors</span>
+            <span>Across {state.zones.length} {state.event.type.toLowerCase()} sectors</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className={`p-4 rounded-xl border transition-all ${isDarkMode ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"}`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-mono">AVG RESPONSE TIME</span>
             <Clock className="w-4 h-4 text-emerald-400" />
@@ -183,7 +210,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className={`p-4 rounded-xl border transition-all ${isDarkMode ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"}`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-mono">CRITICAL ZONES</span>
             <AlertOctagon className="w-4 h-4 text-red-400" />
@@ -196,7 +223,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+        <div className={`p-4 rounded-xl border transition-all ${isDarkMode ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"}`}>
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-mono">HUMANITARIAN EQUITY GAP</span>
             <TrendingDown className="w-4 h-4 text-cyan-400" />

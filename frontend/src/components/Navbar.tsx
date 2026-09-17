@@ -31,6 +31,7 @@ interface NavbarProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onOpenCreateIncident?: () => void;
+  onSwitchScenario?: (scenario: 'flood' | 'tsunami') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -40,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   theme,
   onToggleTheme,
   onOpenCreateIncident,
+  onSwitchScenario,
 }) => {
   const [currentOfficer, setCurrentOfficer] = useState<AuthOfficer>({
     user_id: 'USR-CMD-01',
@@ -91,17 +93,32 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'INCIDENT_COMMANDER':
-        return 'bg-red-500/20 text-red-300 border-red-500/40';
-      case 'LOGISTICS_CHIEF':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-      case 'FIELD_RESPONDER':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/40';
-      case 'GOVERNANCE_AUDITOR':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/40';
-      default:
-        return 'bg-slate-700 text-slate-300 border-slate-600';
+    if (theme === 'dark') {
+      switch (role) {
+        case 'INCIDENT_COMMANDER':
+          return 'bg-red-500/20 text-red-300 border-red-500/40 font-bold';
+        case 'LOGISTICS_CHIEF':
+          return 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold';
+        case 'FIELD_RESPONDER':
+          return 'bg-blue-500/20 text-blue-300 border-blue-500/40 font-bold';
+        case 'GOVERNANCE_AUDITOR':
+          return 'bg-purple-500/20 text-purple-300 border-purple-500/40 font-bold';
+        default:
+          return 'bg-slate-700 text-slate-300 border-slate-600 font-bold';
+      }
+    } else {
+      switch (role) {
+        case 'INCIDENT_COMMANDER':
+          return 'bg-red-100 text-red-800 border-red-400 font-bold';
+        case 'LOGISTICS_CHIEF':
+          return 'bg-amber-100 text-amber-900 border-amber-400 font-bold';
+        case 'FIELD_RESPONDER':
+          return 'bg-blue-100 text-blue-900 border-blue-400 font-bold';
+        case 'GOVERNANCE_AUDITOR':
+          return 'bg-purple-100 text-purple-900 border-purple-400 font-bold';
+        default:
+          return 'bg-slate-100 text-slate-800 border-slate-300 font-bold';
+      }
     }
   };
 
@@ -170,7 +187,36 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {onSwitchScenario && state && (
+            <div className={`flex items-center gap-1 p-1 rounded-lg border ${
+              theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-300 shadow-sm'
+            }`}>
+              <button
+                onClick={() => onSwitchScenario('flood')}
+                title="Switch to Brahmaputra Flood Scenario (Guwahati)"
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition cursor-pointer flex items-center gap-1 ${
+                  state.event.type.toLowerCase().includes('flood')
+                    ? 'bg-sky-500 text-slate-950 shadow-sm font-extrabold'
+                    : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🌊 Flood</span>
+              </button>
+              <button
+                onClick={() => onSwitchScenario('tsunami')}
+                title="Switch to Bay of Bengal Coastal Tsunami Scenario"
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition cursor-pointer flex items-center gap-1 ${
+                  state.event.type.toLowerCase().includes('tsunami')
+                    ? 'bg-teal-500 text-slate-950 shadow-sm font-extrabold'
+                    : theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🌊 Tsunami</span>
+              </button>
+            </div>
+          )}
+
           {onOpenCreateIncident && (
             <button
               onClick={onOpenCreateIncident}
@@ -254,49 +300,75 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Officer Authentication & Clearance Modal */}
       {isAuthModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className={`border rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-6 transition-colors ${
+            theme === 'dark'
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-slate-300 text-slate-900'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${
+              theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-sky-500/20 text-sky-400 rounded-lg">
+                <div className="p-2.5 bg-sky-500/20 text-sky-500 rounded-lg">
                   <Shield className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Officer Authentication & RBAC Clearance</h3>
-                  <p className="text-xs text-slate-400 font-mono">
-                    Active Token: <span className="text-emerald-400 font-bold">HMAC-SHA256 SIGNED & VERIFIED</span>
+                  <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900 font-extrabold'}`}>
+                    Officer Authentication & RBAC Clearance
+                  </h3>
+                  <p className={`text-xs font-mono ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
+                    Active Token: <span className="text-emerald-600 dark:text-emerald-400 font-bold">HMAC-SHA256 SIGNED & VERIFIED</span>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsAuthModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
+                className={`text-lg font-bold cursor-pointer transition ${
+                  theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                }`}
               >
                 ✕
               </button>
             </div>
 
             {/* Current Officer Card */}
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div className={`p-4 rounded-xl border flex items-center justify-between transition-colors ${
+              theme === 'dark'
+                ? 'bg-slate-950 border-slate-800'
+                : 'bg-slate-50 border-slate-200 shadow-sm'
+            }`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sm font-bold text-sky-300 font-mono">
+                <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-bold font-mono ${
+                  theme === 'dark'
+                    ? 'bg-sky-500/20 border-sky-400/30 text-sky-300'
+                    : 'bg-sky-600 border-sky-700 text-white font-extrabold shadow-sm'
+                }`}>
                   {currentOfficer.badge_number}
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white">{currentOfficer.full_name}</div>
-                  <div className="text-xs text-slate-400">{currentOfficer.email}</div>
-                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">ID: {currentOfficer.user_id}</div>
+                  <div className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900 font-extrabold'}`}>
+                    {currentOfficer.full_name}
+                  </div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
+                    {currentOfficer.email}
+                  </div>
+                  <div className={`text-[10px] font-mono mt-0.5 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
+                    ID: {currentOfficer.user_id}
+                  </div>
                 </div>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold border ${getRoleBadgeColor(currentOfficer.role)}`}>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold border shadow-sm ${getRoleBadgeColor(currentOfficer.role)}`}>
                 {currentOfficer.role}
               </span>
             </div>
 
             {/* Role Switcher */}
             <div className="space-y-2.5">
-              <div className="text-xs font-semibold uppercase text-slate-400 tracking-wider flex items-center justify-between">
+              <div className={`text-xs font-bold uppercase tracking-wider flex items-center justify-between ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-700'
+              }`}>
                 <span>Switch Officer Account (Live RBAC Testing)</span>
-                <span className="text-[10px] text-emerald-400 font-mono">Instant Session Token Handshake</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">Instant Session Token Handshake</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -309,19 +381,47 @@ export const Navbar: React.FC<NavbarProps> = ({
                       disabled={authLoading || isCurrent}
                       className={`p-3 rounded-xl border text-left transition flex items-center justify-between cursor-pointer ${
                         isCurrent
-                          ? 'bg-sky-500/10 border-sky-500/40 text-white cursor-default'
-                          : 'bg-slate-800/50 hover:bg-slate-800 border-slate-700/60 text-slate-200'
+                          ? theme === 'dark'
+                            ? 'bg-sky-950/60 border-sky-500 text-white shadow-md'
+                            : 'bg-sky-50 border-sky-500 text-slate-900 shadow-md ring-2 ring-sky-400/30'
+                          : theme === 'dark'
+                          ? 'bg-slate-800/60 hover:bg-slate-800 border-slate-700/80 text-slate-200'
+                          : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm'
                       }`}
                     >
                       <div>
-                        <div className="text-xs font-bold flex items-center gap-1.5">
+                        <div className={`text-xs font-bold flex items-center gap-1.5 ${
+                          isCurrent
+                            ? theme === 'dark' ? 'text-white' : 'text-sky-950 font-extrabold'
+                            : theme === 'dark' ? 'text-slate-200' : 'text-slate-900'
+                        }`}>
                           {off.full_name}
-                          {isCurrent && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400" />}
+                          {isCurrent && <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono">{off.role}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{off.clearance}</div>
+                        <div className={`text-[10px] font-mono font-bold ${
+                          isCurrent
+                            ? theme === 'dark' ? 'text-sky-300' : 'text-sky-700'
+                            : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                        }`}>
+                          {off.role}
+                        </div>
+                        <div className={`text-[10px] mt-0.5 font-medium ${
+                          isCurrent
+                            ? theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
+                            : theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                        }`}>
+                          {off.clearance}
+                        </div>
                       </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-slate-400">
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                        isCurrent
+                          ? theme === 'dark'
+                            ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                            : 'bg-sky-600 text-white border-sky-700 shadow-sm'
+                          : theme === 'dark'
+                          ? 'bg-slate-900 text-slate-300 border-slate-700'
+                          : 'bg-slate-100 text-slate-800 border-slate-300'
+                      }`}>
                         {off.badge_number}
                       </span>
                     </button>
@@ -336,14 +436,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-              <div className="text-xs text-slate-500 font-mono flex items-center gap-1">
-                <Lock className="w-3 h-3 text-emerald-400" />
-                PBKDF2 Salted Hashes | Zero Secrets in Client Bundle
+            <div className={`flex items-center justify-between pt-2 border-t ${
+              theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              <div className={`text-xs font-mono flex items-center gap-1 ${
+                theme === 'dark' ? 'text-slate-500' : 'text-slate-600'
+              }`}>
+                <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>PBKDF2 Salted Hashes | Zero Secrets in Client Bundle</span>
               </div>
               <button
                 onClick={() => setIsAuthModalOpen(false)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer shadow-sm ${
+                  theme === 'dark'
+                    ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                    : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+                }`}
               >
                 Close
               </button>

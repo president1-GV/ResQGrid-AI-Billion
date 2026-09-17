@@ -4,11 +4,13 @@ import 'leaflet/dist/leaflet.css';
 import { SystemState, AffectedZone, Warehouse, Hospital, Shelter, Road } from '../types';
 import {
   Layers, MapPin, AlertTriangle, Check, Shield, Navigation, Globe,
-  Key, X, CheckCircle, Info, RefreshCw, Activity, ArrowRight, Zap, Database, Clock, Languages
+  Key, X, CheckCircle, Info, RefreshCw, Activity, ArrowRight, Zap, Database, Clock, Languages,
+  Radio, Sparkles
 } from 'lucide-react';
-import { fetchGisLayers, fetchGisStatus, toggleRoadStatus } from '../services/api';
+import { fetchGisLayers, fetchGisStatus, fetchGisDatasetLayers, toggleRoadStatus } from '../services/api';
+import { GoogleEarth3DShowcase } from '../components/GoogleEarth3DShowcase';
 
-export type BaseMapStyle = 'tactical_dark' | 'street' | 'topo' | 'satellite';
+export type BaseMapStyle = 'tactical_dark' | 'street' | 'topo' | 'satellite' | 'google_hybrid';
 export type MapLanguage = 'en' | 'local';
 
 interface BaseMapOption {
@@ -21,75 +23,83 @@ interface BaseMapOption {
 }
 
 const BASEMAP_CONFIGS: Record<BaseMapStyle, BaseMapOption> = {
-  tactical_dark: {
-    id: 'tactical_dark',
-    name: 'Tactical Dark',
-    badge: 'English Charcoal',
-    getUrl: (cartoKey) => {
-      if (cartoKey && cartoKey.trim().length > 0) {
-        return `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cartoKey.trim())}`;
-      }
-      // 100% Free, reliable ESRI Dark Gray Canvas without watermarks or API key requirements
-      return 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
-    },
+  google_hybrid: {
+    id: 'google_hybrid',
+    name: 'Google Earth Hybrid',
+    badge: 'Satellite + English Roads',
+    getUrl: () => 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
     getOptions: () => ({
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-      maxNativeZoom: 16,
-      maxZoom: 19,
+      attribution: '&copy; Google Earth &mdash; HD Satellite + Roads',
+      maxNativeZoom: 20,
+      maxZoom: 20,
     }),
   },
   street: {
     id: 'street',
     name: 'Street Map',
-    badge: '100% English Standard',
-    getUrl: (_cartoKey, lang = 'en') => {
-      if (lang === 'en') {
-        // ESRI World Street Map: 100% English across all countries (Pakistan, China, India, Bangladesh, etc.)
-        return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-      }
-      // Native local scripts from OpenStreetMap (Urdu, Chinese, Devanagari, Bengali)
-      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    },
-    getOptions: (lang = 'en') => ({
-      attribution: lang === 'en'
-        ? 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, TomTom'
-        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxNativeZoom: 18,
-      maxZoom: 19,
+    badge: 'Google Maps 100% English',
+    getUrl: () => 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    getOptions: () => ({
+      attribution: '&copy; Google Maps &mdash; 100% English Standard',
+      maxNativeZoom: 20,
+      maxZoom: 20,
     }),
   },
-  topo: {
-    id: 'topo',
-    name: 'Topographic',
-    badge: 'English Elevation & Rivers',
-    getUrl: () => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  tactical_dark: {
+    id: 'tactical_dark',
+    name: 'Tactical Dark',
+    badge: 'Carto Charcoal English',
+    getUrl: () => 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     getOptions: () => ({
-      attribution: 'Tiles &copy; Esri &mdash; National Geographic, USGS, NOAA',
-      maxNativeZoom: 18,
-      maxZoom: 19,
+      attribution: '&copy; CARTO &mdash; Dark Matter Canvas',
+      maxNativeZoom: 19,
+      maxZoom: 20,
     }),
   },
   satellite: {
     id: 'satellite',
-    name: 'Satellite Aerial',
-    badge: 'HD Imagery + English Labels',
-    getUrl: () => 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    name: 'Google Earth Sat',
+    badge: 'Photorealistic HD Imagery',
+    getUrl: () => 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
     getOptions: () => ({
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and GIS User Community',
-      maxNativeZoom: 18,
-      maxZoom: 19,
+      attribution: '&copy; Google Earth &mdash; Photorealistic Satellite Imagery',
+      maxNativeZoom: 20,
+      maxZoom: 20,
     }),
     getReferenceUrl: (lang = 'en') => {
       if (lang === 'en') {
-        // High-contrast English boundaries and place names overlay
-        return 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+        return 'https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}';
       }
       return null;
     }
   },
+  topo: {
+    id: 'topo',
+    name: 'Topographic',
+    badge: 'Google Terrain & Relief',
+    getUrl: () => 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+    getOptions: () => ({
+      attribution: '&copy; Google Maps &mdash; Topographic Elevation Data',
+      maxNativeZoom: 20,
+      maxZoom: 20,
+    }),
+  },
 };
 
+
 // Brahmaputra Flood Inundation Polygon (26.18, 91.75 vicinity)
+
+// Bay of Bengal Coastal Tsunami Surge Inundation Polygon (11.75, 79.77 vicinity)
+const COASTAL_TSUNAMI_POLYGON: [number, number][] = [
+  [11.790, 79.760],
+  [11.790, 79.790],
+  [11.740, 79.795],
+  [11.705, 79.790],
+  [11.710, 79.755],
+  [11.745, 79.750],
+  [11.790, 79.760],
+];
+
 const BRAHMAPUTRA_FLOOD_POLYGON: [number, number][] = [
   [26.220, 91.710],
   [26.215, 91.770],
@@ -129,6 +139,9 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
     localStorage.setItem('resqgrid_map_language', lang);
   };
 
+  // View Mode: 2D Leaflet Tactical GIS vs Google Earth 3D Showcase
+  const [viewMode, setViewMode] = useState<'2d' | '3d_showcase'>('2d');
+
   // Layer Visibility Toggles
   const [showFlood, setShowFlood] = useState(true);
   const [showRoads, setShowRoads] = useState(true);
@@ -137,15 +150,18 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const [showWarehouses, setShowWarehouses] = useState(true);
   const [showHospitals, setShowHospitals] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
+  const [showDatasets, setShowDatasets] = useState(true);
 
   // Selected entities
   const [selectedZone, setSelectedZone] = useState<AffectedZone | null>(state.zones[0] || null);
+  const [selectedDatasetPoint, setSelectedDatasetPoint] = useState<any | null>(null);
   const [lastSyncTimestamp, setLastSyncTimestamp] = useState<string>(() => new Date().toLocaleTimeString());
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [r17ActionStatus, setR17ActionStatus] = useState<string | null>(null);
   const [isProcessingR17, setIsProcessingR17] = useState(false);
   const [gisStatus, setGisStatus] = useState<any>(null);
   const [isConnectionError, setIsConnectionError] = useState(false);
+  const [datasetFeatures, setDatasetFeatures] = useState<any[]>([]);
 
   // Layer groups
   const floodLayerRef = useRef<L.LayerGroup>(L.layerGroup());
@@ -155,6 +171,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const whLayerRef = useRef<L.LayerGroup>(L.layerGroup());
   const hospLayerRef = useRef<L.LayerGroup>(L.layerGroup());
   const shelterLayerRef = useRef<L.LayerGroup>(L.layerGroup());
+  const datasetLayerRef = useRef<L.LayerGroup>(L.layerGroup());
 
   // Fetch GIS status from authoritative backend
   const refreshGisStatus = async () => {
@@ -167,8 +184,21 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
     }
   };
 
+  // Fetch National Disaster Datasets
+  const refreshDatasetLayers = async () => {
+    try {
+      const data = await fetchGisDatasetLayers();
+      if (data && data.features) {
+        setDatasetFeatures(data.features);
+      }
+    } catch (err) {
+      console.warn('Dataset layers fetch error:', err);
+    }
+  };
+
   useEffect(() => {
     refreshGisStatus();
+    refreshDatasetLayers();
     const interval = setInterval(refreshGisStatus, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -243,6 +273,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
       whLayerRef.current.addTo(map);
       hospLayerRef.current.addTo(map);
       shelterLayerRef.current.addTo(map);
+      datasetLayerRef.current.addTo(map);
 
       mapInstanceRef.current = map;
 
@@ -252,6 +283,15 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
       }, 250);
     }
   }, []);
+
+  
+  // Dynamically re-center map when scenario/disaster event changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !state.zones.length) return;
+    const avgLat = state.zones.reduce((sum, z) => sum + z.lat, 0) / state.zones.length;
+    const avgLon = state.zones.reduce((sum, z) => sum + z.lon, 0) / state.zones.length;
+    mapInstanceRef.current.setView([avgLat, avgLon], 12);
+  }, [state.event.id]);
 
   // Update tile layer whenever baseMapStyle, cartoKey, or mapLanguage changes
   useEffect(() => {
@@ -287,34 +327,37 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // 1. FLOOD INUNDATION POLYGON
+    // 1. FLOOD / TSUNAMI INUNDATION POLYGON
     floodLayerRef.current.clearLayers();
     if (showFlood) {
-      const floodPoly = L.polygon(BRAHMAPUTRA_FLOOD_POLYGON, {
-        color: '#dc2626',
-        weight: 2,
-        dashArray: '5, 5',
-        fillColor: '#dc2626',
-        fillOpacity: 0.28,
+      const isTsunami = state.event.type.toLowerCase().includes('tsunami') || (state.zones[0]?.lat < 15.0);
+      const polyCoords = isTsunami ? COASTAL_TSUNAMI_POLYGON : BRAHMAPUTRA_FLOOD_POLYGON;
+      const floodPoly = L.polygon(polyCoords, {
+        color: isTsunami ? '#0284c7' : '#dc2626',
+        weight: 3.5,
+        fillColor: isTsunami ? '#38bdf8' : '#ef4444',
+        fillOpacity: 0.38,
       });
 
       floodPoly.bindTooltip(
-        '<strong>Brahmaputra Flood Inundation Zone (2.8m Level)</strong><br/>Severity: CRITICAL &bull; Area: 42.5 km²',
+        isTsunami
+          ? '<strong>Coastal Tsunami Surge Inundation Zone (4.2m Surge Level)</strong><br/>Severity: CRITICAL &bull; Area: 38.6 km²'
+          : '<strong>Brahmaputra Flood Inundation Zone (2.8m Level)</strong><br/>Severity: CRITICAL &bull; Area: 42.5 km²',
         { permanent: false, direction: 'center' }
       );
 
       floodPoly.bindPopup(`
         <div style="font-family: ui-sans-serif, system-ui; min-width: 220px; color: #0f172a; font-size: 12px; line-height: 1.5;">
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
-            <strong style="color: #b91c1c; font-size: 13px;">Brahmaputra Inundation Extent</strong>
-            <span style="background: #fee2e2; color: #991b1b; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px;">CRITICAL</span>
+            <strong style="color: ${isTsunami ? '#0369a1' : '#b91c1c'}; font-size: 13px;">${isTsunami ? 'Tsunami Surge Inundation Extent' : 'Brahmaputra Inundation Extent'}</strong>
+            <span style="background: ${isTsunami ? '#e0f2fe' : '#fee2e2'}; color: ${isTsunami ? '#075985' : '#991b1b'}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px;">CRITICAL</span>
           </div>
-          <div>Avg Flood Depth: <strong>1.4 m</strong></div>
-          <div>Peak Level: <strong>2.8 m above danger mark</strong></div>
-          <div>Inundated Area: <strong>42.5 km²</strong></div>
-          <div>Hazard Level: <strong style="color: #dc2626;">High Risk / Evacuation Priority</strong></div>
+          <div>Avg Water Depth: <strong>${isTsunami ? '1.8 m (Seawater Salinization)' : '1.4 m'}</strong></div>
+          <div>Peak Level: <strong>${isTsunami ? '4.2 m Tsunami Wavefront Surge' : '2.8 m above danger mark'}</strong></div>
+          <div>Inundated Area: <strong>${isTsunami ? '38.6 km²' : '42.5 km²'}</strong></div>
+          <div>Hazard Level: <strong style="color: ${isTsunami ? '#0284c7' : '#dc2626'};">High Risk / Evacuation Priority</strong></div>
           <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; font-size: 10px; color: #64748b;">
-            Provenance: <strong>DATABASE / ASDMA & CWC Sensors</strong><br/>
+            Provenance: <strong>DATABASE / INCOIS & CWC Coastal Buoys</strong><br/>
             Confidence Score: <strong>0.98</strong>
           </div>
         </div>
@@ -602,7 +645,88 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
         marker.addTo(shelterLayerRef.current);
       });
     }
-  }, [state, showFlood, showRoads, showRoutes, showZones, showWarehouses, showHospitals, showShelters]);
+
+    // 8. NATIONAL DISASTER INTELLIGENCE DATASETS (IFI v3.0, IMD NWIC, ISRO BHUVAN)
+    datasetLayerRef.current.clearLayers();
+    if (showDatasets && datasetFeatures.length > 0) {
+      datasetFeatures.forEach((feat) => {
+        const coords = feat.geometry?.coordinates;
+        if (!coords || coords.length < 2) return;
+        const [lon, lat] = coords;
+        const p = feat.properties || {};
+
+        const isIFI = p.dataset_id === 'india_flood_inventory';
+        const isIMD = p.dataset_id === 'imd_rainfall_daily';
+
+        const badgeColor = isIFI ? '#a855f7' : isIMD ? '#06b6d4' : '#f59e0b';
+        const badgeLabel = isIFI ? 'IFI' : isIMD ? 'IMD' : 'NRSC';
+
+        const customIcon = L.divIcon({
+          className: 'custom-dataset-pin',
+          html: `
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 26px;
+              height: 26px;
+              border-radius: 9999px;
+              background: ${badgeColor};
+              color: white;
+              font-weight: 800;
+              font-size: 9px;
+              font-family: ui-sans-serif, system-ui;
+              border: 2px solid white;
+              box-shadow: 0 4px 10px ${badgeColor}66;
+              cursor: pointer;
+            ">
+              <span>${badgeLabel}</span>
+            </div>
+          `,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+          popupAnchor: [0, -14],
+        });
+
+        const marker = L.marker([lat, lon], { icon: customIcon });
+
+        marker.bindTooltip(
+          `<strong>${p.name}</strong><br/><span style="color: ${badgeColor}">${p.dataset_name}</span>`,
+          { direction: 'top', offset: [0, -14] }
+        );
+
+        marker.bindPopup(`
+          <div style="font-family: ui-sans-serif, system-ui; min-width: 240px; color: #0f172a; font-size: 12px; line-height: 1.5;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
+              <strong style="color: ${badgeColor}; font-size: 13px;">${p.name}</strong>
+              <span style="background: ${badgeColor}22; color: ${badgeColor}; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px;">
+                ${p.district || badgeLabel}
+              </span>
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">
+              Source: <strong>${p.provider || 'National Disaster Data Repository'}</strong>
+            </div>
+            ${p.actual_rainfall_mm ? `<div>24h Observed Rainfall: <strong>${p.actual_rainfall_mm} mm</strong> (<span style="color: #dc2626; font-weight: bold;">+${p.departure_pct}% normal</span>)</div>` : ''}
+            ${p.warning_level ? `<div>Alert Level: <strong style="color: #dc2626;">${p.warning_level}</strong></div>` : ''}
+            ${p.river_gauge_level_m ? `<div>River Gauge: <strong>${p.river_gauge_level_m}m</strong> (Danger: ${p.danger_mark_m}m)</div>` : ''}
+            ${p.flooded_area_pct ? `<div>Historical Flooded Area: <strong>${p.flooded_area_pct}%</strong></div>` : ''}
+            ${p.mean_flood_duration_days ? `<div>Mean Flood Duration: <strong>${p.mean_flood_duration_days} days</strong></div>` : ''}
+            ${p.population ? `<div>District Population: <strong>${Number(p.population).toLocaleString()}</strong></div>` : ''}
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; font-size: 10px; color: #64748b;">
+              Provenance: <strong>${p.provenance || 'DATABASE'}</strong> &bull; Conf: <strong>${p.confidence || 0.95}</strong><br/>
+              ${p.license ? `License: <span>${p.license}</span>` : ''}
+            </div>
+          </div>
+        `);
+
+        marker.on('click', () => {
+          setSelectedDatasetPoint(p);
+        });
+
+        marker.addTo(datasetLayerRef.current);
+      });
+    }
+  }, [state, showFlood, showRoads, showRoutes, showZones, showWarehouses, showHospitals, showShelters, showDatasets, datasetFeatures]);
 
   // Road R17 Evaluator Quick Trigger
   const roadR17 = state.roads.find((r) => r.id === 'ROAD-R17');
@@ -732,44 +856,62 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             );
           })()}
 
-          {/* Map Language Controller */}
-          <div className={`flex items-center p-1 rounded-lg border text-xs ${
+          {/* View Mode Controller: 2D Tactical GIS vs Google Earth 3D Showcase */}
+          <div className={`flex items-center p-1 rounded-xl border text-xs shadow-sm ${
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
-            <div className="flex items-center space-x-1 px-1.5 text-slate-500 font-mono text-[10px] font-bold uppercase">
-              <Languages className="w-3.5 h-3.5 text-sky-500" />
-              <span>Language:</span>
-            </div>
             <button
-              onClick={() => handleSetLanguage('en')}
-              className={`px-2 py-1 rounded font-medium transition flex items-center space-x-1 ${
-                mapLanguage === 'en'
-                  ? 'bg-sky-500 text-white shadow font-bold'
+              onClick={() => setViewMode('2d')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 ${
+                viewMode === '2d'
+                  ? 'bg-sky-500 text-white shadow'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Convert entire map into English standardized global cartography"
             >
-              <span>English (EN)</span>
-              {mapLanguage === 'en' && <Check className="w-3 h-3" />}
+              <MapPin className="w-3.5 h-3.5" />
+              <span>2D Tactical GIS</span>
             </button>
             <button
-              onClick={() => handleSetLanguage('local')}
-              className={`px-2 py-1 rounded font-medium transition flex items-center space-x-1 ${
-                mapLanguage === 'local'
-                  ? 'bg-amber-500 text-white shadow font-bold'
+              onClick={() => setViewMode('3d_showcase')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 ${
+                viewMode === '3d_showcase'
+                  ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-sky-500/30'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="Display native local scripts (Urdu, Chinese, Devanagari, Bengali via OpenStreetMap)"
             >
-              <span>Native Scripts</span>
-              {mapLanguage === 'local' && <Check className="w-3 h-3" />}
+              <Globe className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+              <span>Google Earth 3D Showcase</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                LIVE
+              </span>
             </button>
+          </div>
+
+          {/* Map Language Standard: English */}
+          <div className={`flex items-center px-3 py-1.5 rounded-xl border text-xs font-semibold ${
+            isDarkMode ? 'bg-slate-950 border-slate-800 text-sky-400' : 'bg-slate-100 border-slate-300 text-sky-800'
+          }`}>
+            <Languages className="w-3.5 h-3.5 mr-1.5 text-sky-500" />
+            <span>Standard: 100% English Global Cartography</span>
+            <Check className="w-3.5 h-3.5 ml-1 text-emerald-500" />
           </div>
 
           {/* Basemap Switcher */}
           <div className={`flex items-center p-1 rounded-lg border text-xs ${
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
+            <button
+              onClick={() => setBaseMapStyle('google_hybrid')}
+              className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
+                baseMapStyle === 'google_hybrid'
+                  ? 'bg-sky-500 text-white shadow font-bold'
+                  : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Google Earth 3D Satellite Hybrid with English Place Names & Highways"
+            >
+              <Globe className="w-3 h-3 text-sky-400" />
+              <span>Google Earth Hybrid</span>
+            </button>
             <button
               onClick={() => setBaseMapStyle('tactical_dark')}
               className={`px-2.5 py-1 rounded font-medium transition flex items-center space-x-1.5 ${
@@ -789,7 +931,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title={mapLanguage === 'en' ? "ESRI World Street Map (100% English Global Cartography)" : "OpenStreetMap (Native local scripts)"}
+              title={mapLanguage === 'en' ? "Google Maps 100% English Global Cartography" : "OpenStreetMap (Native local scripts)"}
             >
               <Globe className="w-3 h-3" />
               <span>{mapLanguage === 'en' ? 'Street Map (EN)' : 'Street Map (Local)'}</span>
@@ -813,7 +955,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
                   ? 'bg-sky-500 text-white shadow font-bold'
                   : isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
-              title="ESRI High-Definition Aerial Satellite with English Place Names Overlay"
+              title="Google Earth High-Definition Aerial Satellite"
             >
               <Layers className="w-3 h-3" />
               <span>Satellite</span>
@@ -850,79 +992,116 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setShowFlood(!showFlood)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showFlood
-                ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-red-600 text-white font-bold border-red-700 shadow-red-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Flood Inundation (2.8m)
           </button>
           <button
             onClick={() => setShowRoads(!showRoads)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showRoads
-                ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-emerald-600 text-white font-bold border-emerald-700 shadow-emerald-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Roads ({state.roads.length})
           </button>
           <button
             onClick={() => setShowRoutes(!showRoutes)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showRoutes
-                ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-cyan-600 text-white font-bold border-cyan-700 shadow-cyan-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Supply Corridors ({state.active_allocations.length})
           </button>
           <button
             onClick={() => setShowZones(!showZones)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showZones
-                ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-amber-600 text-white font-bold border-amber-700 shadow-amber-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Incident Zones ({state.zones.length})
           </button>
           <button
             onClick={() => setShowWarehouses(!showWarehouses)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showWarehouses
-                ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-sky-600 text-white font-bold border-sky-700 shadow-sky-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Warehouses ({state.warehouses.length})
           </button>
           <button
             onClick={() => setShowHospitals(!showHospitals)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showHospitals
-                ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-rose-600 text-white font-bold border-rose-700 shadow-rose-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Hospitals ({state.hospitals.length})
           </button>
           <button
             onClick={() => setShowShelters(!showShelters)}
-            className={`px-2.5 py-1 rounded-lg border font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs transition shadow-sm ${
               showShelters
-                ? 'bg-teal-500/20 text-teal-700 dark:text-teal-300 border-teal-500/40 font-bold'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'
+                ? 'bg-teal-600 text-white font-bold border-teal-700 shadow-teal-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
             }`}
           >
             Shelters ({state.shelters.length})
           </button>
+          <button
+            onClick={() => setShowDatasets(!showDatasets)}
+            className={`px-3 py-1.5 rounded-lg border text-xs transition flex items-center space-x-1.5 shadow-sm ${
+              showDatasets
+                ? 'bg-purple-600 text-white font-bold border-purple-700 shadow-purple-500/20'
+                : isDarkMode
+                ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 font-medium'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span>National Datasets (IFI / IMD) ({datasetFeatures.length || 11})</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Map + Right Inspector Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      {viewMode === '3d_showcase' ? (
+        <div className="h-[760px] w-full">
+          <GoogleEarth3DShowcase
+            state={state}
+            onToggleRoad={onToggleRoad}
+            isDarkMode={isDarkMode}
+            onClose={() => setViewMode('2d')}
+          />
+        </div>
+      ) : (
+        /* Main Map + Right Inspector Grid */
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Leaflet Map Canvas */}
         <div className={`lg:col-span-3 h-[620px] rounded-2xl overflow-hidden border relative shadow-xl ${
           isDarkMode ? 'border-slate-800' : 'border-slate-300'
@@ -930,38 +1109,48 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
           <div ref={mapContainerRef} className="w-full h-full" />
 
           {/* Quick Map Legend Overlay */}
-          <div className="absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-md border border-slate-800 p-3.5 rounded-xl text-xs space-y-1.5 z-[1000] pointer-events-auto shadow-2xl text-slate-200 min-w-[210px]">
-            <div className="font-bold text-white text-[11px] uppercase tracking-wider mb-1 flex items-center justify-between">
+          <div className={`absolute bottom-4 left-4 backdrop-blur-md border p-3.5 rounded-xl text-xs space-y-2 z-[1000] pointer-events-auto shadow-2xl min-w-[220px] transition-colors ${
+            isDarkMode
+              ? 'bg-slate-950/95 border-slate-800 text-slate-200'
+              : 'bg-white/95 border-slate-300 text-slate-900 shadow-xl'
+          }`}>
+            <div className={`font-bold text-[11px] uppercase tracking-wider mb-1 flex items-center justify-between border-b pb-1.5 ${
+              isDarkMode ? 'text-white border-slate-800' : 'text-slate-900 border-slate-200'
+            }`}>
               <span>Operational GIS Legend</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3.5 h-2.5 rounded bg-red-600/40 border border-red-500" />
-              <span>Flood Inundation (2.8m Extent)</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-4 h-2.5 rounded bg-red-600/40 border-2 border-red-600 flex-shrink-0" />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Flood Inundation (2.8m Extent)</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3.5 h-1 bg-emerald-500" />
-              <span>Open Road (Direct Transit)</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-4 h-1.5 bg-emerald-500 rounded flex-shrink-0" />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Open Road (Direct Transit)</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3.5 h-1 bg-red-500 border-b border-dashed border-white" />
-              <span>Blocked Road (Severed Segment)</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-4 h-1.5 bg-red-500 border-b border-dashed border-white rounded flex-shrink-0" />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Blocked Road (Severed Segment)</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3.5 h-1 bg-sky-400 border-b border-dashed border-sky-200" />
-              <span>Supply Allocation Corridor</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-4 h-1.5 bg-cyan-500 rounded flex-shrink-0" />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Supply Allocation Corridor</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-red-500" />
-              <span>Critical Zone (Priority &ge; 80)</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0 shadow-sm" />
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Critical Zone (Priority &ge; 80)</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded bg-sky-500 text-[9px] font-bold text-white flex items-center justify-center">WH</span>
-              <span>Regional Logistics Depot</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-3.5 h-3.5 rounded bg-sky-600 text-[9px] font-bold text-white flex items-center justify-center flex-shrink-0 shadow-sm">WH</span>
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Regional Logistics Depot</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-red-600 text-[10px] font-bold text-white flex items-center justify-center">+</span>
-              <span>Hospital Trauma Center</span>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-3.5 h-3.5 rounded-full bg-red-600 text-[10px] font-bold text-white flex items-center justify-center flex-shrink-0 shadow-sm">+</span>
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>Hospital Trauma Center</span>
+            </div>
+            <div className="flex items-center space-x-2 font-medium">
+              <span className="w-3.5 h-3.5 rounded-full bg-purple-600 text-[9px] font-bold text-white flex items-center justify-center flex-shrink-0 shadow-sm">IFI</span>
+              <span className={isDarkMode ? 'text-slate-200' : 'text-slate-800'}>National Telemetry Station</span>
             </div>
           </div>
         </div>
@@ -1048,6 +1237,56 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
             )}
           </div>
 
+          {/* Selected National Dataset Inspector Card */}
+          {selectedDatasetPoint && (
+            <div className={`p-4 rounded-xl border space-y-2.5 transition-colors ${
+              isDarkMode ? 'bg-slate-900 border-purple-500/40 text-white' : 'bg-white border-purple-300 text-slate-900 shadow-sm'
+            }`}>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                <span className="text-xs font-mono text-purple-600 dark:text-purple-400 font-bold uppercase">
+                  {selectedDatasetPoint.dataset_name || 'National Disaster Dataset'}
+                </span>
+                <button
+                  onClick={() => setSelectedDatasetPoint(null)}
+                  className="p-1 text-slate-500 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <h4 className="text-sm font-bold">{selectedDatasetPoint.name}</h4>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Source: <strong className="text-slate-800 dark:text-slate-200">{selectedDatasetPoint.provider}</strong>
+              </div>
+              {selectedDatasetPoint.actual_rainfall_mm && (
+                <div className="text-xs flex justify-between">
+                  <span className="text-slate-500">24h Observed Rainfall:</span>
+                  <strong className="text-cyan-600 dark:text-cyan-400">{selectedDatasetPoint.actual_rainfall_mm} mm (+{selectedDatasetPoint.departure_pct}%)</strong>
+                </div>
+              )}
+              {selectedDatasetPoint.flooded_area_pct && (
+                <div className="text-xs flex justify-between">
+                  <span className="text-slate-500">Historical Flooded Area:</span>
+                  <strong className="text-purple-600 dark:text-purple-400">{selectedDatasetPoint.flooded_area_pct}% of District</strong>
+                </div>
+              )}
+              {selectedDatasetPoint.mean_flood_duration_days && (
+                <div className="text-xs flex justify-between">
+                  <span className="text-slate-500">Mean Flood Duration:</span>
+                  <strong>{selectedDatasetPoint.mean_flood_duration_days} Days</strong>
+                </div>
+              )}
+              {selectedDatasetPoint.population && (
+                <div className="text-xs flex justify-between">
+                  <span className="text-slate-500">District Population:</span>
+                  <strong>{Number(selectedDatasetPoint.population).toLocaleString()}</strong>
+                </div>
+              )}
+              <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800">
+                Provenance: <strong>{selectedDatasetPoint.provenance}</strong> &bull; Conf: {selectedDatasetPoint.confidence}
+              </div>
+            </div>
+          )}
+
           {/* Selected Zone Inspector Card */}
           {selectedZone ? (
             <div className={`p-4 rounded-xl border space-y-3 transition-colors ${
@@ -1073,51 +1312,51 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               </div>
 
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-200 dark:border-slate-800/60">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">Affected Population:</span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700 font-semibold">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">Affected Population:</span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-800 text-white font-bold shadow-sm">
                       DATABASE
                     </span>
                   </div>
-                  <strong>{selectedZone.affected_population.toLocaleString()} / {selectedZone.population.toLocaleString()}</strong>
+                  <strong className="text-slate-900 dark:text-white font-bold">{selectedZone.affected_population.toLocaleString()} / {selectedZone.population.toLocaleString()}</strong>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-200 dark:border-slate-800/60">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">Flood Severity:</span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-500/30 font-semibold">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">Flood Severity:</span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-red-700 text-white font-bold shadow-sm">
                       ASDMA / CWC (0.98)
                     </span>
                   </div>
-                  <strong className="text-red-500">{Math.round(selectedZone.severity * 100)}%</strong>
+                  <strong className="text-red-600 dark:text-red-400 font-bold">{Math.round(selectedZone.severity * 100)}%</strong>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-200 dark:border-slate-800/60">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">Vulnerability Index:</span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-semibold">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">Vulnerability Index:</span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-600 text-white font-bold shadow-sm">
                       CALCULATED
                     </span>
                   </div>
-                  <strong className="text-amber-500">{Math.round(selectedZone.vulnerability * 100)}%</strong>
+                  <strong className="text-amber-600 dark:text-amber-400 font-bold">{Math.round(selectedZone.vulnerability * 100)}%</strong>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-200 dark:border-slate-800/60">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500">Road Navigability:</span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">Road Navigability:</span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-700 text-white font-bold shadow-sm">
                       DIJKSTRA GRAPH
                     </span>
                   </div>
-                  <strong className="text-emerald-500">{Math.round(selectedZone.road_accessibility * 100)}%</strong>
+                  <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{Math.round(selectedZone.road_accessibility * 100)}%</strong>
                 </div>
               </div>
 
               {/* Demand Requirements Grid */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 font-bold">
                     Sector Needs Breakdown:
                   </span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-semibold">
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-700 text-white font-bold shadow-sm">
                     SPHERE ESTIMATOR
                   </span>
                 </div>
@@ -1239,6 +1478,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
           </div>
         </div>
       </div>
+      )}
 
       {/* API Key & Basemap Manager Modal */}
       {isKeyModalOpen && (

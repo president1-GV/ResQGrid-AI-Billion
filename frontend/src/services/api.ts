@@ -459,5 +459,25 @@ export async function fetchGisStatus(): Promise<any> {
   return res.json();
 }
 
+export async function fetchGisDatasetLayers(): Promise<any> {
+  const res = await fetch(`${API_BASE}/gis/dataset-layers`);
+  if (!res.ok) throw new Error('Failed to fetch GIS dataset layers');
+  return res.json();
+}
 
+export async function fetchActiveScenario(): Promise<any> {
+  const res = await fetch(`${API_BASE}/scenario/active`);
+  if (!res.ok) throw new Error('Failed to fetch active scenario');
+  return res.json();
+}
+
+export async function switchScenario(scenario: 'flood' | 'tsunami'): Promise<any> {
+  const res = await fetch(`${API_BASE}/scenario/switch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario }),
+  });
+  if (!res.ok) throw new Error(`Failed to switch scenario to ${scenario}`);
+  return res.json();
+}
 

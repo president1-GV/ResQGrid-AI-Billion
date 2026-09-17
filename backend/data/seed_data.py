@@ -696,3 +696,514 @@ def get_synthetic_scenarios():
             "synthetic": True
         }
     }
+
+
+# ==============================================================================
+# FIRST-CLASS COASTAL TSUNAMI OPERATIONS SCENARIO
+# Bay of Bengal Coastal Corridor (Cuddalore - Nagapattinam Sector)
+# Center: Lat 11.750°N, Lon 79.770°E
+# ==============================================================================
+
+def get_tsunami_disaster_event() -> DisasterEvent:
+    return DisasterEvent(
+        id="EVT-TSUNAMI-2026-01",
+        event_number="DISASTER-IND-TSU-007",
+        type="Tsunami",
+        severity="Critical",
+        status="Active",
+        start_time="2026-09-17T06:30:00Z",
+        location="Bay of Bengal Coastal Sector (Cuddalore - Nagapattinam Corridor)",
+        affected_population=58400,
+        description="Mw 8.4 offshore undersea megathrust seismic trigger generating a 4.2m tsunami surge wavefront. Seawater inundation 1.8km inland, fishing harbor destroyed, causeway bridge partially severed, and coastal hamlets marooned.",
+        rainfall_mm=95.0,
+        river_level_meters=4.2,  # Surge wavefront height
+        danger_mark_meters=1.5,
+        created_at="2026-09-17T06:30:00Z",
+        updated_at="2026-09-17T11:45:00Z"
+    )
+
+def get_tsunami_zones() -> List[AffectedZone]:
+    return [
+        AffectedZone(
+            id="tsunami_zone_1",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="Coastal Ward 1 - Fishing Harbor & Jetty",
+            population=14500,
+            affected_population=12200,
+            severity=0.98,
+            vulnerability=0.92,
+            medical_need=380,
+            food_need=7500,
+            water_need=16000,
+            shelter_need=1100,
+            ambulances_need=7,
+            medical_teams_need=5,
+            lat=11.745,
+            lon=79.775,
+            road_accessibility=0.50,
+            hospital_capacity=10,
+            priority_score=96.5,
+            is_critical=True,
+            notes="Direct surge impact. 140 trawlers smashed; harbor community center surrounded by 1.8m seawater. Immediate maritime extraction and medical triage needed."
+        ),
+        AffectedZone(
+            id="tsunami_zone_2",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="Coastal Ward 2 - High Density Sea Promenade",
+            population=22000,
+            affected_population=16800,
+            severity=0.90,
+            vulnerability=0.84,
+            medical_need=460,
+            food_need=9800,
+            water_need=22000,
+            shelter_need=1400,
+            ambulances_need=6,
+            medical_teams_need=4,
+            lat=11.760,
+            lon=79.768,
+            road_accessibility=0.65,
+            hospital_capacity=25,
+            priority_score=91.2,
+            is_critical=True,
+            notes="Sea wall breach. Seawater inundated ground floors across commercial market strip. Acute shortage of potable water due to salinization of wells."
+        ),
+        AffectedZone(
+            id="tsunami_zone_3",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="Coastal Ward 3 - Lowland Mangrove Delta Hamlet",
+            population=8200,
+            affected_population=6900,
+            severity=0.88,
+            vulnerability=0.90,
+            medical_need=240,
+            food_need=4800,
+            water_need=11000,
+            shelter_need=750,
+            ambulances_need=4,
+            medical_teams_need=3,
+            lat=11.725,
+            lon=79.762,
+            road_accessibility=0.55,
+            hospital_capacity=5,
+            priority_score=87.4,
+            is_critical=True,
+            notes="Remote traditional fishing hamlet. Access road inundated. High humanitarian equity risk; must receive guaranteed relief threshold."
+        ),
+        AffectedZone(
+            id="tsunami_zone_4",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="Coastal Ward 4 - Industrial Refinery Wharf",
+            population=7500,
+            affected_population=5200,
+            severity=0.82,
+            vulnerability=0.78,
+            medical_need=310,
+            food_need=3900,
+            water_need=8500,
+            shelter_need=600,
+            ambulances_need=5,
+            medical_teams_need=3,
+            lat=11.775,
+            lon=79.778,
+            road_accessibility=0.70,
+            hospital_capacity=15,
+            priority_score=83.0,
+            is_critical=True,
+            notes="Petrochemical storage depot bund wall cracked. Precautionary evacuation mandated. High ambulance requirement for burn/toxic inhalation preparedness."
+        ),
+        AffectedZone(
+            id="tsunami_zone_5",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="South Coastal Spit & Lighthouse Enclave",
+            population=5400,
+            affected_population=4300,
+            severity=0.94,
+            vulnerability=0.89,
+            medical_need=210,
+            food_need=3500,
+            water_need=7800,
+            shelter_need=550,
+            ambulances_need=3,
+            medical_teams_need=2,
+            lat=11.710,
+            lon=79.782,
+            road_accessibility=0.40,
+            hospital_capacity=0,
+            priority_score=89.8,
+            is_critical=True,
+            notes="Completely cut off by Coastal Causeway breach (Road R17). Accessible solely via NDRF Gemini motorized inflatable boats or air drop."
+        ),
+        AffectedZone(
+            id="tsunami_zone_6",
+            event_id="EVT-TSUNAMI-2026-01",
+            name="Inland Elevated Sector - High Ground",
+            population=19000,
+            affected_population=4800,
+            severity=0.45,
+            vulnerability=0.50,
+            medical_need=110,
+            food_need=3200,
+            water_need=7000,
+            shelter_need=400,
+            ambulances_need=2,
+            medical_teams_need=1,
+            lat=11.755,
+            lon=79.730,
+            road_accessibility=0.95,
+            hospital_capacity=80,
+            priority_score=48.0,
+            is_critical=False,
+            notes="Naturally elevated topography (35m MSL). Designated safe assembly zone. Relieving incoming displaced persons from coastal wards."
+        )
+    ]
+
+def get_tsunami_warehouses() -> List[Warehouse]:
+    return [
+        Warehouse(
+            id="WH-COAST-BASE",
+            name="Inland Coastal Logistics Base",
+            location="Highland Highway Junction, Safe Elevation 38m",
+            lat=11.765,
+            lon=79.720,
+            capacity=150000,
+            operational_status="Operational",
+            inventory={
+                "water": 55000,
+                "food": 32000,
+                "medical_kits": 1200,
+                "ambulances": 14,
+                "medical_teams": 10,
+                "shelter_kits": 3000,
+                "trucks": 20,
+                "drones": 8
+            },
+            vehicles_available={
+                "heavy_truck": 12,
+                "medium_truck": 8,
+                "all_terrain_ambulance": 10,
+                "speed_rescue_boat": 12,
+                "delivery_drone": 8
+            },
+            personnel_available={
+                "doctors": 22,
+                "paramedics": 38,
+                "rescue_operators": 55,
+                "drivers": 28
+            }
+        ),
+        Warehouse(
+            id="WH-PORT-RESERVE",
+            name="Port Maritime Strategic Reserve",
+            location="North Port Security Zone, Pier 4",
+            lat=11.780,
+            lon=79.755,
+            capacity=85000,
+            operational_status="Operational",
+            inventory={
+                "water": 28000,
+                "food": 18000,
+                "medical_kits": 850,
+                "ambulances": 8,
+                "medical_teams": 6,
+                "shelter_kits": 1800,
+                "trucks": 10,
+                "drones": 4
+            },
+            vehicles_available={
+                "heavy_truck": 6,
+                "medium_truck": 4,
+                "all_terrain_ambulance": 6,
+                "speed_rescue_boat": 8,
+                "delivery_drone": 4
+            },
+            personnel_available={
+                "doctors": 14,
+                "paramedics": 24,
+                "rescue_operators": 32,
+                "drivers": 16
+            }
+        ),
+        Warehouse(
+            id="WH-SOUTH-DEPOT",
+            name="South Sector Civil Defense Depot",
+            location="River Mouth High Road, Delta Sector",
+            lat=11.715,
+            lon=79.735,
+            capacity=90000,
+            operational_status="Operational",
+            inventory={
+                "water": 34000,
+                "food": 22000,
+                "medical_kits": 900,
+                "ambulances": 10,
+                "medical_teams": 7,
+                "shelter_kits": 2200,
+                "trucks": 12,
+                "drones": 6
+            },
+            vehicles_available={
+                "heavy_truck": 8,
+                "medium_truck": 4,
+                "all_terrain_ambulance": 8,
+                "speed_rescue_boat": 10,
+                "delivery_drone": 6
+            },
+            personnel_available={
+                "doctors": 16,
+                "paramedics": 28,
+                "rescue_operators": 40,
+                "drivers": 20
+            }
+        )
+    ]
+
+def get_tsunami_hospitals() -> List[Hospital]:
+    return [
+        Hospital(
+            id="HOSP-DISTRICT",
+            name="District Government Headquarters Hospital",
+            lat=11.758,
+            lon=79.738,
+            total_beds=350,
+            available_beds=45,
+            icu_available=8,
+            status="Operational"
+        ),
+        Hospital(
+            id="HOSP-NAVAL",
+            name="Naval Coastal Defense Trauma Center",
+            lat=11.770,
+            lon=79.742,
+            total_beds=180,
+            available_beds=28,
+            icu_available=6,
+            status="Operational"
+        ),
+        Hospital(
+            id="HOSP-ESTUARY",
+            name="Estuary Community Health Center",
+            lat=11.730,
+            lon=79.748,
+            total_beds=60,
+            available_beds=5,
+            icu_available=1,
+            status="Operational"
+        )
+    ]
+
+def get_tsunami_shelters() -> List[Shelter]:
+    return [
+        Shelter(
+            id="SHELTER-HIGHLAND",
+            name="Highland Multipurpose Cyclone & Tsunami Shelter",
+            lat=11.760,
+            lon=79.728,
+            capacity=4000,
+            current_occupancy=2100,
+            available_capacity=1900,
+            status="Operational"
+        ),
+        Shelter(
+            id="SHELTER-STADIUM",
+            name="District Indoor Stadium Safe Evacuation Complex",
+            lat=11.750,
+            lon=79.722,
+            capacity=6000,
+            current_occupancy=2800,
+            available_capacity=3200,
+            status="Operational"
+        ),
+        Shelter(
+            id="SHELTER-COLLEGE",
+            name="Coastal Polytechnic Highland Relief Camp",
+            lat=11.735,
+            lon=79.732,
+            capacity=3200,
+            current_occupancy=1400,
+            available_capacity=1800,
+            status="Operational"
+        )
+    ]
+
+def get_tsunami_roads() -> List[Road]:
+    return [
+        Road(
+            id="ROAD-R17",
+            name="Coastal Causeway Bridge (NH-32 Spur)",
+            from_node="WH-COAST-BASE",
+            to_node="tsunami_zone_1",
+            distance_km=6.2,
+            standard_travel_min=13.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R02",
+            name="Inland Arterial Bypass Corridor",
+            from_node="WH-COAST-BASE",
+            to_node="tsunami_zone_2",
+            distance_km=5.4,
+            standard_travel_min=11.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R03",
+            name="South Estuary Link Road",
+            from_node="WH-SOUTH-DEPOT",
+            to_node="tsunami_zone_3",
+            distance_km=4.8,
+            standard_travel_min=10.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R04",
+            name="Port Link Expressway",
+            from_node="WH-PORT-RESERVE",
+            to_node="tsunami_zone_4",
+            distance_km=3.9,
+            standard_travel_min=8.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R05",
+            name="Maritime Waterway Ferry Corridor",
+            from_node="WH-SOUTH-DEPOT",
+            to_node="tsunami_zone_5",
+            distance_km=5.8,
+            standard_travel_min=15.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R06",
+            name="Highland Collector Avenue",
+            from_node="WH-COAST-BASE",
+            to_node="tsunami_zone_6",
+            distance_km=2.5,
+            standard_travel_min=5.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R07",
+            name="Port to Coastal Ward 1 Connector",
+            from_node="WH-PORT-RESERVE",
+            to_node="tsunami_zone_1",
+            distance_km=4.6,
+            standard_travel_min=9.5,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R08",
+            name="Inter-Depot Highland Connector",
+            from_node="WH-COAST-BASE",
+            to_node="WH-PORT-RESERVE",
+            distance_km=4.2,
+            standard_travel_min=8.0,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        ),
+        Road(
+            id="ROAD-R09",
+            name="Highland to South Depot Link",
+            from_node="WH-COAST-BASE",
+            to_node="WH-SOUTH-DEPOT",
+            distance_km=5.5,
+            standard_travel_min=10.5,
+            status=RoadStatus.OPEN,
+            flood_depth_cm=0.0,
+            speed_multiplier=1.0
+        )
+    ]
+
+def get_tsunami_workforce():
+    from ..models.schemas import WorkforceTeam
+    return [
+        WorkforceTeam(
+            id="TEAM-MAR-01",
+            name="NDRF 04 Bn Marine Rescue Unit Alpha",
+            role="Rescue Team",
+            skill="Gemini Motorized Inflatable Boats, Sea Trawl Extraction, Deep Sea Divers",
+            location="WH-COAST-BASE",
+            availability="AVAILABLE",
+            capacity=20,
+            current_assignment=None,
+            contact="+91-94440-11201"
+        ),
+        WorkforceTeam(
+            id="TEAM-MED-TSU",
+            name="Naval Trauma Field Surgical Team",
+            role="Medical Team",
+            skill="Mass Casualty Submersion & Hypothermia Trauma Care",
+            location="WH-PORT-RESERVE",
+            availability="AVAILABLE",
+            capacity=14,
+            current_assignment=None,
+            contact="+91-94440-11202"
+        ),
+        WorkforceTeam(
+            id="TEAM-LOG-TSU",
+            name="High-Clearance Amphibious Transport Logistics",
+            role="Logistics Team",
+            skill="Waterway Supply Shuttles & Amphibious Carriers",
+            location="WH-COAST-BASE",
+            availability="ON_DUTY",
+            capacity=16,
+            current_assignment="Tsunami Relief Convoy TS-01",
+            contact="+91-94440-11203"
+        )
+    ]
+
+def get_tsunami_dispatches():
+    from ..models.schemas import DispatchItem, DispatchStatus
+    return [
+        DispatchItem(
+            id="DISP-TSU-001",
+            allocation_id="ALLOC-TSU-001",
+            resource_type="medical_kits",
+            quantity=180,
+            team_id="TEAM-MED-TSU",
+            team_name="Naval Trauma Field Surgical Team",
+            destination_zone_id="tsunami_zone_1",
+            destination_zone_name="Coastal Ward 1 - Fishing Harbor & Jetty",
+            source_warehouse_id="WH-COAST-BASE",
+            source_warehouse_name="Inland Coastal Logistics Base",
+            vehicle_type="All-Terrain 4WD Medical Unit",
+            eta_min=13.0,
+            status=DispatchStatus.IN_TRANSIT,
+            departure_time="2026-09-17T07:15:00Z",
+            notes="Priority transit across Causeway Bridge for surge casualties.",
+            timestamp="2026-09-17T07:05:00Z"
+        ),
+        DispatchItem(
+            id="DISP-TSU-002",
+            allocation_id="ALLOC-TSU-002",
+            resource_type="water",
+            quantity=8000,
+            team_id="TEAM-LOG-TSU",
+            team_name="High-Clearance Amphibious Transport Logistics",
+            destination_zone_id="tsunami_zone_2",
+            destination_zone_name="Coastal Ward 2 - High Density Sea Promenade",
+            source_warehouse_id="WH-COAST-BASE",
+            source_warehouse_name="Inland Coastal Logistics Base",
+            vehicle_type="Heavy Water Tanker Truck",
+            eta_min=11.0,
+            status=DispatchStatus.ASSIGNED,
+            departure_time="2026-09-17T07:20:00Z",
+            notes="Emergency potable water delivery following salinization of civic mains.",
+            timestamp="2026-09-17T07:10:00Z"
+        )
+    ]
