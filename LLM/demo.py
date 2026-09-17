@@ -16,11 +16,22 @@ Executes the full 13-step disaster response workflow:
 13. Return structured result
 """
 
+import os
 import sys
 import json
-from .inference.predictor import ResQGridInferenceEngine
-from .pipelines.reallocation_pipeline import ReallocationEngine
-from .rag.knowledge_store import DisasterKnowledgeStore
+
+try:
+    from .inference.predictor import ResQGridInferenceEngine
+    from .pipelines.reallocation_pipeline import ReallocationEngine
+    from .rag.knowledge_store import DisasterKnowledgeStore
+except (ImportError, ValueError):
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    from LLM.inference.predictor import ResQGridInferenceEngine
+    from LLM.pipelines.reallocation_pipeline import ReallocationEngine
+    from LLM.rag.knowledge_store import DisasterKnowledgeStore
+
 
 
 def run_demo():

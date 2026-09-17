@@ -26,8 +26,10 @@ class DataQualityEngine:
                 timeliness_hours=0.0,
                 geospatial_validity_pct=0.0,
                 overall_quality_score=0.0,
+                status="DATASET_INVALID",
                 issues=["Dataset contains 0 records."]
             )
+
 
         total_records = len(records)
         issues: List[str] = []
@@ -139,6 +141,8 @@ class DataQualityEngine:
         if not issues:
             issues.append("Zero validation anomalies found. Schema matches canonical definitions.")
 
+        dataset_status = "DATASET_VALID" if overall_score >= 50.0 and validity_pct >= 50.0 else "DATASET_INVALID"
+
         return DataQualityReport(
             dataset_id=dataset_id,
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -150,5 +154,7 @@ class DataQualityEngine:
             timeliness_hours=timeliness_hours,
             geospatial_validity_pct=geospatial_validity_pct,
             overall_quality_score=overall_score,
+            status=dataset_status,
             issues=issues
         )
+

@@ -1397,7 +1397,21 @@ def predict_demand(body: Dict[str, Any]):
     """Predicts multi-commodity demand and returns empirical P10-P90 prediction intervals."""
     preds = ai_engine.predict_demand(body)
     uncertainty = ai_engine.estimate_uncertainty(body)
+
+    if preds.get("status") in ("INFERENCE_FAILED", "MODEL_UNAVAILABLE"):
+        return {
+            "status": preds.get("status"),
+            "error": preds.get("error", "Inference failed"),
+            "prediction": None,
+            "uncertainty": None,
+            "confidence_score": 0.0,
+            "model": preds.get("model"),
+            "version": "v1.0.0",
+            "fallback_active": False
+        }
+
     return {
+        "status": "SUCCESS",
         "prediction": preds,
         "uncertainty": uncertainty.get("uncertainty_intervals", {}),
         "confidence_score": 0.98,
@@ -1405,6 +1419,7 @@ def predict_demand(body: Dict[str, Any]):
         "version": "v1.0.0",
         "fallback_active": preds.get("fallback_active", False)
     }
+
 
 
 @app.post("/api/ai/optimize")

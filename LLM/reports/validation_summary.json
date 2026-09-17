@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-16T19:46:30.184442Z",
-  "status": "PASSED",
+  "timestamp": "2026-09-17T02:58:45.657961+00:00",
+  "status": "DATASET_VALID",
   "datasets": {
     "india_flood_inventory": {
       "rows": 6876,

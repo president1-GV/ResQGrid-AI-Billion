@@ -1,7 +1,7 @@
 {
   "model_name": "resqgrid-demand-forecaster",
   "version": "v1.0.0",
-  "trained_at": "2026-09-17T04:50:16.519792Z",
+  "trained_at": "2026-09-17T11:55:52.959983Z",
   "random_seed": 42,
   "baseline_model": {
     "type": "Ridge Regression",

@@ -8,7 +8,7 @@ import sys
 import json
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def validate_all_data():
@@ -17,16 +17,23 @@ def validate_all_data():
     print("=" * 60)
 
     summary = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "status": "PASSED",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "DATASET_VALID",
         "datasets": {}
     }
 
-    # 1. India Flood Inventory
-    ifi_path = "LLM/raw/India_Flood_Inventory_v3.csv"
+
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    ifi_path = os.path.join(_repo_root, "LLM/raw/India_Flood_Inventory_v3.csv")
     if not os.path.exists(ifi_path):
-        print(f"[FAIL] Missing {ifi_path}")
-        sys.exit(1)
+        print(f"[FAIL] Missing {ifi_path} -> DATASET_INVALID")
+        summary["status"] = "DATASET_INVALID"
+        summary["error"] = f"Missing required file: {ifi_path}"
+        out_path = os.path.join(_repo_root, "LLM/reports/validation_summary.json")
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
+        return 1
+
 
     df_ifi = pd.read_csv(ifi_path)
     print(f"\n[1/4] Validating India Flood Inventory ({ifi_path})...")
@@ -51,7 +58,7 @@ def validate_all_data():
     }
 
     # 2. District Flooded Area
-    dfa_path = "LLM/raw/District_FloodedArea.csv"
+    dfa_path = os.path.join(_repo_root, "LLM/raw/District_FloodedArea.csv")
     if os.path.exists(dfa_path):
         df_dfa = pd.read_csv(dfa_path)
         print(f"\n[2/4] Validating District Flooded Area ({dfa_path})...")
@@ -65,7 +72,7 @@ def validate_all_data():
         }
 
     # 3. District Flood Impact
-    dfi_path = "LLM/raw/District_FloodImpact.csv"
+    dfi_path = os.path.join(_repo_root, "LLM/raw/District_FloodImpact.csv")
     if os.path.exists(dfi_path):
         df_dfi = pd.read_csv(dfi_path)
         print(f"\n[3/4] Validating District Flood Impact ({dfi_path})...")
@@ -79,7 +86,7 @@ def validate_all_data():
         }
 
     # 4. EM-DAT India Parquet
-    emdat_train_path = "LLM/raw/emdat_india_train.parquet"
+    emdat_train_path = os.path.join(_repo_root, "LLM/raw/emdat_india_train.parquet")
     if os.path.exists(emdat_train_path):
         df_emdat = pd.read_parquet(emdat_train_path)
         print(f"\n[4/4] Validating EM-DAT Disaster Profiles ({emdat_train_path})...")
@@ -92,9 +99,10 @@ def validate_all_data():
             "status": "VALIDATED"
         }
 
-    out_path = "LLM/reports/validation_summary.json"
+    out_path = os.path.join(_repo_root, "LLM/reports/validation_summary.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+
 
     print("\n" + "=" * 60)
     print(f"  ALL DATASETS VALIDATED SUCCESSFULLY -> {out_path}")

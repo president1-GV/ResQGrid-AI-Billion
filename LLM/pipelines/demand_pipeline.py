@@ -3,8 +3,18 @@ ResQGrid AI - Demand Forecasting Pipeline
 Orchestrates multi-commodity demand prediction and uncertainty estimation.
 """
 
+import os
+import sys
 from typing import Dict, Any, List
-from ..inference.predictor import ResQGridInferenceEngine
+
+try:
+    from ..inference.predictor import ResQGridInferenceEngine
+except (ImportError, ValueError):
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    from LLM.inference.predictor import ResQGridInferenceEngine
+
 
 
 class DemandForecastingPipeline:

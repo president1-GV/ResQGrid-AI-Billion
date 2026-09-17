@@ -1,7 +1,7 @@
 # RESQGRID AI — MODEL EVALUATION REPORT
 
 > **Model**: `resqgrid-demand-forecaster` | **Version**: `v1.0.0`
-> **Evaluated At**: 2026-09-17T04:50:16.519792Z
+> **Evaluated At**: 2026-09-17T11:55:52.959983Z
 > **Validation Strategy**: Strict Chronological Temporal Holdout (Test: 2021-2023)
 
 ---

@@ -3,9 +3,16 @@ ResQGrid AI - Standalone CLI Prediction and Optimization Runner
 Run: python -m LLM.inference.predict
 """
 
+import os
 import sys
 import json
-from .predictor import ResQGridInferenceEngine
+
+try:
+    from .predictor import ResQGridInferenceEngine
+except ImportError:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+    from LLM.inference.predictor import ResQGridInferenceEngine
+
 
 
 def run_predict_cli():

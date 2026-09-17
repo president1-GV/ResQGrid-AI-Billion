@@ -13,8 +13,16 @@ import pandas as pd
 from datetime import datetime
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from .baselines import build_baseline_model
-from .advanced_model import AdvancedDemandForecaster
+try:
+    from .baselines import build_baseline_model
+    from .advanced_model import AdvancedDemandForecaster
+except ImportError:
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    from LLM.training.baselines import build_baseline_model
+    from LLM.training.advanced_model import AdvancedDemandForecaster
+
 
 
 def train_pipeline():

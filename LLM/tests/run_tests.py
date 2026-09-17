@@ -3,10 +3,18 @@ ResQGrid AI - AI/ML, Optimization, Geospatial & RAG Test Suite
 Run: python -m LLM.tests.run_tests
 """
 
+import os
+import sys
 import unittest
 import numpy as np
+
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
 from LLM.inference.predictor import ResQGridInferenceEngine
 from LLM.rag.knowledge_store import DisasterKnowledgeStore
+
 
 
 class TestResQGridAI(unittest.TestCase):
@@ -217,10 +225,47 @@ class TestResQGridAI(unittest.TestCase):
         opt_res = self.engine.optimize_resources(opt_input)
         self.assertEqual(opt_res["status"], "FEASIBLE")
 
-        # 4. Explain
         explanation = self.engine.generate_explanation(opt_res)
         self.assertIn("Allocated", explanation["summary"])
         print("  ✓ End-to-End Decision Support Pipeline Verified")
+
+    def test_adversarial_invalid_input_fails_explicitly(self):
+        """NON-NEGOTIABLE TEST:
+        Verify that NaN, Inf, negative population, or non-numeric inputs
+        do NOT return fake numbers or crash; they must return INFERENCE_FAILED explicitly.
+        """
+        bad_inputs = [
+            {"district_population": -5000},
+            {"severity_score": float("nan")},
+            {"duration_days": float("inf")},
+            {"district_population": "not_a_number"}
+        ]
+        for bad in bad_inputs:
+            pred = self.engine.predict_demand(bad)
+            self.assertEqual(pred.get("status"), "INFERENCE_FAILED", f"Failed to expose INFERENCE_FAILED on input: {bad}")
+            self.assertFalse(pred.get("fallback_active"), "Should never return mock/fallback on corrupted input")
+
+            uncert = self.engine.estimate_uncertainty(bad)
+            self.assertEqual(uncert.get("status"), "INFERENCE_FAILED")
+        print("  ✓ Adversarial Failure Exposure (INFERENCE_FAILED) Verified")
+
+    def test_model_unavailable_exposure(self):
+        """NON-NEGOTIABLE TEST:
+        When models are not loaded in the engine, it must return MODEL_UNAVAILABLE
+        rather than masking with hardcoded numbers or silent mock data.
+        """
+        empty_engine = ResQGridInferenceEngine(model_dir="non_existent_dir_resqgrid_test")
+        empty_engine.advanced_model = None
+        empty_engine.baseline_model = None
+
+        pred = empty_engine.predict_demand({"district_population": 50000, "severity_score": 5.0})
+        self.assertEqual(pred.get("status"), "MODEL_UNAVAILABLE")
+        self.assertIsNone(pred.get("model"))
+
+        uncert = empty_engine.estimate_uncertainty({"district_population": 50000, "severity_score": 5.0})
+        self.assertEqual(uncert.get("status"), "MODEL_UNAVAILABLE")
+        print("  ✓ Model Unavailable Exposure (MODEL_UNAVAILABLE) Verified")
+
 
 
 def run_all_tests():

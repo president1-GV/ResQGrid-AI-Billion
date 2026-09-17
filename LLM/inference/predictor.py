@@ -29,9 +29,17 @@ class ResQGridInferenceEngine:
         self.load_models()
 
     def load_models(self):
-        adv_path = os.path.join(self.model_dir, "advanced_model.pkl")
-        base_path = os.path.join(self.model_dir, "baseline_model.pkl")
-        schema_path = os.path.join(self.model_dir, "feature_schema.json")
+        # Resolve path relative to current cwd or relative to repository root
+        resolved_dir = self.model_dir
+        if not os.path.exists(resolved_dir):
+            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            candidate = os.path.join(repo_root, self.model_dir)
+            if os.path.exists(candidate):
+                resolved_dir = candidate
+
+        adv_path = os.path.join(resolved_dir, "advanced_model.pkl")
+        base_path = os.path.join(resolved_dir, "baseline_model.pkl")
+        schema_path = os.path.join(resolved_dir, "feature_schema.json")
 
         if os.path.exists(adv_path):
             with open(adv_path, "rb") as f:
@@ -43,6 +51,7 @@ class ResQGridInferenceEngine:
             with open(schema_path, "r", encoding="utf-8") as f:
                 self.schema = json.load(f)
 
+
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
@@ -50,8 +59,16 @@ class ResQGridInferenceEngine:
         return cls._instance
 
     def predict_demand(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Predicts multi-commodity demand with model fallback."""
+        """Predicts multi-commodity demand with strict failure exposure."""
         features = self._extract_features(input_data)
+        if features is None:
+            return {
+                "status": "INFERENCE_FAILED",
+                "error": "Invalid feature values, NaN/Inf, or negative parameters detected in input payload.",
+                "model": None,
+                "fallback_active": False
+            }
+
         X = np.array([features])
 
         if self.advanced_model is not None:
@@ -61,6 +78,7 @@ class ResQGridInferenceEngine:
                 "demand_rescue_boats", "demand_ambulances"
             ]
             res = {target: round(float(preds[i]), 1) for i, target in enumerate(targets)}
+            res["status"] = "SUCCESS"
             res["model"] = "Gradient Boosting Regressor v1.0.0"
             res["fallback_active"] = False
             return res
@@ -72,41 +90,40 @@ class ResQGridInferenceEngine:
                 "demand_rescue_boats", "demand_ambulances"
             ]
             res = {target: round(float(preds[i]), 1) for i, target in enumerate(targets)}
+            res["status"] = "SUCCESS"
             res["model"] = "Ridge Regression Baseline v1.0.0"
             res["fallback_active"] = True
             return res
 
         else:
-            # Deterministic heuristic fallback
-            pop = input_data.get("population", 50000)
-            sev = input_data.get("severity", 5.0)
-            dur = input_data.get("duration_days", 3.0)
-            affected = pop * (sev / 10.0) * 0.08
             return {
-                "demand_water_liters": round(affected * 15 * min(dur, 5), 1),
-                "demand_food_packs": round(affected * 2 * min(dur, 5), 1),
-                "demand_medical_kits": round(affected / 30, 1),
-                "demand_rescue_boats": round(sev * 4, 1),
-                "demand_ambulances": round(sev * 2, 1),
-                "model": "Deterministic Heuristic Fallback",
-                "fallback_active": True
+                "status": "MODEL_UNAVAILABLE",
+                "error": "No trained machine learning model or validated baseline checkpoint is available in registry.",
+                "model": None,
+                "fallback_active": False
             }
 
     def estimate_uncertainty(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculates empirical P10-P90 prediction interval and confidence score."""
+        """Calculates empirical P10-P90 prediction interval with strict failure exposure."""
         features = self._extract_features(input_data)
+        if features is None:
+            return {
+                "status": "INFERENCE_FAILED",
+                "error": "Invalid feature values or NaN/Inf detected in input parameters."
+            }
+
         X = np.array([features])
 
         if self.advanced_model is not None:
             results = self.advanced_model.predict_with_uncertainty(X)[0]
             return {
+                "status": "CALIBRATED",
                 "uncertainty_intervals": results,
-                "confidence_method": "Empirical Log-Residual Quantile Estimator (P10–P90)",
-                "status": "CALIBRATED"
+                "confidence_method": "Empirical Log-Residual Quantile Estimator (P10–P90)"
             }
         return {
-            "status": "NOT AVAILABLE",
-            "reason": "Advanced model not loaded; prediction intervals unavailable for fallback."
+            "status": "MODEL_UNAVAILABLE",
+            "error": "Advanced model not loaded; empirical prediction intervals are unavailable."
         }
 
     def optimize_resources(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -249,13 +266,23 @@ class ResQGridInferenceEngine:
             ]
         }
 
-    def _extract_features(self, data: Dict[str, Any]) -> List[float]:
-        return [
-            float(data.get("duration_days", 3.0)),
-            float(data.get("severity_score", data.get("severity", 5.0))),
-            float(data.get("district_flooded_area_pct", 20.0)),
-            float(data.get("district_population", data.get("population", 100000))),
-            float(data.get("historical_mean_duration", 7.0)),
-            float(data.get("start_month", 7)),
-            float(data.get("is_monsoon", 1 if data.get("start_month", 7) in [6, 7, 8, 9] else 0))
-        ]
+    def _extract_features(self, data: Dict[str, Any]) -> Optional[List[float]]:
+        try:
+            duration = float(data.get("duration_days", 3.0))
+            severity = float(data.get("severity_score", data.get("severity", 5.0)))
+            flooded_pct = float(data.get("district_flooded_area_pct", 20.0))
+            population = float(data.get("district_population", data.get("population", 100000)))
+            hist_duration = float(data.get("historical_mean_duration", 7.0))
+            start_month = float(data.get("start_month", 7))
+            is_monsoon = float(data.get("is_monsoon", 1 if start_month in [6, 7, 8, 9] else 0))
+
+            features = [duration, severity, flooded_pct, population, hist_duration, start_month, is_monsoon]
+            for f in features:
+                if np.isnan(f) or np.isinf(f):
+                    return None
+            if population < 0 or severity < 0 or duration < 0:
+                return None
+            return features
+        except (ValueError, TypeError):
+            return None
+

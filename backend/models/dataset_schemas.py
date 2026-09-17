@@ -63,7 +63,9 @@ class DataQualityReport(BaseModel):
     timeliness_hours: float
     geospatial_validity_pct: float
     overall_quality_score: float
+    status: str = "DATASET_VALID"  # "DATASET_VALID" or "DATASET_INVALID"
     issues: List[str] = []
+
 
 
 class IngestionRun(BaseModel):
