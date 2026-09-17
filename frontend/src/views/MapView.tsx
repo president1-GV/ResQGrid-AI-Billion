@@ -6,7 +6,7 @@ import {
   Layers, MapPin, AlertTriangle, Check, Shield, Navigation, Globe,
   Key, X, CheckCircle, Info, RefreshCw, Activity, ArrowRight, Zap, Database, Clock
 } from 'lucide-react';
-import { fetchGisLayers, toggleRoadStatus } from '../services/api';
+import { fetchGisLayers, fetchGisStatus, toggleRoadStatus } from '../services/api';
 
 export type BaseMapStyle = 'tactical_dark' | 'osm' | 'satellite';
 
@@ -106,6 +106,8 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [r17ActionStatus, setR17ActionStatus] = useState<string | null>(null);
   const [isProcessingR17, setIsProcessingR17] = useState(false);
+  const [gisStatus, setGisStatus] = useState<any>(null);
+  const [isConnectionError, setIsConnectionError] = useState(false);
 
   // Layer groups
   const floodLayerRef = useRef<L.LayerGroup>(L.layerGroup());
@@ -115,6 +117,23 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   const whLayerRef = useRef<L.LayerGroup>(L.layerGroup());
   const hospLayerRef = useRef<L.LayerGroup>(L.layerGroup());
   const shelterLayerRef = useRef<L.LayerGroup>(L.layerGroup());
+
+  // Fetch GIS status from authoritative backend
+  const refreshGisStatus = async () => {
+    try {
+      const data = await fetchGisStatus();
+      setGisStatus(data);
+      setIsConnectionError(false);
+    } catch (err) {
+      setIsConnectionError(true);
+    }
+  };
+
+  useEffect(() => {
+    refreshGisStatus();
+    const interval = setInterval(refreshGisStatus, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Seconds since sync ticker
   useEffect(() => {
@@ -128,6 +147,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
   useEffect(() => {
     setLastSyncTimestamp(new Date().toLocaleTimeString());
     setSecondsAgo(0);
+    refreshGisStatus();
   }, [state]);
 
   // Expose road toggle callback to global window for Leaflet popup HTML onclick
@@ -603,14 +623,42 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
 
         {/* Telemetry Chips & Sync Controls */}
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          <div className={`px-2.5 py-1 rounded-lg border font-mono text-[11px] flex items-center gap-1.5 ${
-            isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-          }`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>LIVE SYNC</span>
-            <span className="text-slate-400">|</span>
-            <span className="text-slate-500">{secondsAgo}s ago ({lastSyncTimestamp})</span>
-          </div>
+          {(() => {
+            const syncStatus = isConnectionError
+              ? 'OFFLINE'
+              : secondsAgo > 600
+              ? 'OFFLINE'
+              : secondsAgo > 120
+              ? 'STALE'
+              : 'LIVE';
+
+            const syncStatusDot = syncStatus === 'LIVE'
+              ? 'bg-emerald-500 animate-pulse'
+              : syncStatus === 'STALE'
+              ? 'bg-amber-500 animate-pulse'
+              : 'bg-rose-500';
+
+            const syncStatusText = syncStatus === 'LIVE'
+              ? 'text-emerald-500'
+              : syncStatus === 'STALE'
+              ? 'text-amber-500'
+              : 'text-rose-500';
+
+            return (
+              <div className={`px-2.5 py-1 rounded-lg border font-mono text-[11px] flex items-center gap-1.5 ${
+                isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${syncStatusDot}`} />
+                <span className={`font-bold ${syncStatusText}`}>
+                  {syncStatus === 'LIVE' && 'LIVE SYNC'}
+                  {syncStatus === 'STALE' && 'STALE SYNC (>2m)'}
+                  {syncStatus === 'OFFLINE' && 'OFFLINE (CACHED DATA)'}
+                </span>
+                <span className="text-slate-400">|</span>
+                <span className="text-slate-500">{secondsAgo}s ago ({lastSyncTimestamp})</span>
+              </div>
+            );
+          })()}
 
           {/* Basemap Switcher */}
           <div className={`flex items-center p-1 rounded-lg border text-xs ${
@@ -907,52 +955,89 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
               </div>
 
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/60">
-                  <span className="text-slate-500">Affected Population:</span>
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Affected Population:</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700 font-semibold">
+                      DATABASE
+                    </span>
+                  </div>
                   <strong>{selectedZone.affected_population.toLocaleString()} / {selectedZone.population.toLocaleString()}</strong>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/60">
-                  <span className="text-slate-500">Flood Severity:</span>
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Flood Severity:</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-500/30 font-semibold">
+                      ASDMA / CWC (0.98)
+                    </span>
+                  </div>
                   <strong className="text-red-500">{Math.round(selectedZone.severity * 100)}%</strong>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/60">
-                  <span className="text-slate-500">Vulnerability Index:</span>
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Vulnerability Index:</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-semibold">
+                      CALCULATED
+                    </span>
+                  </div>
                   <strong className="text-amber-500">{Math.round(selectedZone.vulnerability * 100)}%</strong>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/60">
-                  <span className="text-slate-500">Road Navigability:</span>
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Road Navigability:</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold">
+                      DIJKSTRA GRAPH
+                    </span>
+                  </div>
                   <strong className="text-emerald-500">{Math.round(selectedZone.road_accessibility * 100)}%</strong>
                 </div>
               </div>
 
               {/* Demand Requirements Grid */}
               <div className="space-y-1.5 pt-1">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
-                  Sector Needs Breakdown:
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                    Sector Needs Breakdown:
+                  </span>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-semibold">
+                    SPHERE ESTIMATOR
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className={`p-2 rounded border ${
                     isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <span className="text-[10px] text-slate-500 block">Water Need</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-500 block">Water Need</span>
+                      <span className="text-[8px] font-mono text-purple-400">15L/p/d</span>
+                    </div>
                     <strong>{selectedZone.water_need.toLocaleString()} L</strong>
                   </div>
                   <div className={`p-2 rounded border ${
                     isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <span className="text-[10px] text-slate-500 block">Food Need</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-500 block">Food Need</span>
+                      <span className="text-[8px] font-mono text-purple-400">2100kcal</span>
+                    </div>
                     <strong>{selectedZone.food_need.toLocaleString()} rk</strong>
                   </div>
                   <div className={`p-2 rounded border ${
                     isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <span className="text-[10px] text-slate-500 block">Medical Kits</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-500 block">Medical Kits</span>
+                      <span className="text-[8px] font-mono text-purple-400">WHO Std</span>
+                    </div>
                     <strong>{selectedZone.medical_need} kits</strong>
                   </div>
                   <div className={`p-2 rounded border ${
                     isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <span className="text-[10px] text-slate-500 block">Ambulances</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-slate-500 block">Ambulances</span>
+                      <span className="text-[8px] font-mono text-purple-400">Triage</span>
+                    </div>
                     <strong>{selectedZone.ambulances_need} vehicles</strong>
                   </div>
                 </div>
@@ -960,8 +1045,13 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
 
               {/* Inflow Allocations */}
               <div className="space-y-1.5 pt-1">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
-                  Allocated Inflow Corridors:
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                    Allocated Inflow Corridors:
+                  </span>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-500/30 font-semibold">
+                    OR-TOOLS MIP
+                  </span>
                 </div>
                 {state.active_allocations
                   .filter((a) => a.destination_zone_id === selectedZone.id)
@@ -980,7 +1070,7 @@ export const MapView: React.FC<MapViewProps> = ({ state, onToggleRoad, isDarkMod
                       </div>
                       <div className="text-[10px] text-slate-500 flex justify-between mt-0.5">
                         <span>From: {a.source_warehouse_name}</span>
-                        <span>ETA: {a.estimated_time_min}m</span>
+                        <span className="font-mono text-sky-400">ETA: {a.estimated_time_min}m (DIJKSTRA)</span>
                       </div>
                     </div>
                   ))}

@@ -453,5 +453,11 @@ export async function calculateRoute(startId: string, endId: string): Promise<an
   return res.json();
 }
 
+export async function fetchGisStatus(): Promise<any> {
+  const res = await fetch(`${API_BASE}/gis/status`);
+  if (!res.ok) throw new Error('Failed to fetch GIS status');
+  return res.json();
+}
+
 
 

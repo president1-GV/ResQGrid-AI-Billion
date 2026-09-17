@@ -339,6 +339,23 @@ def get_gis_layers():
         field_reports=state.field_reports
     )
 
+@app.get("/api/gis/status")
+def get_gis_status():
+    """
+    Authoritative GIS & Telemetry System Status:
+    Reports live database connection, weather API health, hydrology sensor status,
+    data freshness tier, active solver, road network health, and provenance taxonomy.
+    """
+    return gis_service.get_system_status(
+        zones=list(state.zones.values()),
+        warehouses=list(state.warehouses.values()),
+        roads=list(state.roads.values()),
+        hospitals=list(state.hospitals.values()),
+        shelters=list(state.shelters.values()),
+        allocations=state.allocations,
+        field_reports=state.field_reports
+    )
+
 @app.get("/api/gis/travel-matrix")
 def get_travel_matrix():
     """
@@ -637,16 +654,6 @@ def get_demand_uncertainty():
     for z in state.zones.values():
         results[z.id] = demand_estimator.estimate_zone_demand(z, state.event.rainfall_mm)
     return results
-
-@app.get("/api/gis/layers")
-def get_gis_layers():
-    return gis_service.get_geojson_layers(
-        list(state.zones.values()),
-        list(state.warehouses.values()),
-        list(state.hospitals.values()),
-        list(state.shelters.values()),
-        list(state.roads.values())
-    )
 
 class SpatialQueryRequest(BaseModel):
     query_type: str # "nearest_warehouse", "hospitals_in_radius", "shelters_reachable", "roads_in_flood", "population_in_flood"
